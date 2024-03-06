@@ -1,0 +1,13 @@
+ktor:
+  environment: local
+  application:
+    modules:
+      - no.nav.tsm.ApplicationKt.module
+  deployment:
+    port: 8080
+  database:
+    dbUser: $DB_USERNAME
+    dbPassword: $DB_PASSWORD
+    dbHost: $DB_HOST
+    dbPort: $DB_PORT
+    dbName: $DB_DATABASE
