@@ -40,8 +40,7 @@ dependencies {
 
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+
     implementation("org.flywaydb:flyway-database-postgresql:$flyway_version")
 
     implementation("io.insert-koin:koin-ktor:$koin_version")
