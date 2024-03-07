@@ -52,6 +52,4 @@ spec:
     enabled: false
   kafka:
     pool: nav-dev
-  envFrom:
-    - secret: tsm-migrator-smregister-secret
 
