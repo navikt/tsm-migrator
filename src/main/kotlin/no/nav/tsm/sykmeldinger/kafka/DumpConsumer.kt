@@ -10,6 +10,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.koin.java.KoinJavaComponent.inject
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -41,10 +42,12 @@ class DumpConsumer(
 
     private suspend fun processMessages() {
         try {
-            val records = kafkaConsumer.poll(1.seconds.toJavaDuration())
+            val records = kafkaConsumer.poll(Duration.ofMillis(10_000)).mapNotNull { it.value() }
             logger.info("Received ${records.count()} messages from topic: $regdumpTopic")
-            records.forEach { record ->
-                processRecord(record)
+
+            processRecord(records)
+            if (records.isNotEmpty()) {
+                kafkaConsumer.commitSync()
             }
         } catch (ex: Exception) {
             println("Error processing messages: ${ex.message}")
@@ -55,11 +58,11 @@ class DumpConsumer(
     }
 
 
-    private suspend fun processRecord(record: ConsumerRecord<String, SykmeldingInput>) {
+    private suspend fun processRecord(records: List<SykmeldingInput>) {
         //logger.info("Received message from topic: ${record.topic()}")
         var counter = 0
         withContext(Dispatchers.IO) {
-            dumpService.insertDump(record.value())
+            dumpService.batchInsert(records)
             counter++
         }
         //logger.info("Inserted $counter records into the database when consuming from topic: ${record.topic()}")
