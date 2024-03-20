@@ -1,6 +1,6 @@
 package no.nav.tsm.plugins
 
-import io.ktor.server.application.Application
+import io.ktor.server.application.*
 import io.ktor.server.config.ApplicationConfig
 import java.util.Properties
 
@@ -9,8 +9,10 @@ class Environment(
     val dbUser: String,
     val dbPassword: String,
     val kafkaConfig: Properties,
-    val regdumpTopic: String = "tsm.regdump"
+    val hostname: String,
+    val regdumpTopic: String = "tsm.regdump",
 )
+
 private fun ApplicationConfig.requiredEnv(name: String) =
     propertyOrNull(name)?.getString()
         ?: throw IllegalArgumentException("Missing required environment variable $name")
@@ -22,11 +24,11 @@ fun Application.createEnvironment(): Environment {
         jdbcUrl = "jdbc:postgresql://$host:$port/$database",
         dbUser = environment.config.requiredEnv("ktor.database.dbUser"),
         dbPassword = environment.config.requiredEnv("ktor.database.dbPassword"),
+        hostname = environment.config.host,
         kafkaConfig = Properties().apply {
             environment.config.config("ktor.kafka.config").toMap().forEach {
                 this[it.key] = it.value
             }
-        }
-
+        },
     )
 }

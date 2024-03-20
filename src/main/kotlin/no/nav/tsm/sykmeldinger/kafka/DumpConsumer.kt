@@ -56,13 +56,13 @@ class DumpConsumer(
 
 
     private suspend fun processRecord(record: ConsumerRecord<String, SykmeldingInput>) {
-        logger.info("Received message from topic: ${record.topic()}")
+        //logger.info("Received message from topic: ${record.topic()}")
         var counter = 0
         withContext(Dispatchers.IO) {
             dumpService.insertDump(record.value())
             counter++
         }
-        logger.info("Inserted $counter records into the database when consuming from topic: ${record.topic()}")
+        //logger.info("Inserted $counter records into the database when consuming from topic: ${record.topic()}")
     }
     private fun subscribeToKafkaTopics() {
         kafkaConsumer.subscribe(listOf(regdumpTopic))

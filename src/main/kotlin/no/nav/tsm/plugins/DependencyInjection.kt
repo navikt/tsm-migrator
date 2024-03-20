@@ -34,15 +34,19 @@ val databaseModule = module {
     singleOf(::DumpService)
 }
 
-
 val kafkaModule = module {
     single {
+        val env = get<Environment>()
+
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = DumpDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-1"
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-2"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-dump-consumer"
+            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+
         }, StringDeserializer(), DumpDeserializer(SykmeldingInput::class))
     }
     single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
 }
-
