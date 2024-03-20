@@ -40,7 +40,7 @@ val kafkaModule = module {
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = DumpDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator"
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-1"
         }, StringDeserializer(), DumpDeserializer(SykmeldingInput::class))
     }
     single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
