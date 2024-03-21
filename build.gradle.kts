@@ -9,6 +9,7 @@ val exposed_version: String by project
 val flyway_version: String by project
 val kafka_version: String by project
 val jackson_version: String by project
+val logback_encoder_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.22"
@@ -39,6 +40,7 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgres_version")
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
