@@ -1,14 +1,15 @@
 
-val ktor_version: String by project
-val kotlin_version: String by project
-val logback_version: String by project
-val koin_version: String by project
-val postgres_version: String by project
-val h2_version: String by project
-val exposed_version: String by project
-val flyway_version: String by project
-val kafka_version: String by project
-val jackson_version: String by project
+val ktor_version="2.3.8"
+val kotlin_version="1.9.22"
+val logback_version="1.4.14"
+val postgres_version="42.7.1"
+val koin_version="3.5.3"
+val exposed_version="0.48.0"
+val flyway_version="10.6.0"
+val prometheus_version="1.6.3"
+val logback_encoder_version="7.2"
+val kafka_version="3.4.0"
+val jackson_version="2.16.1"
 
 plugins {
     kotlin("jvm") version "1.9.22"
@@ -39,6 +40,7 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgres_version")
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
