@@ -49,6 +49,6 @@ val kafkaModule = module {
 
         }, StringDeserializer(), DumpDeserializer(SykmeldingInput::class))
     }
-    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
+//    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
     single {FellesformatConsumer(get(), get<Environment>().okSykmeldingTopic, get<Environment>().avvistSykmeldingTopic, get<Environment>().manuellSykmeldingTopic, get<Environment>().gamleSykmeldingTopic)}
 }
