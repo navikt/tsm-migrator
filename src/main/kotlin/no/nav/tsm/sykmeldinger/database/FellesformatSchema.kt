@@ -27,8 +27,8 @@ class FellesformatService() {
         newSuspendedTransaction(Dispatchers.IO) { block() }
 
     suspend fun batchUpsert(records: List<FellesformatInput>): Boolean = dbQuery {
-        val res = Sykmelding.batchUpsert(records) { (sykmelding, fellesformat) ->
-            this[Sykmelding.sykmelding_id] = getSykmeldingId(sykmelding)
+        val res = Sykmelding.batchUpsert(records) { (sykmeldingId, fellesformat) ->
+            this[Sykmelding.sykmelding_id] = sykmeldingId
             this[Sykmelding.fellesformat] = fellesformat
         }
         if(res.size == records.size) {
@@ -37,12 +37,6 @@ class FellesformatService() {
         }
         logger.info("FellesformatService.batchUpsert: resultrow size = ${res.size} and records size = ${records.size}")
         return@dbQuery false
-    }
-
-    private fun getSykmeldingId(sykmelding: String): String {
-        val asText = ObjectMapper().readTree(sykmelding).get("id").asText()
-        logger.info("FellesformatService.getSykmeldingId: asText = $asText")
-        return asText
     }
 
 

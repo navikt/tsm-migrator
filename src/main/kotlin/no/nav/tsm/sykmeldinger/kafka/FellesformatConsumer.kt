@@ -40,21 +40,28 @@ class FellesformatConsumer(
             }
         }
 
-        private suspend fun processMessages() {
-            try {
-                val records = kafkaConsumer.poll(Duration.ofMillis(10_000)).mapNotNull { it.value() }
-
-                processRecord(records)
-                if (records.isNotEmpty()) {
-                    kafkaConsumer.commitSync()
+    private suspend fun processMessages() {
+        try {
+            val records = kafkaConsumer.poll(Duration.ofMillis(10_000)).mapNotNull {
+                try {
+                    it.value()
+                } catch (ex: Exception) {
+                    logger.error("Error deserializing record: ${ex.message}")
+                    null
                 }
-            } catch (ex: Exception) {
-                println("Error processing messages: ${ex.message}")
-                kafkaConsumer.unsubscribe()
-                delay(1.seconds)
-                subscribeToKafkaTopics()
             }
+
+            processRecord(records)
+            if (records.isNotEmpty()) {
+                kafkaConsumer.commitSync()
+            }
+        } catch (ex: Exception) {
+            logger.error("Error processing messages: ${ex.message}")
+            kafkaConsumer.unsubscribe()
+            delay(1.seconds)
+            subscribeToKafkaTopics()
         }
+    }
 
 
         private suspend fun processRecord(records: List<FellesformatInput>) {
