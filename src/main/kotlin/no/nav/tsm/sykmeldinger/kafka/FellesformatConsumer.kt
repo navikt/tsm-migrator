@@ -64,7 +64,7 @@ class FellesformatConsumer(
                 fellesformatService.batchUpsert(records)
                 counter++
             }
-            //logger.info("Inserted $counter records into the database when consuming from topic: ${record.topic()}")
+            logger.info("Inserted $counter records into the database when consuming from a sykmelding topic")
         }
         private fun subscribeToKafkaTopics() {
             kafkaConsumer.subscribe(listOf(okSykmeldingTopic, avvistSykmeldingTopic, manuellSykmeldingTopic, gamleSykmeldingTopic))

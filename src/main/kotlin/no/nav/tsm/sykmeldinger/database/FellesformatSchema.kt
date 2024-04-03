@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 class FellesformatService() {
 
@@ -39,7 +40,9 @@ class FellesformatService() {
     }
 
     private fun getSykmeldingId(sykmelding: String): String {
-        return ObjectMapper().readTree(sykmelding).get("id").asText()
+        val asText = ObjectMapper().readTree(sykmelding).get("id").asText()
+        logger.info("FellesformatService.getSykmeldingId: asText = $asText")
+        return asText
     }
 
 
