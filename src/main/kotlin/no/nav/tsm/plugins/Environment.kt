@@ -11,6 +11,10 @@ class Environment(
     val kafkaConfig: Properties,
     val hostname: String,
     val regdumpTopic: String = "tsm.regdump",
+    val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
+    val avvistSykmeldingTopic: String = "teamsykmelding.avvist-sykmelding",
+    val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
+    val gamleSykmeldingTopic: String = "teamsykmelding.gamle-sykmeldinger",
 )
 
 private fun ApplicationConfig.requiredEnv(name: String) =

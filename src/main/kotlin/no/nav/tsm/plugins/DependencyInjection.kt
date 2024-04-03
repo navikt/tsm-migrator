@@ -5,6 +5,7 @@ import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.sykmeldinger.database.DumpService
 import no.nav.tsm.sykmeldinger.kafka.DumpConsumer
+import no.nav.tsm.sykmeldinger.kafka.FellesformatConsumer
 import no.nav.tsm.sykmeldinger.kafka.model.SykmeldingInput
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -49,4 +50,5 @@ val kafkaModule = module {
         }, StringDeserializer(), DumpDeserializer(SykmeldingInput::class))
     }
     single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
+    single {FellesformatConsumer(get(), get<Environment>().okSykmeldingTopic, get<Environment>().avvistSykmeldingTopic, get<Environment>().manuellSykmeldingTopic, get<Environment>().gamleSykmeldingTopic)}
 }
