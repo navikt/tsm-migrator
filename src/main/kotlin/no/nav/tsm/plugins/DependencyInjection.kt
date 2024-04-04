@@ -9,6 +9,7 @@ import no.nav.tsm.sykmeldinger.kafka.FellesformatConsumer
 import no.nav.tsm.sykmeldinger.kafka.model.FellesformatInput
 import no.nav.tsm.sykmeldinger.kafka.model.SykmeldingInput
 import no.nav.tsm.sykmeldinger.kafka.util.FellesformatDeserializer
+import no.nav.tsm.sykmeldinger.kafka.util.GamleSykmeldingerDeserializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -52,6 +53,20 @@ val kafkaModule = module {
         }, StringDeserializer(), FellesformatDeserializer(FellesformatInput::class))
     }
     single {FellesformatConsumer(get(), listOf( get<Environment>().okSykmeldingTopic, get<Environment>().avvistSykmeldingTopic, get<Environment>().manuellSykmeldingTopic))}
+
+    single {
+        val env = get<Environment>()
+
+        KafkaConsumer(get<Environment>().kafkaConfig.apply {
+            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
+            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-g1"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer"
+            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+
+        }, StringDeserializer(), GamleSykmeldingerDeserializer(FellesformatInput::class))
+    }
+    single {FellesformatConsumer(get(), listOf( get<Environment>().gamleSykmeldingTopic))}
 //    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
-    // gamle trenger eigen deserializer. , get<Environment>().gamleSykmeldingTopic
 }
