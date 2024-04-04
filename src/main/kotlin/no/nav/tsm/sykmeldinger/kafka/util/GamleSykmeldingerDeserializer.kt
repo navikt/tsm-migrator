@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.tsm.sykmeldinger.kafka.model.FellesformatInput
+import no.nav.tsm.sykmeldinger.kafka.model.GamleSykmeldingerInput
 import org.apache.kafka.common.serialization.Deserializer
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
@@ -20,8 +20,8 @@ class GamleSykmeldingerDeserializer<T : Any>(private val type: KClass<T>) : Dese
     override fun deserialize(topic: String, p1: ByteArray): T {
         val jsonNode: JsonNode = objectMapper.readTree(p1)
         val sykmeldingId = jsonNode.get("receivedSykmelding").get("sykmelding").get("id").asText()
-        val mottattDato = LocalDateTime.parse(jsonNode.get("mottattDato").asText())
-        val fellesformat = jsonNode.get("fellesformat").asText()
-        return FellesformatInput(sykmeldingId, mottattDato, fellesformat) as T
+        val mottattDato = LocalDateTime.parse(jsonNode.get("receivedSykmelding").get("mottattDato").asText())
+        val gammelSykmelding = jsonNode.get("receivedSykmelding").get("sykmelding").asText()
+        return GamleSykmeldingerInput(sykmeldingId, mottattDato, gammelSykmelding) as T
     }
 }
