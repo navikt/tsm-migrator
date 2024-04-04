@@ -44,13 +44,14 @@ val kafkaModule = module {
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = FellesformatDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-3"
-            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-fellesformat-consumer"
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-4"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-fellesformat-consumer2"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
 
         }, StringDeserializer(), FellesformatDeserializer(FellesformatInput::class))
     }
+    single {FellesformatConsumer(get(), listOf( get<Environment>().okSykmeldingTopic, get<Environment>().avvistSykmeldingTopic, get<Environment>().manuellSykmeldingTopic))}
 //    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
-    single {FellesformatConsumer(get(), get<Environment>().okSykmeldingTopic, get<Environment>().avvistSykmeldingTopic, get<Environment>().manuellSykmeldingTopic, get<Environment>().gamleSykmeldingTopic)}
+    // gamle trenger eigen deserializer. , get<Environment>().gamleSykmeldingTopic
 }

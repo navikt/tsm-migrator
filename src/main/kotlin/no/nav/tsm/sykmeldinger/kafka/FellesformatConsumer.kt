@@ -14,10 +14,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class FellesformatConsumer(
     private val kafkaConsumer: KafkaConsumer<String, FellesformatInput>,
-    private val okSykmeldingTopic: String,
-    private val avvistSykmeldingTopic: String,
-    private val manuellSykmeldingTopic: String,
-    private val gamleSykmeldingTopic: String,
+    private val topics: List<String>,
 ) {
 
         val fellesformatService by KoinJavaComponent.inject<FellesformatService>(FellesformatService::class.java)
@@ -74,6 +71,6 @@ class FellesformatConsumer(
             logger.info("Inserted $counter records into the database when consuming from a sykmelding topic")
         }
         private fun subscribeToKafkaTopics() {
-            kafkaConsumer.subscribe(listOf(okSykmeldingTopic, avvistSykmeldingTopic, manuellSykmeldingTopic, gamleSykmeldingTopic))
+            kafkaConsumer.subscribe(topics)
         }
 }
