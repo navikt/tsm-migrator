@@ -29,6 +29,9 @@ jobs:
     name: deploy to prod
     runs-on: ubuntu-latest
     if: github.ref_name == 'main'
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
