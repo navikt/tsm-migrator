@@ -24,8 +24,9 @@ fun Application.configureDependencyInjection() {
 
         modules(
             environmentModule(),
-            kafkaModule,
-            databaseModule
+            fellesformatKafkaModule,
+            databaseModule,
+            gamleSykmeldingerModule
         )
     }
 }
@@ -38,7 +39,7 @@ val databaseModule = module {
     singleOf(::FellesformatService)
 }
 
-val kafkaModule = module {
+val fellesformatKafkaModule = module {
 
     single(qualifier("kafkaFellesformatConsumer")) {
         val env = get<Environment>()
@@ -63,7 +64,10 @@ val kafkaModule = module {
             )
         )
     }
+//    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
+}
 
+val gamleSykmeldingerModule =module {
     single(qualifier("kafkaGamleSykmeldingerConsumer")) {
         val env = get<Environment>()
 
@@ -83,5 +87,4 @@ val kafkaModule = module {
             listOf(get<Environment>().gamleSykmeldingTopic)
         )
     }
-//    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
 }
