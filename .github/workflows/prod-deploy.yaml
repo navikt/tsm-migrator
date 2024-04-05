@@ -3,8 +3,8 @@ on:
   push:
 
 jobs:
-  build_and_deploy:
-    name: Build, push and deploy
+  build:
+    name: Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,9 +25,13 @@ jobs:
           team: tsm
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-      - name: Deploy to NAIS
-        if: github.ref_name == 'main'
-        uses: nais/deploy/actions/deploy@v2
+  deploy-prod:
+    name: deploy to prod
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: prod-gcp
           RESOURCE: nais/nais-prod.yaml
