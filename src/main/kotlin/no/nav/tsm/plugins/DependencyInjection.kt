@@ -1,18 +1,20 @@
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import no.nav.tsm.mottak.sykmelding.kafka.util.DumpDeserializer
 import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.sykmeldinger.database.FellesformatService
-import no.nav.tsm.sykmeldinger.kafka.DumpConsumer
+import no.nav.tsm.sykmeldinger.database.GamleSykmeldingerService
 import no.nav.tsm.sykmeldinger.kafka.FellesformatConsumer
+import no.nav.tsm.sykmeldinger.kafka.GamleSykmeldingerConsumer
 import no.nav.tsm.sykmeldinger.kafka.model.FellesformatInput
-import no.nav.tsm.sykmeldinger.kafka.model.SykmeldingInput
 import no.nav.tsm.sykmeldinger.kafka.util.FellesformatDeserializer
+import no.nav.tsm.sykmeldinger.kafka.util.GamleSykmeldingerDeserializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -23,8 +25,9 @@ fun Application.configureDependencyInjection() {
 
         modules(
             environmentModule(),
-            kafkaModule,
-            databaseModule
+            fellesformatKafkaModule,
+            databaseModule,
+            gamleSykmeldingerModule
         )
     }
 }
@@ -35,9 +38,11 @@ fun Application.environmentModule() = module {
 
 val databaseModule = module {
     singleOf(::FellesformatService)
+    singleOf(::GamleSykmeldingerService)
 }
 
-val kafkaModule = module {
+val fellesformatKafkaModule = module {
+
     single {
         val env = get<Environment>()
 
@@ -51,7 +56,37 @@ val kafkaModule = module {
 
         }, StringDeserializer(), FellesformatDeserializer(FellesformatInput::class))
     }
-    single {FellesformatConsumer(get(), listOf( get<Environment>().okSykmeldingTopic, get<Environment>().avvistSykmeldingTopic, get<Environment>().manuellSykmeldingTopic))}
+    single {
+        FellesformatConsumer(
+            get(),
+            listOf(
+                get<Environment>().okSykmeldingTopic,
+                get<Environment>().avvistSykmeldingTopic,
+                get<Environment>().manuellSykmeldingTopic
+            )
+        )
+    }
 //    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
-    // gamle trenger eigen deserializer. , get<Environment>().gamleSykmeldingTopic
+}
+
+val gamleSykmeldingerModule = module {
+    single {
+        val env = get<Environment>()
+
+        KafkaConsumer(get<Environment>().kafkaConfig.apply {
+            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
+            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-g3"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer3"
+            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+
+        }, StringDeserializer(), GamleSykmeldingerDeserializer(FellesformatInput::class))
+    }
+    single {
+        GamleSykmeldingerConsumer(
+            get(),
+            listOf(get<Environment>().gamleSykmeldingTopic)
+        )
+    }
 }
