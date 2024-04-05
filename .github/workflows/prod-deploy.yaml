@@ -29,6 +29,7 @@ jobs:
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
   deploy-prod:
     name: deploy to prod
+    needs: [build]
     runs-on: ubuntu-latest
     if: github.ref_name == 'main'
     permissions:
