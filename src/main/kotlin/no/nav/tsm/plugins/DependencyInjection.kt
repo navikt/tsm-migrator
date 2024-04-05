@@ -3,6 +3,7 @@ import io.ktor.server.application.install
 import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.sykmeldinger.database.FellesformatService
+import no.nav.tsm.sykmeldinger.database.GamleSykmeldingerService
 import no.nav.tsm.sykmeldinger.kafka.FellesformatConsumer
 import no.nav.tsm.sykmeldinger.kafka.GamleSykmeldingerConsumer
 import no.nav.tsm.sykmeldinger.kafka.model.FellesformatInput
@@ -37,11 +38,12 @@ fun Application.environmentModule() = module {
 
 val databaseModule = module {
     singleOf(::FellesformatService)
+    singleOf(::GamleSykmeldingerService)
 }
 
 val fellesformatKafkaModule = module {
 
-    single(qualifier("kafkaFellesformatConsumer")) {
+    single {
         val env = get<Environment>()
 
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
@@ -56,7 +58,7 @@ val fellesformatKafkaModule = module {
     }
     single {
         FellesformatConsumer(
-            get(qualifier = named("kafkaFellesformatConsumer")),
+            get(),
             listOf(
                 get<Environment>().okSykmeldingTopic,
                 get<Environment>().avvistSykmeldingTopic,
@@ -67,15 +69,15 @@ val fellesformatKafkaModule = module {
 //    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
 }
 
-val gamleSykmeldingerModule =module {
-    single(qualifier("kafkaGamleSykmeldingerConsumer")) {
+val gamleSykmeldingerModule = module {
+    single {
         val env = get<Environment>()
 
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-g2"
-            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer2"
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-g3"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer3"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
 
@@ -83,7 +85,7 @@ val gamleSykmeldingerModule =module {
     }
     single {
         GamleSykmeldingerConsumer(
-            get(qualifier = named("kafkaGamleSykmeldingerConsumer")),
+            get(),
             listOf(get<Environment>().gamleSykmeldingTopic)
         )
     }
