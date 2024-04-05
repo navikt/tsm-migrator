@@ -28,7 +28,7 @@ jobs:
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
   deploy-prod:
-    name: deploy to prod
+    name: Deploy to prod
     needs: [build]
     runs-on: ubuntu-latest
     if: github.ref_name == 'main'
@@ -41,4 +41,18 @@ jobs:
         env:
           CLUSTER: prod-gcp
           RESOURCE: nais/nais-prod.yaml
+          VAR: image=${{ needs.build.outputs.image }}
+  deploy-dev:
+    name: Deploy to dev
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: dev-gcp
+          RESOURCE: nais/nais-dev.yaml
           VAR: image=${{ needs.build.outputs.image }}
