@@ -6,7 +6,7 @@ val postgres_version="42.7.1"
 val koin_version="3.5.3"
 val exposed_version="0.48.0"
 val flyway_version="10.6.0"
-val prometheus_version="1.6.3"
+val prometheus_version="0.16.0"
 val logback_encoder_version="7.2"
 val kafka_version="3.4.0"
 val jackson_version="2.16.1"
@@ -50,6 +50,8 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
     implementation("io.insert-koin:koin-ktor:$koin_version")
     implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
+    implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
+    implementation("io.prometheus:simpleclient_common:$prometheus_version")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
