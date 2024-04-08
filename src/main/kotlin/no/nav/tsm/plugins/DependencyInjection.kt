@@ -26,8 +26,7 @@ fun Application.configureDependencyInjection() {
         modules(
             environmentModule(),
             fellesformatKafkaModule,
-            databaseModule,
-            gamleSykmeldingerModule
+            databaseModule
         )
     }
 }
@@ -38,7 +37,8 @@ fun Application.environmentModule() = module {
 
 val databaseModule = module {
     singleOf(::FellesformatService)
-    singleOf(::GamleSykmeldingerService)
+    //singleOf(::GamleSykmeldingerService)
+    // disabling because it appears to be completed
 }
 
 val fellesformatKafkaModule = module {
@@ -69,24 +69,24 @@ val fellesformatKafkaModule = module {
 //    single {DumpConsumer(get(), get<Environment>().regdumpTopic)}
 }
 
-val gamleSykmeldingerModule = module {
-    single {
-        val env = get<Environment>()
-
-        KafkaConsumer(get<Environment>().kafkaConfig.apply {
-            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
-            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-g3"
-            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer3"
-            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
-
-        }, StringDeserializer(), GamleSykmeldingerDeserializer(FellesformatInput::class))
-    }
-    single {
-        GamleSykmeldingerConsumer(
-            get(),
-            listOf(get<Environment>().gamleSykmeldingTopic)
-        )
-    }
-}
+//val gamleSykmeldingerModule = module {
+//    single {
+//        val env = get<Environment>()
+//
+//        KafkaConsumer(get<Environment>().kafkaConfig.apply {
+//            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
+//            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
+//            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-g3"
+//            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer3"
+//            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+//            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+//
+//        }, StringDeserializer(), GamleSykmeldingerDeserializer(FellesformatInput::class))
+//    }
+//    single {
+//        GamleSykmeldingerConsumer(
+//            get(),
+//            listOf(get<Environment>().gamleSykmeldingTopic)
+//        )
+//    }
+//}
