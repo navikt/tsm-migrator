@@ -1,20 +1,20 @@
 
 val ktor_version="2.3.8"
-val kotlin_version="1.9.22"
-val logback_version="1.4.14"
-val postgres_version="42.7.1"
-val koin_version="3.5.3"
-val exposed_version="0.48.0"
-val flyway_version="10.6.0"
+val kotlin_version="1.9.23"
+val logback_version="1.5.3"
+val postgres_version="42.7.3"
+val koin_version="3.5.4"
+val exposed_version="0.49.0"
+val flyway_version="10.11.0"
 val prometheus_version="0.16.0"
-val logback_encoder_version="7.2"
-val kafka_version="3.4.0"
-val jackson_version="2.16.1"
+val logback_encoder_version="7.4"
+val kafka_version="3.7.0"
+val jackson_version="2.17.0"
 
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("io.ktor.plugin") version "2.3.8"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
+    kotlin("jvm") version "1.9.23"
+    id("io.ktor.plugin") version "2.3.9"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
 }
 
 group = "no.nav.tsm"
