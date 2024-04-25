@@ -31,17 +31,10 @@ fun Properties.toProducerConfig(
 
 class MigrertSykmeldingProducer(
     private val env: Environment,
-    private val migrertSykmeldingKafkaProducer: KafkaProducer<String, MigrertSykmelding>
 ) {
     fun getKafkaProducerConfig(clientId: String): Properties {
         return KafkaUtils.getAivenKafkaConfig(clientId)
             .toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
-    }
-
-    val migrertSykmeldingService by KoinJavaComponent.inject<MigrertSykmeldingService>(MigrertSykmeldingService::class.java)
-
-    suspend fun publishMigrertSykmelding() {
-        migrertSykmeldingService.selectSykmeldingerAndProduce(migrertSykmeldingKafkaProducer)
     }
 // Korleis bør denne triggerast no når vi les ut alt og produserer undervegs? withCOntext(Dispatchers.IO) ?
 // sjekk kor langt ein er komt i tilfelle shit hits the fan

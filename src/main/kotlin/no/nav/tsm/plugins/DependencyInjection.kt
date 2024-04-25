@@ -1,9 +1,11 @@
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.routing.*
 import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.sykmeldinger.database.FellesformatService
 import no.nav.tsm.sykmeldinger.database.GamleSykmeldingerService
+import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import no.nav.tsm.sykmeldinger.kafka.FellesformatConsumer
 import no.nav.tsm.sykmeldinger.kafka.GamleSykmeldingerConsumer
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingProducer
@@ -29,7 +31,8 @@ fun Application.configureDependencyInjection() {
         modules(
             environmentModule(),
             fellesformatKafkaModule,
-            databaseModule
+            databaseModule,
+            migrerteSykmeldingerTask
         )
     }
 }
@@ -42,6 +45,12 @@ val databaseModule = module {
     singleOf(::FellesformatService)
     //singleOf(::GamleSykmeldingerService)
     // disabling because it appears to be completed
+}
+
+val migrerteSykmeldingerTask = module {
+    single {
+        MigrertSykmeldingService()
+    }
 }
 
 val fellesformatKafkaModule = module {
@@ -80,7 +89,7 @@ val fellesformatKafkaModule = module {
         })
     }
     single{
-        MigrertSykmeldingProducer(get(), get())
+        MigrertSykmeldingProducer(get())
     }
 }
 
