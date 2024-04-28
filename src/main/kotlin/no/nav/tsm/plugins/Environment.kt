@@ -2,6 +2,7 @@ package no.nav.tsm.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.config.ApplicationConfig
+import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
 import java.util.Properties
 
 class Environment(
@@ -10,11 +11,13 @@ class Environment(
     val dbPassword: String,
     val kafkaConfig: Properties,
     val hostname: String,
+    val applicationName: String = getEnvVar("NAIS_APP_NAME", "migrator"),
     val regdumpTopic: String = "tsm.regdump",
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
     val avvistSykmeldingTopic: String = "teamsykmelding.avvist-sykmelding",
     val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
     val gamleSykmeldingTopic: String = "teamsykmelding.gamle-sykmeldinger",
+    val migrertSykmeldingTopic: String = "tsm.migrert-sykmelding",
 )
 
 private fun ApplicationConfig.requiredEnv(name: String) =
