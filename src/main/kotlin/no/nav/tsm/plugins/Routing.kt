@@ -20,28 +20,22 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText("Hello World!")
         }
-
-        @OptIn(DelicateCoroutinesApi::class)
-        fun Route.setupMigrertsykmeldingApi() {
-            var running = false
-            var error = false
-            post("/api/migrert") {
-                if (running) {
-                    call.respond(HttpStatusCode.Conflict, mapOf("message" to "Job is already running"))
-                    return@post
-                }
-                call.respond(HttpStatusCode.Accepted, mapOf("running" to true))
-                running = true
-                error = false
-                GlobalScope.launch(Dispatchers.IO) {
-                    logger.info("Getting migrerte sykmeldinger from DB to move to topic")
-                    try {
-                        migrertSykmeldingService.selectSykmeldingerAndProduce()
-                    } catch (e: Exception) {
-                        logger.error("Failed to get migrerte sykmeldinger from migrator DB", e)
-                    } finally {
-                        running = false
-                    }
+        var running = false
+        post("/api/migrert") {
+            if (running) {
+                call.respond(HttpStatusCode.Conflict, mapOf("message" to "Job is already running"))
+                return@post
+            }
+            call.respond(HttpStatusCode.Accepted, mapOf("running" to true))
+            running = true
+            GlobalScope.launch(Dispatchers.IO) {
+                logger.info("Getting migrerte sykmeldinger from DB to move to topic")
+                try {
+                    migrertSykmeldingService.selectSykmeldingerAndProduce()
+                } catch (e: Exception) {
+                    logger.error("Failed to get migrerte sykmeldinger from migrator DB", e)
+                } finally {
+                    running = false
                 }
             }
         }

@@ -27,10 +27,10 @@ class GamleSykmeldingerService() {
         newSuspendedTransaction(Dispatchers.IO) { block() }
 
     suspend fun batchUpsert(records: List<GamleSykmeldingerInput>): Boolean = dbQuery {
-        val res = Sykmelding.batchUpsert(records) { (sykmeldingId, mottattDato, gammelSykmelding) ->
+        val res = Sykmelding.batchUpsert(records) { (sykmeldingId, mottattDato, sykmelding) ->
             this[Sykmelding.sykmelding_id] = sykmeldingId
             this[Sykmelding.mottattdato] = mottattDato
-            this[Sykmelding.gammelSykmelding] = gammelSykmelding
+            this[Sykmelding.gammelSykmelding] = sykmelding
         }
         if(res.size == records.size) {
             logger.info("GamleSykmeldingerService.batchUpsert: resultrow size = ${res.size} and records size = ${records.size}")

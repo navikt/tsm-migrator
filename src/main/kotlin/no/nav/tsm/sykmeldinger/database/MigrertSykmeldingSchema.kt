@@ -34,15 +34,16 @@ class MigrertSykmeldingService() {
     suspend fun <T> dbQuery(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO) { block() }
 
+    val kafkaProducer = KafkaProducer<String, MigrertSykmelding>(
+        getAivenKafkaConfig("migrator-migrert-sykmelding-producer").toProducerConfig(
+            "migrator-migrert-sykmelding-producer",
+            JacksonKafkaSerializer::class,
+        )
+    )
 
     suspend fun selectSykmeldingerAndProduce() =
         dbQuery {
-            val kafkaProducer = KafkaProducer<String, MigrertSykmelding>(
-                getAivenKafkaConfig("migrator-migrert-sykmelding-producer").toProducerConfig(
-                    "migrator-migrert-sykmelding-producer",
-                    JacksonKafkaSerializer::class,
-                )
-            )
+            logger.info("Starting to retrieve sykmeldinger from the database")
             var sisteMottattDato: LocalDateTime? = null
             do {
                 val migrerteSykmeldinger = Sykmelding.selectAll().apply {
@@ -66,6 +67,7 @@ class MigrertSykmeldingService() {
                     logger.info("Retrieved ${migrerteSykmeldinger.size} sykmeldinger from the database")
                     migrerteSykmeldinger.forEach { migrertSykmelding ->
                         produceToKafka(migrertSykmelding, kafkaProducer)
+                        // TODO oppdatere flagg i DB
                     }
                 }
             } while (migrerteSykmeldinger.isNotEmpty())
