@@ -10,9 +10,12 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.upsert
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -23,6 +26,7 @@ class MigrertSykmeldingService() {
         val mottattdato = datetime("mottattdato")
         val fellesformat = text("fellesformat")
         val gammelSykmelding = text("gammel_sykmelding")
+        val migrert = bool("migrert")
 
         override val primaryKey = PrimaryKey(sykmelding_id)
     }
@@ -51,6 +55,7 @@ class MigrertSykmeldingService() {
                         andWhere { Sykmelding.mottattdato greaterEq sisteMottattDato!! }
                     }
                 }
+                    .where { Sykmelding.migrert eq false }
                     .orderBy(Sykmelding.mottattdato to SortOrder.ASC)
                     .limit(500)
                     .map {
@@ -67,7 +72,9 @@ class MigrertSykmeldingService() {
                     logger.info("Retrieved ${migrerteSykmeldinger.size} sykmeldinger from the database")
                     migrerteSykmeldinger.forEach { migrertSykmelding ->
                         produceToKafka(migrertSykmelding, kafkaProducer)
-                        // TODO oppdatere flagg i DB
+                        Sykmelding.update({ Sykmelding.sykmelding_id eq migrertSykmelding.sykmeldingId }) {
+                            it[migrert] = true
+                        }
                     }
                 }
             } while (migrerteSykmeldinger.isNotEmpty())
