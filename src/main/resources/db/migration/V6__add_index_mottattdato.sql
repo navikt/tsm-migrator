@@ -1,0 +1,1 @@
+CREATE INDEX idx_mottattdato on sykmelding (mottattdato);
