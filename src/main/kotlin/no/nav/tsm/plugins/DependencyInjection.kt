@@ -87,7 +87,7 @@ val kafkaModule = module {
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
             this[ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG] = "300000" //5 minutes
 
-        }, StringDeserializer(), FellesformatDeserializer(GamleSykmeldingerInput::class))
+        }, StringDeserializer(), GamleSykmeldingerDeserializer(GamleSykmeldingerInput::class))
     }
     single {
         GamleSykmeldingerConsumer(

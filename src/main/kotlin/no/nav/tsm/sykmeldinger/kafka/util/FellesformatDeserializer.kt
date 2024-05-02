@@ -10,7 +10,7 @@ import org.apache.kafka.common.serialization.Deserializer
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
 
-class FellesformatDeserializer<T : Any>(private val type: KClass<T>) : Deserializer<T> {
+class   FellesformatDeserializer<T : Any>(private val type: KClass<T>) : Deserializer<T> {
 
     private val objectMapper: ObjectMapper = jacksonObjectMapper().apply {
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
