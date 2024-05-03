@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class GamleSykmeldingerService() {
@@ -21,6 +22,7 @@ class GamleSykmeldingerService() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GamleSykmeldingerService::class.java)
+        val securelog: Logger = LoggerFactory.getLogger("securelog")
     }
 
     suspend fun <T> dbQuery(block: suspend () -> T): T =
@@ -28,6 +30,7 @@ class GamleSykmeldingerService() {
 
     suspend fun batchUpsert(records: List<GamleSykmeldingerInput>): Boolean = dbQuery {
         val res = Sykmelding.batchUpsert(records) { (sykmeldingId, mottattDato, sykmelding) ->
+            securelog.info("GamleSykmeldingerService.batchUpsert: sykmeldingId = $sykmeldingId, mottattDato = $mottattDato, sykmelding = $sykmelding")
             this[Sykmelding.sykmelding_id] = sykmeldingId
             this[Sykmelding.mottattdato] = mottattDato
             this[Sykmelding.gammelSykmelding] = sykmelding
@@ -36,7 +39,7 @@ class GamleSykmeldingerService() {
             logger.info("GamleSykmeldingerService.batchUpsert: resultrow size = ${res.size} and records size = ${records.size}")
             return@dbQuery true
         }
-        logger.info("GamleSykmeldingerService.batchUpsert: resultrow size = ${res.size} and records size = ${records.size}")
+        logger.info("GamleSykmeldingerService.batchUpsert: res.size != records.size, res.size = ${res.size} and records.size = ${records.size}")
         return@dbQuery false
     }
 
