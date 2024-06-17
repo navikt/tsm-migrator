@@ -29,7 +29,7 @@ class GamleSykmeldingerDeserializer<T : Any>(private val type: KClass<T>) : Dese
         securelog.info("GamleSykmeldingerDeserializer.deserialize: jsonNode = $jsonNode")
         val sykmeldingId = jsonNode.get("receivedSykmelding").get("sykmelding").get("id").asText()
         val mottattDato = LocalDateTime.parse(jsonNode.get("receivedSykmelding").get("mottattDato").asText())
-        val gammelSykmelding = jsonNode.get("receivedSykmelding").get("sykmelding").asText()
+        val gammelSykmelding = jsonNode.get("receivedSykmelding").get("sykmelding").toString()
         return GamleSykmeldingerInput(sykmeldingId, mottattDato, gammelSykmelding) as T
     }
 }
