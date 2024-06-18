@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/java17-debian11@sha256:3147bb05aca27b48e7b9042444488a127e3f8a256c8534a277791375a1b105a9
+FROM gcr.io/distroless/java21-debian12@sha256:4c79ab242b99bf7ce29f97be45c0c360e3ecd564475becdfcdcc01a3196777ac
 WORKDIR /app
 COPY build/libs/migrator-all.jar app.jar
 ENV JAVA_OPTS="-Dlogback.configurationFile=logback.xml"
