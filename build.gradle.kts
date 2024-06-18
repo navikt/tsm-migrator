@@ -1,5 +1,4 @@
 
-val ktor_version="2.3.8"
 val kotlin_version="2.0.0"
 val logback_version="1.5.6"
 val postgres_version="42.7.3"
