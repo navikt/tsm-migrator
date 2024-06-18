@@ -8,8 +8,12 @@ Migrator application og sykmeldinger
 * Kafka
 * Postgres
 
-#### Requirements
-* JDK 17
+### Prerequisites
+Make sure you have the Java JDK 21 installed
+You can check which version you have installed using this command:
+``` bash
+java -version
+```
 
 ### Building the application
 #### Compile and package application
