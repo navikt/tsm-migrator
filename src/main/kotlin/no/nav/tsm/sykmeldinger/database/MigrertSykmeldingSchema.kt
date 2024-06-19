@@ -54,6 +54,7 @@ class MigrertSykmeldingService() {
             do {
                 val migrerteSykmeldinger = Sykmelding.selectAll().apply {
                     if (sisteMottattDato != null) {
+                        logger.info("Retrieving sykmeldinger with mottattdato greater or equal to $sisteMottattDato")
                         andWhere { Sykmelding.mottattdato greaterEq sisteMottattDato!! }
                     }
                 }
@@ -69,6 +70,7 @@ class MigrertSykmeldingService() {
                         )
                     }
 
+                logger.info("Retrieved ${migrerteSykmeldinger.size} sykmeldinger from the database")
                 if (migrerteSykmeldinger.isNotEmpty()) {
                     sisteMottattDato = migrerteSykmeldinger.last().mottattDato
                     logger.info("Retrieved ${migrerteSykmeldinger.size} sykmeldinger from the database")
