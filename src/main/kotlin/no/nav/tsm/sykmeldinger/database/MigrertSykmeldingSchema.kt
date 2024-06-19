@@ -1,5 +1,6 @@
 package no.nav.tsm.sykmeldinger.database
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.Dispatchers
 import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaUtils.Companion.getAivenKafkaConfig
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
@@ -45,6 +46,7 @@ class MigrertSykmeldingService() {
         )
     )
 
+    @WithSpan
     suspend fun selectSykmeldingerAndProduce() =
         dbQuery {
             logger.info("Starting to retrieve sykmeldinger from the database")
@@ -76,7 +78,9 @@ class MigrertSykmeldingService() {
                             it[migrert] = true
                         }
                     }
-                }
+                } else
+                    logger.info("No sykmeldinger retrieved from the database")
+
             } while (migrerteSykmeldinger.isNotEmpty())
         }
 
