@@ -9,11 +9,11 @@ val prometheus_version="0.16.0"
 val logback_encoder_version="7.4"
 val kafka_version="3.7.0"
 val jackson_version="2.17.1"
-val opentelemetryVersion = "2.3.0"
+val opentelemetryVersion = "2.5.0"
 
 plugins {
     kotlin("jvm") version "2.0.0"
-    id("io.ktor.plugin") version "2.3.11"
+    id("io.ktor.plugin") version "2.3.12"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
 }
 
