@@ -39,7 +39,7 @@ fun Application.environmentModule() = module {
 
 val databaseModule = module {
 //    singleOf(::FellesformatService)
-    singleOf(::GamleSykmeldingerService)
+//    singleOf(::GamleSykmeldingerService)
     // disabling because it appears to be completed
 }
 
@@ -75,28 +75,28 @@ val kafkaModule = module {
 //            )
 //        )
 //    }
-    single {
-        val env = get<Environment>()
-
-        KafkaConsumer(get<Environment>().kafkaConfig.apply {
-            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
-            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-9"
-            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer7"
-            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
-            this[ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG] = "300000" //5 minutes
-
-        }, StringDeserializer(), GamleSykmeldingerDeserializer(GamleSykmeldingerInput::class))
-    }
-    single {
-        GamleSykmeldingerConsumer(
-            get(),
-            listOf(
-                get<Environment>().gamleSykmeldingTopic,
-            )
-        )
-    }
+//    single {
+//        val env = get<Environment>()
+//
+//        KafkaConsumer(get<Environment>().kafkaConfig.apply {
+//            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = GamleSykmeldingerDeserializer::class.java.name
+//            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
+//            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-9"
+//            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-gamleSykmeldinger-consumer7"
+//            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+//            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+//            this[ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG] = "300000" //5 minutes
+//
+//        }, StringDeserializer(), GamleSykmeldingerDeserializer(GamleSykmeldingerInput::class))
+//    }
+//    single {
+//        GamleSykmeldingerConsumer(
+//            get(),
+//            listOf(
+//                get<Environment>().gamleSykmeldingTopic,
+//            )
+//        )
+//    }
 
     single {
         val env = get<Environment>()
