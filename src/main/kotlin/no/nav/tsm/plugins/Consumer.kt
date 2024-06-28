@@ -10,5 +10,5 @@ import no.nav.tsm.sykmeldinger.kafka.GamleSykmeldingerConsumer
 fun Application.configureConsumer(gamleSykmeldingerConsumer: GamleSykmeldingerConsumer) {
 //    launch(Dispatchers.IO) { dumpConsumer.consumeDump() }
 //    launch(Dispatchers.IO) { fellesformatConsumer.consumeDump() }
-    launch(Dispatchers.IO) { gamleSykmeldingerConsumer.consumeDump() }
+//    launch(Dispatchers.IO) { gamleSykmeldingerConsumer.consumeDump() }
 }
