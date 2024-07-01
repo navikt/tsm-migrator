@@ -58,7 +58,7 @@ class MigrertSykmeldingService() {
                         andWhere { Sykmelding.mottattdato greaterEq sisteMottattDato!! }
                     }
                 }
-                    .where { Sykmelding.migrert eq false }
+                    .andWhere { Sykmelding.migrert eq false }
                     .orderBy(Sykmelding.mottattdato to SortOrder.ASC)
                     .limit(500)
                     .map {
