@@ -32,6 +32,13 @@ class MigrertSykmeldingService() {
         override val primaryKey = PrimaryKey(sykmelding_id)
     }
 
+    private object SykmeldingMigrert : Table() {
+        val sykmelding_id = text("sykmelding_id")
+        val mottattdato = datetime("mottattdato")
+
+        override val primaryKey = PrimaryKey(sykmelding_id)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(MigrertSykmeldingService::class.java)
     }
