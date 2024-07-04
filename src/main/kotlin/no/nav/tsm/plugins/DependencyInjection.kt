@@ -4,9 +4,15 @@ import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingProducer
+import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
+import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaUtils.Companion.getAivenKafkaConfig
+import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
+import no.nav.tsm.sykmeldinger.kafka.toProducerConfig
+import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -16,10 +22,7 @@ fun Application.configureDependencyInjection() {
         slf4jLogger()
 
         modules(
-            environmentModule(),
-            kafkaModule,
-            databaseModule,
-            migrerteSykmeldingerTask
+            environmentModule(), kafkaModule, databaseModule, migrerteSykmeldingerTask
         )
     }
 }
@@ -36,8 +39,12 @@ val databaseModule = module {
 
 val migrerteSykmeldingerTask = module {
     single {
-        MigrertSykmeldingService()
+        KafkaProducer<String, MigrertSykmelding>(getAivenKafkaConfig("migrator-migrert-sykmelding-producer").toProducerConfig(
+            "migrator-migrert-sykmelding-producer",
+            JacksonKafkaSerializer::class,
+        ).apply { this[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "migrator-${getEnvVar("HOSTNAME")}" })
     }
+    single { MigrertSykmeldingService(get()) }
 }
 
 val kafkaModule = module {
@@ -98,7 +105,7 @@ val kafkaModule = module {
             this[ProducerConfig.CLIENT_ID_CONFIG] = "migrert-sykmelding-producer"
         })
     }
-    single{
+    single {
         MigrertSykmeldingProducer(get())
     }
 }

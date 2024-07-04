@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import kotlin.time.measureTime
 
-class MigrertSykmeldingService() {
+class MigrertSykmeldingService(private val kafkaProducer: KafkaProducer<String, MigrertSykmelding>) {
 
     object Sykmelding : Table() {
         val sykmelding_id = text("sykmelding_id")
@@ -52,13 +52,6 @@ class MigrertSykmeldingService() {
     suspend fun <T> dbQuery(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO) { block() }
 
-    val kafkaProducer = KafkaProducer<String, MigrertSykmelding>(
-        getAivenKafkaConfig("migrator-migrert-sykmelding-producer").toProducerConfig(
-            "migrator-migrert-sykmelding-producer",
-            JacksonKafkaSerializer::class,
-        )
-    )
-
     @WithSpan
     suspend fun selectSykmeldingerAndProduce() {
         var shouldRun = true
@@ -73,6 +66,7 @@ class MigrertSykmeldingService() {
                     .first()[mottattdato.min()])?.toLocalDate()?.atStartOfDay() ?: throw Exception("No timestamp found")
         }
         logger.info("Starting to retrieve sykmeldinger from $lastTimestamp")
+        kafkaProducer.initTransactions()
         while(shouldRun) {
                 val result = measureTime {
                     dbQuery {

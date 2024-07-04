@@ -23,6 +23,7 @@ class KafkaUtils {
                 it[SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG] = ""
                 it[ProducerConfig.ACKS_CONFIG] = "all"
                 it[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+                it[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "migrator-${kafkaEnv.KAFKA_CLIENT_ID}"
             }
         }
     }
