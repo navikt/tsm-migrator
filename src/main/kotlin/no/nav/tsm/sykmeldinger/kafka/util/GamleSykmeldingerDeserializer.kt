@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 import kotlin.reflect.KClass
 
 
-class GamleSykmeldingerDeserializer<T : Any>(private val type: KClass<T>) : Deserializer<T> {
+class GamleSykmeldingerDeserializer() : Deserializer<GamleSykmeldingerInput> {
 
     private val objectMapper: ObjectMapper = jacksonObjectMapper().apply {
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -24,12 +24,12 @@ class GamleSykmeldingerDeserializer<T : Any>(private val type: KClass<T>) : Dese
         val securelog: Logger = LoggerFactory.getLogger("securelog")
     }
 
-    override fun deserialize(topic: String, p1: ByteArray): T {
+    override fun deserialize(topic: String, p1: ByteArray): GamleSykmeldingerInput {
         val jsonNode: JsonNode = objectMapper.readTree(p1)
         securelog.info("GamleSykmeldingerDeserializer.deserialize: jsonNode = $jsonNode")
         val sykmeldingId = jsonNode.get("receivedSykmelding").get("sykmelding").get("id").asText()
         val mottattDato = LocalDateTime.parse(jsonNode.get("receivedSykmelding").get("mottattDato").asText())
         val gammelSykmelding = jsonNode.get("receivedSykmelding").get("sykmelding").toString()
-        return GamleSykmeldingerInput(sykmeldingId, mottattDato, gammelSykmelding) as T
+        return GamleSykmeldingerInput(sykmeldingId, mottattDato, gammelSykmelding)
     }
 }

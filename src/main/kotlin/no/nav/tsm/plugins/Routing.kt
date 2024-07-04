@@ -8,6 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -16,6 +17,7 @@ import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 
+@OptIn(DelicateCoroutinesApi::class)
 fun Application.configureRouting() {
     val migrertSykmeldingService by inject<MigrertSykmeldingService>()
     val logger = LoggerFactory.getLogger(MigrertSykmeldingService::class.java)

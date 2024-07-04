@@ -10,18 +10,18 @@ import org.apache.kafka.common.serialization.Deserializer
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
 
-class   FellesformatDeserializer<T : Any>(private val type: KClass<T>) : Deserializer<T> {
+class   FellesformatDeserializer() : Deserializer<FellesformatInput> {
 
     private val objectMapper: ObjectMapper = jacksonObjectMapper().apply {
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
     }
 
-    override fun deserialize(topic: String, p1: ByteArray): T {
+    override fun deserialize(topic: String, p1: ByteArray): FellesformatInput {
         val jsonNode: JsonNode = objectMapper.readTree(p1)
         val sykmeldingId = jsonNode.get("sykmelding").get("id").asText()
         val mottattDato = LocalDateTime.parse(jsonNode.get("mottattDato").asText())
         val fellesformat = jsonNode.get("fellesformat").asText()
-        return FellesformatInput(sykmeldingId, mottattDato, fellesformat) as T
+        return FellesformatInput(sykmeldingId, mottattDato, fellesformat)
     }
 }
