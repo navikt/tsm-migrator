@@ -12,7 +12,6 @@ import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger

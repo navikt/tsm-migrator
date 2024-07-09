@@ -47,11 +47,7 @@ class FellesformatConsumer(
                     null
                 }
             }
-
             processRecord(records)
-            if (records.isNotEmpty()) {
-                kafkaConsumer.commitSync()
-            }
         } catch (ex: Exception) {
             logger.error("Error processing messages: ${ex.message}")
             kafkaConsumer.unsubscribe()
