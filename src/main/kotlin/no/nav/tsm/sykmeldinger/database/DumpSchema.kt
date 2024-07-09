@@ -1,25 +1,23 @@
 package no.nav.tsm.sykmeldinger.database
 
 import kotlinx.coroutines.Dispatchers
-import no.nav.tsm.sykmeldinger.kafka.DumpConsumer
-import no.nav.tsm.sykmeldinger.kafka.model.SykmeldingInput
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import no.nav.tsm.sykmeldinger.kafka.model.HistoriskSykmeldingInput
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
 
 class DumpService() {
 
-    private object Sykmelding : Table() {
+    private object historiske_sykmeldinger : Table() {
 
-        val mottak_id = text("mottak_id")
+        val sykmeldingId = text("sykmelding_id")
         val mottattdato = datetime("mottattdato")
-
-        override val primaryKey = PrimaryKey(mottak_id)
+        val receivedSykmelding = text("receivedsykmelding").nullable()
+        val sykmeldingSource = text("source")
+        override val primaryKey = PrimaryKey(sykmeldingId)
     }
 
     companion object {
@@ -29,29 +27,15 @@ class DumpService() {
     suspend fun <T> dbQuery(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO) { block() }
 
-    suspend fun insertDump(sykmeldingInput: SykmeldingInput): Boolean = dbQuery {
-        try {
-            val exists = Sykmelding.select( Sykmelding.mottak_id eq sykmeldingInput.sykmeldingId).singleOrNull() != null
-            if (!exists) {
-                Sykmelding.insert {
-                    it[mottak_id] = sykmeldingInput.sykmeldingId
-                    it[mottattdato] = sykmeldingInput.mottattDato
-                }
-            }
-            true
-        } catch (e: Exception){
-            logger.info("Exception occurred while inserting batch update into Sykmelding database ${e}")
-            false
-        }
-    }
-
-    suspend fun batchInsert(records: List<SykmeldingInput>): Boolean = dbQuery {
-        val res = Sykmelding.batchInsert(records) { (mottakId, mottattdato) ->
-            this[Sykmelding.mottak_id] = mottakId
-            this[Sykmelding.mottattdato] = mottattdato
+    suspend fun batchInsert(records: List<HistoriskSykmeldingInput>): Boolean = dbQuery {
+        val res = historiske_sykmeldinger.batchUpsert(records) { (sykmeldingId, mottattdato, receivedSykmelding, sykmeldingSource) ->
+            this[historiske_sykmeldinger.sykmeldingId] = sykmeldingId
+            this[historiske_sykmeldinger.mottattdato] = mottattdato
+            this[historiske_sykmeldinger.receivedSykmelding] = receivedSykmelding
+            this[historiske_sykmeldinger.sykmeldingSource] = sykmeldingSource
         }
         if(res.size == records.size) {
-            logger.info("resultrow size = ${res.size} and records size = ${records.size}")
+            //logger.info("resultrow size = ${res.size} and records size = ${records.size}")
             return@dbQuery true
         }
         return@dbQuery false
