@@ -12,43 +12,63 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class HistoriskSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, String>, private val topic: String) {
+class HistoriskSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, String>,
+                                  private val okSykmeldingTopic: String,
+                                  private val manuellBehandlingSykmeldingTopic: String,
+                                  private val avvistSykmeldingTopic: String) {
 
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(HistoriskSykmeldingConsumer::class.java)
     }
 
-    val sykmeldingTopics = listOf("privat-syfo-sm2013-automatiskBehandling", "privat-syfo-sm2013-manuellBehandling", "privat-syfo-sm2013-avvistBehandling")
+    val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
+
     @OptIn(DelicateCoroutinesApi::class)
     suspend fun start() {
-        logger.info("starting consumer for $topic")
-        kafkaConsumer.subscribe(listOf(topic))
-        var counter = 0
-        var deleted = 0
-        var lastDate = java.time.LocalDate.MIN
+        logger.info("starting consumer for $sykmeldingTopics")
+        kafkaConsumer.subscribe(sykmeldingTopics)
+        val topicCount = sykmeldingTopics.associateWith {
+            0
+        }.toMutableMap()
+        val topicDeleted = sykmeldingTopics.associateWith {
+            0
+        }.toMutableMap()
+
+        val topicDate = sykmeldingTopics.associateWith {
+            OffsetDateTime.MIN
+        }.toMutableMap()
+
         GlobalScope.launch(Dispatchers.IO) {
             while(true) {
-                logger.info("lest $counter, deleted: $deleted")
+                sykmeldingTopics.forEach {
+                    logger.info("Topic: $it, count: ${topicCount[it]}, deleted: ${topicDeleted[it]}, date: ${topicDate[it]}")
+                }
                 delay(10_000)
             }
         }
 
         while (true) {
             val records = kafkaConsumer.poll(java.time.Duration.ofMillis(10_000))
-            counter += records.count()
-            val sykmeldinger = records.filter { record ->
-                val header = record.headers().headers("topic").firstOrNull()?.value()?.let { String(it, StandardCharsets.UTF_8) } ?: "no-topic"
-                header in sykmeldingTopics
-            }.map { it.key() }
 
-            if(sykmeldinger.isNotEmpty()) {
-                deleted +=
-                    transaction {
+            val topicMap = records
+                .groupBy { it.topic() }
+
+            topicMap.forEach { (topic, records) ->
+                if(records.isNotEmpty()) {
+                    topicCount[topic] = topicCount.getOrDefault(topic, 0) + records.count()
+                    topicDate[topic] = records.maxOf { Instant.ofEpochMilli(it.timestamp()).atOffset(ZoneOffset.UTC) }
+
+                    val deleted = transaction {
                         historiske_sykmeldinger.deleteWhere {
-                            sykmeldingId inList sykmeldinger
+                            sykmeldingId inList records.map { it.key() }
                         }
+                    }
+                    topicDeleted[topic] = topicDeleted.getOrDefault(topic, 0) + deleted
                 }
             }
         }

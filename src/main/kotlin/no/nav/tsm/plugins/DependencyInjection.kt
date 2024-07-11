@@ -63,8 +63,8 @@ val kafkaModule = module {
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding-historisk-consumer"
-            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-sykmelding-historisk-consumer"
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-ny-sykmelding-consumer"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-ny-sykmelding-consumer"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
             this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "10000"
@@ -73,8 +73,10 @@ val kafkaModule = module {
     }
     single {
         HistoriskSykmeldingConsumer(
-            get(),
-            get<Environment>().sykmeldingHistoriskTopic,
+            kafkaConsumer = get(),
+            okSykmeldingTopic = get<Environment>().okSykmeldingTopic,
+            manuellBehandlingSykmeldingTopic = get<Environment>().manuellSykmeldingTopic,
+            avvistSykmeldingTopic = get<Environment>().avvistSykmeldingTopic
         )
     }
 //    single {
