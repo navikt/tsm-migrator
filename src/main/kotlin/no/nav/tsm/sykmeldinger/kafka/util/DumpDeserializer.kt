@@ -18,4 +18,3 @@ class DumpDeserializer<T : Any>(private val type: KClass<T>) : Deserializer<T> {
        return objectMapper.readValue(p1, type.java)
     }
 }
-

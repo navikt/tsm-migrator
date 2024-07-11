@@ -6,6 +6,7 @@ import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.sykmeldinger.database.DumpService
 import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import no.nav.tsm.sykmeldinger.kafka.DumpConsumer
+import no.nav.tsm.sykmeldinger.kafka.HistoriskSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingProducer
 import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
 import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaUtils.Companion.getAivenKafkaConfig
@@ -60,20 +61,20 @@ val kafkaModule = module {
         val env = get<Environment>()
 
         KafkaConsumer(get<Environment>().kafkaConfig.apply {
-            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = DumpDeserializer::class.java.name
+            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-regdump-consumer"
-            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-regdump-consumer"
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding-historisk-consumer"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-sykmelding-historisk-consumer"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "10000"
 
-        }, StringDeserializer(), DumpDeserializer(HistoriskSykmeldingInput::class))
+        }, StringDeserializer(), StringDeserializer())
     }
     single {
-        DumpConsumer(
+        HistoriskSykmeldingConsumer(
             get(),
-            get<Environment>().regdumpTopic,
-            DumpService()
+            get<Environment>().sykmeldingHistoriskTopic,
         )
     }
 //    single {

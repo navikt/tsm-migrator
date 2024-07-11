@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 
 class DumpService() {
 
-    private object historiske_sykmeldinger : Table() {
+    object historiske_sykmeldinger : Table() {
 
         val sykmeldingId = text("sykmelding_id")
         val mottattdato = datetime("mottattdato")
