@@ -6,23 +6,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import no.nav.tsm.sykmeldinger.database.historiske_sykmeldinger
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.apache.kafka.clients.producer.ProducerRecord
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class SykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, String>,
-                         private val kafkaProducer: KafkaProducer<String, MigrertSykmelding>,
-                         private val tsmMigrertTopic: String,
-                         private val okSykmeldingTopic: String,
-                         private val manuellBehandlingSykmeldingTopic: String,
-                         private val avvistSykmeldingTopic: String) {
+class SykmeldingConsumer(
+    private val kafkaConsumer: KafkaConsumer<String, String>,
+    private val kafkaProducer: KafkaProducer<String, MigrertSykmelding>,
+    private val tsmMigrertTopic: String,
+    private val okSykmeldingTopic: String,
+    private val manuellBehandlingSykmeldingTopic: String,
+    private val avvistSykmeldingTopic: String
+) {
 
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(SykmeldingConsumer::class.java)
@@ -35,10 +34,8 @@ class SykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, String
     suspend fun start() {
         logger.info("starting consumer for $sykmeldingTopics")
         kafkaConsumer.subscribe(sykmeldingTopics)
+        kafkaProducer.initTransactions()
         val topicCount = sykmeldingTopics.associateWith {
-            0
-        }.toMutableMap()
-        val topicDeleted = sykmeldingTopics.associateWith {
             0
         }.toMutableMap()
 
@@ -47,9 +44,9 @@ class SykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, String
         }.toMutableMap()
 
         GlobalScope.launch(Dispatchers.IO) {
-            while(true) {
+            while (true) {
                 sykmeldingTopics.forEach {
-                    logger.info("Topic: $it, count: ${topicCount[it]}, deleted: ${topicDeleted[it]}, date: ${topicDate[it]}")
+                    logger.info("Topic: $it, count: ${topicCount[it]}, date: ${topicDate[it]}")
                 }
                 delay(10_000)
             }
@@ -62,12 +59,31 @@ class SykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, String
                 .groupBy { it.topic() }
 
             topicMap.forEach { (topic, records) ->
-                if(records.isNotEmpty()) {
+                if (records.isNotEmpty()) {
                     topicCount[topic] = topicCount.getOrDefault(topic, 0) + records.count()
                     topicDate[topic] = records.maxOf { Instant.ofEpochMilli(it.timestamp()).atOffset(ZoneOffset.UTC) }
-
-                    //produce to tsm.migrert-sykmelding
                 }
+            }
+
+            try {
+                kafkaProducer.beginTransaction()
+                records.forEach {
+                    val receivedSykmelding = it.value()
+                    val sykmeldingId = it.key()
+                    kafkaProducer.send(
+                        ProducerRecord(
+                            tsmMigrertTopic,
+                            sykmeldingId,
+                            MigrertSykmelding(sykmeldingId, null, receivedSykmelding)
+                        )
+                    )
+                }
+                kafkaProducer.commitTransaction()
+            } catch (ex: Exception) {
+                logger.error("Error processing messages ${records.first().partition()}} ${records.first().offset()}")
+                kafkaProducer.abortTransaction()
+                kafkaConsumer.unsubscribe()
+                throw ex
             }
         }
     }
