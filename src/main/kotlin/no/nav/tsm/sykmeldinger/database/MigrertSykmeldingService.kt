@@ -2,14 +2,7 @@ package no.nav.tsm.sykmeldinger.database
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.Dispatchers
-import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService.Sykmelding.fellesformat
-import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService.Sykmelding.gammelSykmelding
-import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService.Sykmelding.mottattdato
-import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService.Sykmelding.sykmelding_id
-import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaUtils.Companion.getAivenKafkaConfig
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
-import no.nav.tsm.sykmeldinger.kafka.toProducerConfig
-import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.jetbrains.exposed.sql.SortOrder.ASC
@@ -27,16 +20,6 @@ import java.time.LocalDateTime
 import kotlin.time.measureTime
 
 class MigrertSykmeldingService(private val kafkaProducer: KafkaProducer<String, MigrertSykmelding>) {
-
-    object Sykmelding : Table() {
-        val sykmelding_id = text("sykmelding_id")
-        val mottattdato = datetime("mottattdato")
-        val fellesformat = text("fellesformat")
-        val gammelSykmelding = text("gammel_sykmelding")
-        val migrert = bool("migrert")
-
-        override val primaryKey = PrimaryKey(sykmelding_id)
-    }
 
     object Sykmelding_migrert : Table() {
         val sykmelding_id = text("sykmelding_id")
@@ -62,8 +45,8 @@ class MigrertSykmeldingService(private val kafkaProducer: KafkaProducer<String, 
             (Sykmelding_migrert
                 .select(Sykmelding_migrert.mottattdato.max())
                 .singleOrNull()?.get(Sykmelding_migrert.mottattdato.max())
-                ?: Sykmelding.select(mottattdato.min())
-                    .first()[mottattdato.min()])?.toLocalDate()?.atStartOfDay() ?: throw Exception("No timestamp found")
+                ?: historiske_sykmeldinger.select(historiske_sykmeldinger.mottattdato.min())
+                    .first()[historiske_sykmeldinger.mottattdato.min()])?.toLocalDate()?.atStartOfDay() ?: throw Exception("No timestamp found")
         }
         logger.info("Starting to retrieve sykmeldinger from $lastTimestamp")
         kafkaProducer.initTransactions()
@@ -114,23 +97,22 @@ class MigrertSykmeldingService(private val kafkaProducer: KafkaProducer<String, 
     }
 
     private fun getSykmeldinger(lastTimestamp: LocalDateTime) =
-        Sykmelding.select(sykmelding_id, mottattdato, fellesformat, gammelSykmelding)
-            .where { mottattdato greaterEq lastTimestamp }
-            .andWhere { mottattdato less lastTimestamp.plusDays(1) }
+        historiske_sykmeldinger.select(historiske_sykmeldinger.sykmeldingId, historiske_sykmeldinger.mottattdato)
+            .where { historiske_sykmeldinger.mottattdato greaterEq lastTimestamp }
+            .andWhere { historiske_sykmeldinger.mottattdato less lastTimestamp.plusDays(1) }
             .andWhere {
                 notExists(
                     Sykmelding_migrert.select(Sykmelding_migrert.sykmelding_id).where {
-                        Sykmelding_migrert.sykmelding_id eq sykmelding_id
+                        Sykmelding_migrert.sykmelding_id eq historiske_sykmeldinger.sykmeldingId
                     }
                 )
             }
-            .orderBy(mottattdato, ASC)
+            .orderBy(historiske_sykmeldinger.mottattdato, ASC)
             .map {
                 MigrertSykmelding(
-                    it[sykmelding_id],
-                    it[mottattdato],
-                    it[fellesformat],
-                    it[gammelSykmelding]
+                    sykmeldingId = it[historiske_sykmeldinger.sykmeldingId],
+                    mottattDato = it[historiske_sykmeldinger.mottattdato],
+                    receivedSykmelding = null,
                 )
             }
 

@@ -10,7 +10,7 @@ import no.nav.tsm.sykmeldinger.kafka.HistoriskSykmeldingConsumer
 
 fun Application.configureConsumer(historiskSykmeldingConsumer: HistoriskSykmeldingConsumer) {
     //launch(Dispatchers.IO) { dumpConsumer.consumeDump() }
-    launch(Dispatchers.IO) { historiskSykmeldingConsumer.start() }
+   // launch(Dispatchers.IO) { historiskSykmeldingConsumer.start() }
 
 //    launch(Dispatchers.IO) { fellesformatConsumer.consumeDump() }
 //    launch(Dispatchers.IO) { gamleSykmeldingerConsumer.consumeDump() }

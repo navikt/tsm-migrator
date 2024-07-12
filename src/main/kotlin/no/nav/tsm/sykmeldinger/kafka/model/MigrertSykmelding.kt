@@ -5,6 +5,5 @@ import java.time.LocalDateTime
 data class MigrertSykmelding(
     val sykmeldingId: String,
     val mottattDato: LocalDateTime,
-    val fellesformat: String?,
-    val gammelSykmelding: String?,
+    val receivedSykmelding: String?,
 )

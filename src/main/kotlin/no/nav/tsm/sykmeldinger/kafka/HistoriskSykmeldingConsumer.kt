@@ -5,15 +5,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import no.nav.tsm.sykmeldinger.database.DumpService.historiske_sykmeldinger
+import no.nav.tsm.sykmeldinger.database.historiske_sykmeldinger
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 

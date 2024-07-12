@@ -11,14 +11,7 @@ import org.slf4j.LoggerFactory
 
 class DumpService() {
 
-    object historiske_sykmeldinger : Table() {
 
-        val sykmeldingId = text("sykmelding_id")
-        val mottattdato = datetime("mottattdato")
-        val receivedSykmelding = text("receivedsykmelding").nullable()
-        val sykmeldingSource = text("source")
-        override val primaryKey = PrimaryKey(sykmeldingId)
-    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(DumpService::class.java)
