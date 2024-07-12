@@ -23,7 +23,7 @@ class MigrertSykmeldingService(private val kafkaProducer: KafkaProducer<String, 
 
     object Sykmelding_migrert : Table() {
         val sykmelding_id = text("sykmelding_id")
-        val mottattdato = datetime("mottattdato")
+        val mottattdato = datetime("mottattdato").nullable()
 
         override val primaryKey = PrimaryKey(sykmelding_id)
     }
