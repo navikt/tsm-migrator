@@ -41,8 +41,8 @@ class HistoriskSykmeldingConsumer(
         GlobalScope.launch(Dispatchers.IO) {
             while (true) {
                 logger.info("Total count: $counter")
-                sykmeldingTopics.forEach {
-                    logger.info("Topic: $it, count: ${topicCount[it]}")
+                topicCount.forEach {
+                    logger.info("Topic: ${it.key}, count: ${it.value}")
                 }
                 delay(10_000)
             }
@@ -53,7 +53,8 @@ class HistoriskSykmeldingConsumer(
             counter += records.count()
 
             val sykmeldinger = records.filter { record ->
-                topicCount[record.topic()] = topicCount.getOrDefault(record.topic(), 0) + 1
+                val topicName = record.headers().headers("topic").firstOrNull()?.value()?.let { String(it, StandardCharsets.UTF_8) } ?: "no-topic"
+                topicCount[topicName] = topicCount.getOrDefault(topicName, 0) + 1
                 val header =
                     record.headers().headers("topic").firstOrNull()?.value()?.let { String(it, StandardCharsets.UTF_8) }
                         ?: "no-topic"
