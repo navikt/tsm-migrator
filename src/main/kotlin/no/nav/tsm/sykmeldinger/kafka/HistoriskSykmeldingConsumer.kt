@@ -40,11 +40,10 @@ class HistoriskSykmeldingConsumer(
 
         GlobalScope.launch(Dispatchers.IO) {
             while (true) {
-                logger.info("Total count: $counter")
                 topicCount.forEach {
                     logger.info("Topic: ${it.key}, count: ${it.value}")
                 }
-                delay(10_000)
+                delay(30_000)
             }
         }
 

@@ -6,8 +6,8 @@ import kotlinx.coroutines.launch
 import no.nav.tsm.sykmeldinger.kafka.HistoriskSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
 
-fun Application.configureConsumer(sykmeldingConsumer: SykmeldingConsumer) {
-    launch(Dispatchers.IO) { sykmeldingConsumer.start() }
+fun Application.configureConsumer(historiskSykmeldingConsumer: HistoriskSykmeldingConsumer) {
+    launch(Dispatchers.IO) { historiskSykmeldingConsumer.start() }
    // launch(Dispatchers.IO) { historiskSykmeldingConsumer.start() }
 
 //    launch(Dispatchers.IO) { fellesformatConsumer.consumeDump() }
