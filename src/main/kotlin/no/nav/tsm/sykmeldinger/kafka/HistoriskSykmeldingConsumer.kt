@@ -64,13 +64,14 @@ class HistoriskSykmeldingConsumer(
             try {
                 kafkaProducer.beginTransaction()
                 sykmeldinger.forEach {
+                    val topicName = it.headers().headers("topic").firstOrNull()?.value()?.let { topicName -> String(topicName, StandardCharsets.UTF_8) } ?: "no-topic"
                     val receivedSykmelding = it.value()
                     val sykmeldingId = it.key()
                     kafkaProducer.send(
                         ProducerRecord(
                             tsmMigrertTopic,
                             sykmeldingId,
-                            MigrertSykmelding(sykmeldingId, null, receivedSykmelding)
+                            MigrertSykmelding(sykmeldingId, null, receivedSykmelding, topicName)
                         )
                     )
                 }

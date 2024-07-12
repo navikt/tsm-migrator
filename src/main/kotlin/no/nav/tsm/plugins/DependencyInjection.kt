@@ -27,9 +27,11 @@ fun Application.configureDependencyInjection() {
 
         modules(
             environmentModule(),
+
             historiskSykmeldingConsumer,
             sykmeldingConsumer,
             migrertSykmeldingProducer,
+            migrerteSykmeldingerTask
         )
     }
 }
@@ -56,14 +58,6 @@ val migrertSykmeldingProducer = module {
 }
 
 val migrerteSykmeldingerTask = module {
-    single {
-        KafkaProducer<String, MigrertSykmelding>(getAivenKafkaConfig("migrator-migrert-sykmelding-producer").toProducerConfig(
-            "migrator-migrert-sykmelding-producer",
-            JacksonKafkaSerializer::class,
-        ).apply {
-            this[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "migrator-${getEnvVar("HOSTNAME")}" }
-        )
-    }
     single { MigrertSykmeldingService(get()) }
 }
 

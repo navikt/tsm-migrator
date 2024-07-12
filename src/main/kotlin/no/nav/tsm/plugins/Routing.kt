@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 
 @OptIn(DelicateCoroutinesApi::class)
 fun Application.configureRouting() {
-    //val migrertSykmeldingService by inject<MigrertSykmeldingService>()
+    val migrertSykmeldingService by inject<MigrertSykmeldingService>()
     val logger = LoggerFactory.getLogger(MigrertSykmeldingService::class.java)
     routing {
         get("/") {
@@ -36,7 +36,7 @@ fun Application.configureRouting() {
             GlobalScope.launch(Dispatchers.IO) {
                 logger.info("Getting migrerte sykmeldinger from DB to move to topic")
                 try {
-                    //migrertSykmeldingService.selectSykmeldingerAndProduce()
+                    migrertSykmeldingService.selectSykmeldingerAndProduce()
                 } catch (e: Exception) {
                     logger.error("Failed to get migrerte sykmeldinger from migrator DB", e)
                 } finally {

@@ -6,4 +6,5 @@ data class MigrertSykmelding(
     val sykmeldingId: String,
     val mottattDato: LocalDateTime?,
     val receivedSykmelding: String?,
+    val source: String,
 )

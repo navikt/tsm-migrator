@@ -113,6 +113,7 @@ class MigrertSykmeldingService(private val kafkaProducer: KafkaProducer<String, 
                     sykmeldingId = it[historiske_sykmeldinger.sykmeldingId],
                     mottattDato = it[historiske_sykmeldinger.mottattdato],
                     receivedSykmelding = null,
+                    source = "REGDUMP"
                 )
             }
 

@@ -74,7 +74,7 @@ class SykmeldingConsumer(
                         ProducerRecord(
                             tsmMigrertTopic,
                             sykmeldingId,
-                            MigrertSykmelding(sykmeldingId, null, receivedSykmelding)
+                            MigrertSykmelding(sykmeldingId, null, receivedSykmelding, it.topic())
                         )
                     )
                 }
