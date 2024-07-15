@@ -48,7 +48,7 @@ class SykmeldingConsumer(
                 sykmeldingTopics.forEach {
                     logger.info("Topic: $it, count: ${topicCount[it]}, date: ${topicDate[it]}")
                 }
-                delay(10_000)
+                delay(300_000)
             }
         }
 
