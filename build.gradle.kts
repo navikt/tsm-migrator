@@ -8,8 +8,9 @@ val flyway_version="10.15.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="7.4"
 val kafka_version="3.7.0"
-val jackson_version="2.17.1"
+val jackson_version= "2.17.2"
 val opentelemetryVersion = "2.5.0"
+val googlePostgresVersion = "1.19.0"
 
 plugins {
     kotlin("jvm") version "2.0.0"
@@ -53,7 +54,7 @@ dependencies {
     implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
     implementation("io.prometheus:simpleclient_common:$prometheus_version")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
-
+    implementation("com.google.cloud.sql:postgres-socket-factory:$googlePostgresVersion")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
