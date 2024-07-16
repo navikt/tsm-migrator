@@ -46,7 +46,7 @@ fun Application.configureRouting() {
                 }
             }
         }
-        get("api/sykmelding/{id}") {
+        get("internal/api/sykmelding/{id}") {
             val id = call.parameters["id"]!!
             val sykmelding = smregisterDatabase.getSykmelding(id)
             call.respond(sykmelding)

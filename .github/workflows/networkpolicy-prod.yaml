@@ -1,0 +1,24 @@
+name: Deploy networkpolicy to prod
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'nais/network-policy-prod.yaml'
+      - '.github/workflows/networkpolicy-prod.yaml'
+
+jobs:
+  deploy-to-dev:
+    name: Networkpolicy to prod-gcp
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Deploy policy to prod
+        uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: prod-gcp
+          RESOURCE: nais/network-policy-dev.yaml
