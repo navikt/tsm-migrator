@@ -8,15 +8,8 @@ import org.koin.ktor.ext.inject
 fun Application.configureDatabases() {
     val environment by inject<Environment>()
     Flyway.configure()
-        .dataSource(environment.jdbcUrl, environment.dbUser, environment.dbPassword)
+        .dataSource(environment.migratorJdbcUrl, environment.migratorDbUser, environment.migratorDbPassword)
         .validateMigrationNaming(true)
         .load()
         .migrate()
-
-    Database.connect(
-        url = environment.jdbcUrl,
-        user = environment.dbUser,
-        password = environment.dbPassword,
-        driver = "org.postgresql.Driver",
-    )
 }

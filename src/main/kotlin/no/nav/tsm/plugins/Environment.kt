@@ -6,11 +6,15 @@ import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
 import java.util.Properties
 
 class Environment(
-    val jdbcUrl: String,
-    val dbUser: String,
-    val dbPassword: String,
+    val migratorJdbcUrl: String,
+    val migratorDbUser: String,
+    val migratorDbPassword: String,
     val kafkaConfig: Properties,
     val hostname: String,
+    val registerDBConnectionName: String,
+    val registerDBUsername: String,
+    val registerDBPassword: String,
+    val registerDBName: String,
     val applicationName: String = getEnvVar("NAIS_APP_NAME", "migrator"),
     val regdumpTopic: String = "tsm.regdump",
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
@@ -29,10 +33,14 @@ fun Application.createEnvironment(): Environment {
     val port = environment.config.requiredEnv("ktor.database.dbPort")
     val database = environment.config.requiredEnv("ktor.database.dbName")
     return Environment(
-        jdbcUrl = "jdbc:postgresql://$host:$port/$database",
-        dbUser = environment.config.requiredEnv("ktor.database.dbUser"),
-        dbPassword = environment.config.requiredEnv("ktor.database.dbPassword"),
+        migratorJdbcUrl = "jdbc:postgresql://$host:$port/$database",
+        migratorDbUser = environment.config.requiredEnv("ktor.database.dbUser"),
+        migratorDbPassword = environment.config.requiredEnv("ktor.database.dbPassword"),
         hostname = environment.config.host,
+        registerDBConnectionName = environment.config.requiredEnv("register.db.connectionName"),
+        registerDBUsername = environment.config.requiredEnv("register.db.username"),
+        registerDBPassword = environment.config.requiredEnv("register.db.password"),
+        registerDBName = environment.config.requiredEnv("register.db.name"),
         kafkaConfig = Properties().apply {
             environment.config.config("ktor.kafka.config").toMap().forEach {
                 this[it.key] = it.value

@@ -1,7 +1,9 @@
+import io.ktor.http.contentRangeHeaderValue
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
+import no.nav.tsm.smregister.SmregisterDatabase
 import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import no.nav.tsm.sykmeldinger.kafka.HistoriskSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
@@ -17,9 +19,13 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.jetbrains.exposed.sql.Database
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import java.sql.DriverManager
+import java.util.Properties
 
 fun Application.configureDependencyInjection() {
     install(Koin) {
@@ -27,7 +33,7 @@ fun Application.configureDependencyInjection() {
 
         modules(
             environmentModule(),
-
+            databaseModule,
             historiskSykmeldingConsumer,
             sykmeldingConsumer,
             migrertSykmeldingProducer,
@@ -41,9 +47,34 @@ fun Application.environmentModule() = module {
 }
 
 val databaseModule = module {
-//    singleOf(::FellesformatService)
-//    singleOf(::GamleSykmeldingerService)
-    // disabling because it appears to be completed
+
+    single(named("migrator")) {
+        val environment = get<Environment>()
+        Database.connect(
+            url = environment.migratorJdbcUrl,
+            user = environment.migratorDbUser,
+            password = environment.migratorDbPassword,
+            driver = "org.postgresql.Driver",
+        )
+    }
+
+    single(named("syfosmregister")) {
+        val environment = get<Environment>()
+        val props = Properties()
+        val dbUser = environment.registerDBUsername
+        val dbPassword = environment.registerDBPassword
+        val dbName = environment.registerDBName
+        val instanceConnectionName = environment.registerDBConnectionName
+        logger.info("Connecting to database $dbName, instance $instanceConnectionName, user $dbUser")
+        val jdbcUrl = "jdbc:postgresql:///$dbName"
+        props.setProperty("user", dbUser)
+        props.setProperty("password", dbPassword)
+        props.setProperty("socketFactory", "com.google.cloud.sql.postgres.SocketFactory")
+        props.setProperty("cloudSqlInstance", instanceConnectionName)
+        Database.connect(getNewConnection = { DriverManager.getConnection(jdbcUrl, props) } )
+    }
+
+    single { SmregisterDatabase(get(named("syfosmregister"))) }
 }
 
 val migrertSykmeldingProducer = module {

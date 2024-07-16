@@ -12,6 +12,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import no.nav.tsm.smregister.SmregisterDatabase
 import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory
 @OptIn(DelicateCoroutinesApi::class)
 fun Application.configureRouting() {
     val migrertSykmeldingService by inject<MigrertSykmeldingService>()
+    val smregisterDatabase by inject<SmregisterDatabase>()
     val logger = LoggerFactory.getLogger(MigrertSykmeldingService::class.java)
     routing {
         get("/") {
@@ -43,6 +45,11 @@ fun Application.configureRouting() {
                     running = false
                 }
             }
+        }
+        get("api/sykmelding/{id}") {
+            val id = call.parameters["id"]!!
+            val sykmelding = smregisterDatabase.getSykmelding(id)
+            call.respond(sykmelding)
         }
     }
 }
