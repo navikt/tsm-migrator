@@ -12,7 +12,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import no.nav.tsm.smregister.SmregisterDatabase
+import no.nav.tsm.smregister.database.SmregisterDatabase
 import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -48,7 +48,7 @@ fun Application.configureRouting() {
         }
         get("internal/api/sykmelding/{id}") {
             val id = call.parameters["id"]!!
-            val sykmelding = smregisterDatabase.getSykmelding(id)
+            val sykmelding = smregisterDatabase.getFullSykmelding(id)
             call.respond(sykmelding)
         }
     }

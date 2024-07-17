@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmeldinger.receivedsykmelding
+package no.nav.tsm.smregister.models
 
 data class ValidationResult(val status: Status, val ruleHits: List<RuleInfo>)
 

@@ -1,13 +1,11 @@
-import io.ktor.http.contentRangeHeaderValue
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.plugins.Environment
 import no.nav.tsm.plugins.createEnvironment
-import no.nav.tsm.smregister.SmregisterDatabase
+import no.nav.tsm.smregister.database.SmregisterDatabase
 import no.nav.tsm.sykmeldinger.database.MigrertSykmeldingService
 import no.nav.tsm.sykmeldinger.kafka.HistoriskSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
-import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingProducer
 import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
 import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaUtils.Companion.getAivenKafkaConfig
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
@@ -18,7 +16,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
