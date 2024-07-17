@@ -40,9 +40,9 @@ class SmregisterDatabase(private val database: Database) {
         transaction(database) {
             try {
                 val result = Sykmeldingsopplysning
-                    .innerJoin(Sykmeldingsdokument, onColumn = { id eq Sykmeldingsdokument.id })
-                    .innerJoin(Behandlingsutfall,
-                        onColumn = { Sykmeldingsopplysning.id eq Behandlingsutfall.id } ).selectAll()
+                    .innerJoin(Sykmeldingsdokument) { Sykmeldingsopplysning.id eq Sykmeldingsdokument.id }
+                    .innerJoin(Behandlingsutfall) { Sykmeldingsopplysning.id eq Behandlingsutfall.id }
+                        .selectAll()
                     .where { Sykmeldingsopplysning.id eq sykmeldingId }
                     .andWhere {
                         notExists(
