@@ -3,7 +3,11 @@ package no.nav.tsm
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.server.application.call
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
 import io.ktor.server.testing.*
 import kotlin.test.*
 import no.nav.tsm.plugins.*
@@ -20,7 +24,11 @@ class ApplicationTest {
                     "dbName" to "dev")
         }
         application {
-            configureRouting()
+            routing {
+                get("/") {
+                    call.respondText("Hello World!")
+                }
+            }
         }
         client.get("/").apply {
             assertEquals(HttpStatusCode.OK, status)

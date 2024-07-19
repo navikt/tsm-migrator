@@ -10,11 +10,11 @@ data class ReceivedSykmelding(
     val legeHelsepersonellkategori: String?,
     val legeHprNr: String?,
     val navLogId: String,
-    val msgId: String,
+    val msgId: String?,
     val legekontorOrgNr: String?,
     val legekontorHerId: String?,
     val legekontorReshId: String?,
-    val legekontorOrgName: String,
+    val legekontorOrgName: String?,
     val mottattDato: LocalDateTime,
     val rulesetVersion: String?,
     val merknader: List<Merknad>?,
@@ -25,7 +25,8 @@ data class ReceivedSykmelding(
      * Full fellesformat as a XML payload, this is only used for infotrygd compat and should be
      * removed in thefuture
      */
-    val fellesformat: String,
+    val fellesformat: String?,
     /** TSS-ident, this is only used for infotrygd compat and should be removed in thefuture */
     val tssid: String?,
+    val validationResult: ValidationResult?,
 )

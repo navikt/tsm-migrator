@@ -1,13 +1,22 @@
 package no.nav.tsm.smregister.database
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.tsm.smregister.database.tables.Behandlingsutfall
 import no.nav.tsm.smregister.database.tables.Sykmeldingsdokument
 import no.nav.tsm.smregister.database.tables.Sykmeldingsopplysning
 import no.nav.tsm.smregister.database.tables.Sykmeldingstatus
+import no.nav.tsm.smregister.models.Merknad
+import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.smregister.models.Sykmelding
+import no.nav.tsm.smregister.models.ValidationResult
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.notExists
@@ -17,6 +26,12 @@ import org.slf4j.LoggerFactory
 
 
 class SmregisterDatabase(private val database: Database) {
+
+    private val objectMapper =     ObjectMapper().apply {
+        registerKotlinModule()
+        registerModule(JavaTimeModule())
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SmregisterDatabase::class.java)
@@ -36,7 +51,7 @@ class SmregisterDatabase(private val database: Database) {
         }
     }
 
-    suspend fun getFullSykmelding(sykmeldingId: String): String = withContext(Dispatchers.IO) {
+    suspend fun getFullSykmelding(sykmeldingId: String): ReceivedSykmelding? = withContext(Dispatchers.IO) {
         transaction(database) {
             try {
                 val result = Sykmeldingsopplysning
@@ -51,27 +66,54 @@ class SmregisterDatabase(private val database: Database) {
                             }.andWhere { Sykmeldingstatus.event eq "SLETTET" }
                         )
                     }.map {
-                        val sykmeldingId = it[Sykmeldingsopplysning.id]
-                        val behandlingsutfallId = it[Behandlingsutfall.id]
-                        val sykmelidngsDokumentID = it[Sykmeldingsdokument.id]
-                        mapOf(
-                            "sykmeldingsopplysninger" to sykmeldingId,
-                            "sykmeldingsdokument" to sykmelidngsDokumentID,
-                            "behandlingsutfall" to behandlingsutfallId
+                        val sykmeldingsDokument = objectMapper.readValue<Sykmelding>(it[Sykmeldingsdokument.sykmelding])
+                        val validationResult = objectMapper.readValue<ValidationResult>(it[Behandlingsutfall.behandlingsutfall])
+                        ReceivedSykmelding(
+                                    personNrPasient = it[Sykmeldingsopplysning.pasientFnr],
+                                    personNrLege = it[Sykmeldingsopplysning.legeFnr],
+                                    legeHprNr = it[Sykmeldingsopplysning.legeHpr],
+                                    legeHelsepersonellkategori = it[Sykmeldingsopplysning.legeHelsepersonellKategori],
+                                    navLogId = it[Sykmeldingsopplysning.mottakId],
+                                    legekontorOrgNr = it[Sykmeldingsopplysning.legekontor_org_nr],
+                                    legekontorHerId = it[Sykmeldingsopplysning.legekontorHerId],
+                                    legekontorReshId = it[Sykmeldingsopplysning.legekontorReshId],
+                                    mottattDato = it[Sykmeldingsopplysning.mottattTidspunkt],
+                                    tssid = it[Sykmeldingsopplysning.tss_id],
+                                    merknader = it[Sykmeldingsopplysning.merknader]?.let { objectMapper.readValue<List<Merknad>>(it) },
+                                    partnerreferanse = it[Sykmeldingsopplysning.partnerreferanse],
+                                    utenlandskSykmelding = it[Sykmeldingsopplysning.utenlandskSykmelding]?.let { objectMapper.readValue(it) },
+                                    fellesformat = null,
+                            rulesetVersion = null,
+                            vedlegg = null,
+                            legekontorOrgName = null,
+                            sykmelding = sykmeldingsDokument,
+                            msgId = it[Sykmeldingsopplysning.mottakId],
+                            tlfPasient = null,
+                            validationResult = validationResult
                         )
                     }
                 val sykmeldingsInfo = result.firstOrNull()
                 if (sykmeldingsInfo != null) {
                     logger.info("Got sykmelding: $sykmeldingsInfo")
+                    sykmeldingsInfo
                 } else {
                     logger.info("Sykmelding not found: $sykmeldingId")
+                    null
                 }
-                "Sykmelding: $sykmeldingId"
             } catch (ex: Exception) {
                 logger.error("Error getting sykmelding with id $sykmeldingId")
-                "Error getting sykmelding with id $sykmeldingId"
+                null
             }
-
         }
     }
+
+    fun getValidationResult(sykmeldingId: String): ValidationResult? =
+        transaction(database) {
+            val validationResult = Behandlingsutfall
+                .selectAll()
+                .where { Behandlingsutfall.id eq sykmeldingId }
+                .map { objectMapper.readValue<ValidationResult>(it[Behandlingsutfall.behandlingsutfall]) }
+            validationResult.firstOrNull()
+        }
+
 }
