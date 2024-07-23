@@ -16,13 +16,11 @@ class Environment(
     val registerDBPassword: String,
     val registerDBName: String,
     val applicationName: String = getEnvVar("NAIS_APP_NAME", "migrator"),
-    val regdumpTopic: String = "tsm.regdump",
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
     val avvistSykmeldingTopic: String = "teamsykmelding.avvist-sykmelding",
     val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
-    val gamleSykmeldingTopic: String = "teamsykmelding.gamle-sykmeldinger",
     val migrertSykmeldingTopic: String = "tsm.migrert-sykmelding",
-    val sykmeldingHistoriskTopic: String = "teamsykmelding.sykmelding-historisk",
+    val sykmeldingerInputTopic: String = "tsm.sykmeldinger-input",
 )
 
 private fun ApplicationConfig.requiredEnv(name: String) =
@@ -36,15 +34,15 @@ fun Application.createEnvironment(): Environment {
         migratorJdbcUrl = "jdbc:postgresql://$host:$port/$database",
         migratorDbUser = environment.config.requiredEnv("ktor.database.dbUser"),
         migratorDbPassword = environment.config.requiredEnv("ktor.database.dbPassword"),
-        hostname = environment.config.host,
-        registerDBConnectionName = environment.config.requiredEnv("register.db.connectionName"),
-        registerDBUsername = environment.config.requiredEnv("register.db.username"),
-        registerDBPassword = environment.config.requiredEnv("register.db.password"),
-        registerDBName = environment.config.requiredEnv("register.db.name"),
         kafkaConfig = Properties().apply {
             environment.config.config("ktor.kafka.config").toMap().forEach {
                 this[it.key] = it.value
             }
         },
+        hostname = environment.config.host,
+        registerDBConnectionName = environment.config.requiredEnv("register.db.connectionName"),
+        registerDBUsername = environment.config.requiredEnv("register.db.username"),
+        registerDBPassword = environment.config.requiredEnv("register.db.password"),
+        registerDBName = environment.config.requiredEnv("register.db.name"),
     )
 }

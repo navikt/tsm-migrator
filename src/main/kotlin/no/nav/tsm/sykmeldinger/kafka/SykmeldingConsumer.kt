@@ -18,9 +18,9 @@ class SykmeldingConsumer(
     private val kafkaConsumer: KafkaConsumer<String, String>,
     private val kafkaProducer: KafkaProducer<String, MigrertSykmelding>,
     private val tsmMigrertTopic: String,
-    private val okSykmeldingTopic: String,
-    private val manuellBehandlingSykmeldingTopic: String,
-    private val avvistSykmeldingTopic: String
+    okSykmeldingTopic: String,
+    manuellBehandlingSykmeldingTopic: String,
+    avvistSykmeldingTopic: String
 ) {
 
     companion object {
