@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.plugins.Environment
@@ -45,7 +46,8 @@ val migrertSykmeldingConsumer = module {
     single {
         val env = get<Environment>()
 
-        val consumer: KafkaConsumer<String, MigrertSykmelding> = KafkaConsumer(get<Environment>().kafkaConfig.apply {
+        val consumer: KafkaConsumer<String, MigrertSykmelding> = KafkaConsumer(Properties().apply {
+            putAll(env.kafkaConfig)
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
             this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding"
@@ -56,7 +58,8 @@ val migrertSykmeldingConsumer = module {
 
         }, StringDeserializer(), JacksonKafkaDeserializer(MigrertSykmelding::class))
 
-        val producer = KafkaProducer<String, ReceivedSykmelding?>(env.kafkaConfig.apply {
+        val producer = KafkaProducer<String, ReceivedSykmelding?>(Properties().apply {
+            putAll(env.kafkaConfig)
             this[ProducerConfig.ACKS_CONFIG] = "all"
             this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
             this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-receivedsykmelding-producer"
@@ -100,8 +103,8 @@ val sykmeldingConsumer = module {
 
     single {
         val env = get<Environment>()
-
-        KafkaConsumer(get<Environment>().kafkaConfig.apply {
+        KafkaConsumer( Properties().apply {
+            putAll(env.kafkaConfig)
             this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
             this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
             this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding"
@@ -109,13 +112,24 @@ val sykmeldingConsumer = module {
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
             this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "10000"
-
         }, StringDeserializer(), StringDeserializer())
     }
+
+
     single {
+        val env = get<Environment>()
+        val producer = KafkaProducer<String, MigrertSykmelding>(Properties().apply {
+            putAll(env.kafkaConfig)
+            this[ProducerConfig.ACKS_CONFIG] = "all"
+            this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+            this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-migrert-sykmelding-producer"
+            this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
+            this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
+        })
+
         SykmeldingConsumer(
             kafkaConsumer = get(),
-            kafkaProducer = get(),
+            kafkaProducer = producer,
             okSykmeldingTopic = get<Environment>().okSykmeldingTopic,
             manuellBehandlingSykmeldingTopic = get<Environment>().manuellSykmeldingTopic,
             avvistSykmeldingTopic = get<Environment>().avvistSykmeldingTopic,
