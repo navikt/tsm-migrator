@@ -93,13 +93,10 @@ class SmregisterDatabase(private val database: Database) {
                         )
                     }
                 val sykmeldingsInfo = result.firstOrNull()
-                if (sykmeldingsInfo != null) {
-                    logger.info("Got sykmelding: $sykmeldingsInfo")
-                    sykmeldingsInfo
-                } else {
-                    logger.info("Sykmelding not found: $sykmeldingId")
-                    null
+                if(sykmeldingsInfo == null) {
+                    logger.warn("No sykmelding found with id $sykmeldingId in database")
                 }
+                sykmeldingsInfo
             } catch (ex: Exception) {
                 logger.error("Error getting sykmelding with id $sykmeldingId")
                 null

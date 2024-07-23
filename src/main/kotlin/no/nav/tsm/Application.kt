@@ -16,5 +16,5 @@ fun Application.module() {
     configureDependencyInjection()
     configureMonitoring()
     configureDatabases()
-    configureConsumer(get())
+    configureConsumer(get(), get())
 }
