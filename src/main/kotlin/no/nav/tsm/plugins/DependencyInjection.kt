@@ -109,7 +109,7 @@ val sykmeldingConsumer = module {
             this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-ny-sykmelding-consumer"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
-            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "10000"
+            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
         }, StringDeserializer(), StringDeserializer())
     }
 
@@ -123,7 +123,6 @@ val sykmeldingConsumer = module {
             this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-migrert-sykmelding-producer"
             this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
             this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
-            this[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "${env.hostname}-migrator-sykmelding-producer"
         })
 
         SykmeldingConsumer(

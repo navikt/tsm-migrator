@@ -22,6 +22,7 @@ import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.notExists
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 
@@ -34,6 +35,7 @@ class SmregisterDatabase(private val database: Database) {
         configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) }
 
     companion object {
+        private val secureLog: Logger = LoggerFactory.getLogger("securelog")
         private val logger = LoggerFactory.getLogger(SmregisterDatabase::class.java)
     }
     fun getSykmelding(id: String): String {
@@ -98,8 +100,9 @@ class SmregisterDatabase(private val database: Database) {
                 }
                 sykmeldingsInfo
             } catch (ex: Exception) {
+                secureLog.error("Error getting sykmelding with id $sykmeldingId", ex)
                 logger.error("Error getting sykmelding with id $sykmeldingId")
-                null
+                throw ex
             }
         }
     }

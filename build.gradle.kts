@@ -11,7 +11,7 @@ val kafka_version="3.7.0"
 val jackson_version= "2.17.2"
 val opentelemetryVersion = "2.5.0"
 val googlePostgresVersion = "1.19.0"
-
+val mockkVersion = "1.13.11"
 plugins {
     kotlin("jvm") version "2.0.0"
     id("io.ktor.plugin") version "2.3.12"
@@ -57,6 +57,8 @@ dependencies {
     implementation("com.google.cloud.sql:postgres-socket-factory:$googlePostgresVersion")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    testImplementation("io.mockk:mockk:$mockkVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
 }
 
 tasks {

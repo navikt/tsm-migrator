@@ -1,15 +1,18 @@
 package no.nav.tsm.sykmeldinger.kafka
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
+import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -28,33 +31,49 @@ class SykmeldingConsumer(
     }
 
     private val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
+    private val topicCount = sykmeldingTopics.associateWith {
+        0
+    }.toMutableMap()
+
+    private val topicDate = sykmeldingTopics.associateWith {
+        OffsetDateTime.MIN
+    }.toMutableMap()
 
     @WithSpan
-    @OptIn(DelicateCoroutinesApi::class)
-    suspend fun start() {
-        logger.info("starting consumer for $sykmeldingTopics")
-        kafkaConsumer.subscribe(sykmeldingTopics)
-        kafkaProducer.initTransactions()
-        val topicCount = sykmeldingTopics.associateWith {
-            0
-        }.toMutableMap()
+    suspend fun start() = coroutineScope(suspendFunction1())
 
-        val topicDate = sykmeldingTopics.associateWith {
-            OffsetDateTime.MIN
-        }.toMutableMap()
+    private fun SykmeldingConsumer.suspendFunction1(): suspend CoroutineScope.() -> Unit =
+        {
+            logger.info("starting consumer for $sykmeldingTopics")
 
-        GlobalScope.launch(Dispatchers.IO) {
-            while (true) {
-                sykmeldingTopics.forEach {
-                    logger.info("Topic: $it, count: ${topicCount[it]}, date: ${topicDate[it]}")
+            launch(Dispatchers.IO) {
+                while (isActive) {
+                    sykmeldingTopics.forEach {
+                        logger.info("Topic: $it, count: ${topicCount[it]}, date: ${topicDate[it]}")
+                    }
+                    delay(300_000)
                 }
-                delay(300_000)
             }
+
+            while (isActive) {
+                try {
+                    consumeMessages()
+                } catch (ex: CancellationException) {
+                    logger.info("Consumer cancelled")
+                } catch (ex: Exception) {
+                    logger.error("Error processing messages from kafka delaying 60 seconds to tray again")
+                    kafkaConsumer.unsubscribe()
+                    delay(60_000)
+                }
+            }
+            kafkaConsumer.unsubscribe()
+            logger.info("Consumerer is stopping")
         }
 
-        while (true) {
-            val records = kafkaConsumer.poll(java.time.Duration.ofMillis(10_000))
-
+    private suspend fun consumeMessages() = coroutineScope {
+        kafkaConsumer.subscribe(sykmeldingTopics)
+        while (isActive) {
+            val records = kafkaConsumer.poll(Duration.ofMillis(10_000))
             val topicMap = records
                 .groupBy { it.topic() }
 
@@ -64,26 +83,16 @@ class SykmeldingConsumer(
                     topicDate[topic] = records.maxOf { Instant.ofEpochMilli(it.timestamp()).atOffset(ZoneOffset.UTC) }
                 }
             }
-
-            try {
-                kafkaProducer.beginTransaction()
-                records.forEach {
-                    val receivedSykmelding = it.value()
-                    val sykmeldingId = it.key()
-                    kafkaProducer.send(
-                        ProducerRecord(
-                            tsmMigrertTopic,
-                            sykmeldingId,
-                            MigrertSykmelding(sykmeldingId, null, receivedSykmelding, it.topic())
-                        )
+            records.forEach {
+                val receivedSykmelding = it.value()
+                val sykmeldingId = it.key()
+                kafkaProducer.send(
+                    ProducerRecord(
+                        tsmMigrertTopic,
+                        sykmeldingId,
+                        MigrertSykmelding(sykmeldingId, null, receivedSykmelding, it.topic())
                     )
-                }
-                kafkaProducer.commitTransaction()
-            } catch (ex: Exception) {
-                logger.error("Error processing messages ${records.first().partition()}} ${records.first().offset()}")
-                kafkaProducer.abortTransaction()
-                kafkaConsumer.unsubscribe()
-                throw ex
+                ).get()
             }
         }
     }
