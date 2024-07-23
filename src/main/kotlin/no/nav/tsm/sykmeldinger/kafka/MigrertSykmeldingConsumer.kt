@@ -8,12 +8,16 @@ import kotlinx.coroutines.launch
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.slf4j.LoggerFactory
 
 class MigrertSykmeldingConsumer(
     private val migrertSykmeldingConsumer: KafkaConsumer<String, MigrertSykmelding>,
     private val sykmeldingRegisterService: SykmeldingRegisterService,
     private val migrertTopic: String,
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(MigrertSykmeldingConsumer::class.java)
+    }
     @OptIn(DelicateCoroutinesApi::class)
     suspend fun start() {
         migrertSykmeldingConsumer.subscribe(listOf(migrertTopic))
@@ -21,7 +25,7 @@ class MigrertSykmeldingConsumer(
         GlobalScope.launch(Dispatchers.IO) {
             while (true) {
                 sourceMap.forEach { (source, count) ->
-                    println("Source: $source, count: $count")
+                    logger.info("Source: $source, count: $count")
                 }
                 delay(60_000)
             }

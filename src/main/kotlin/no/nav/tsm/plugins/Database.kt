@@ -1,7 +1,6 @@
+package no.nav.tsm.plugins
 import io.ktor.server.application.Application
-import no.nav.tsm.plugins.Environment
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
 import org.koin.ktor.ext.inject
 
 

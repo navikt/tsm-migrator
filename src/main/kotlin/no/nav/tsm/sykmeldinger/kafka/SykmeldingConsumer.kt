@@ -27,7 +27,7 @@ class SykmeldingConsumer(
         private val logger = org.slf4j.LoggerFactory.getLogger(SykmeldingConsumer::class.java)
     }
 
-    val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
+    private val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
 
     @WithSpan
     @OptIn(DelicateCoroutinesApi::class)

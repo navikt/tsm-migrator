@@ -2,8 +2,6 @@ package no.nav.tsm.smregister.database.tables
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 
 object Sykmeldingsopplysning : Table("sykmeldingsopplysninger") {
     val id = text("id")

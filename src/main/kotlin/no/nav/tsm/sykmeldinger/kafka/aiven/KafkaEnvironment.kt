@@ -1,11 +1,11 @@
 package no.nav.tsm.sykmeldinger.kafka.aiven
 
 data class KafkaEnvironment(
-    val KAFKA_BROKERS: String = getEnvVar("KAFKA_BROKERS"),
-    val KAFKA_CLIENT_ID: String = getEnvVar("HOSTNAME"),
-    val KAFKA_TRUSTSTORE_PATH: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
-    val KAFKA_KEYSTORE_PATH: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
-    val KAFKA_CREDSTORE_PASSWORD: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD")
+    val kafkaBrokers: String = getEnvVar("KAFKA_BROKERS"),
+    val kafkaClientId: String = getEnvVar("HOSTNAME"),
+    val kafkaTruststorePath: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
+    val kafkaKeystorePath: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
+    val kafkaCredstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD")
 ) {
     companion object {
         fun getEnvVar(varName: String, defaultValue: String? = null) =

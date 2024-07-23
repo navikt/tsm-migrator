@@ -1,8 +1,6 @@
-import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
+package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import no.nav.tsm.plugins.Environment
-import no.nav.tsm.plugins.createEnvironment
 import no.nav.tsm.smregister.database.SmregisterDatabase
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
