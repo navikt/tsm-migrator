@@ -61,13 +61,7 @@ class SmregisterDatabase(private val database: Database) {
                     .innerJoin(Behandlingsutfall) { Sykmeldingsopplysning.id eq Behandlingsutfall.id }
                         .selectAll()
                     .where { Sykmeldingsopplysning.id eq sykmeldingId }
-                    .andWhere {
-                        notExists(
-                            Sykmeldingstatus.select(Sykmeldingstatus.sykmeldingId).where {
-                                Sykmeldingstatus.sykmeldingId eq sykmeldingId
-                            }.andWhere { Sykmeldingstatus.event eq "SLETTET" }
-                        )
-                    }.map {
+                    .map {
                         val sykmeldingsDokument = objectMapper.readValue<Sykmelding>(it[Sykmeldingsdokument.sykmelding])
                         val validationResult = objectMapper.readValue<ValidationResult>(it[Behandlingsutfall.behandlingsutfall])
                         ReceivedSykmelding(
