@@ -52,7 +52,49 @@ class SmregisterDatabase(private val database: Database) {
             }
         }
     }
-
+    suspend fun getFullSykmeldinger(sykmeldingIds: List<String>): List<ReceivedSykmelding> = withContext(Dispatchers.IO) {
+        transaction(database) {
+            try {
+                val result = Sykmeldingsopplysning
+                    .innerJoin(Sykmeldingsdokument) { Sykmeldingsopplysning.id eq Sykmeldingsdokument.id }
+                    .innerJoin(Behandlingsutfall) { Sykmeldingsopplysning.id eq Behandlingsutfall.id }
+                    .selectAll()
+                    .where { Sykmeldingsopplysning.id inList sykmeldingIds }
+                    .map {
+                        val sykmeldingsDokument = objectMapper.readValue<Sykmelding>(it[Sykmeldingsdokument.sykmelding])
+                        val validationResult = objectMapper.readValue<ValidationResult>(it[Behandlingsutfall.behandlingsutfall])
+                        ReceivedSykmelding(
+                            personNrPasient = it[Sykmeldingsopplysning.pasientFnr],
+                            personNrLege = it[Sykmeldingsopplysning.legeFnr],
+                            legeHprNr = it[Sykmeldingsopplysning.legeHpr],
+                            legeHelsepersonellkategori = it[Sykmeldingsopplysning.legeHelsepersonellKategori],
+                            navLogId = it[Sykmeldingsopplysning.mottakId],
+                            legekontorOrgNr = it[Sykmeldingsopplysning.legekontor_org_nr],
+                            legekontorHerId = it[Sykmeldingsopplysning.legekontorHerId],
+                            legekontorReshId = it[Sykmeldingsopplysning.legekontorReshId],
+                            mottattDato = it[Sykmeldingsopplysning.mottattTidspunkt],
+                            tssid = it[Sykmeldingsopplysning.tss_id],
+                            merknader = it[Sykmeldingsopplysning.merknader]?.let { merknader -> objectMapper.readValue<List<Merknad>>(merknader) },
+                            partnerreferanse = it[Sykmeldingsopplysning.partnerreferanse],
+                            utenlandskSykmelding = it[Sykmeldingsopplysning.utenlandskSykmelding]?.let { utenlandskSykmelding -> objectMapper.readValue(utenlandskSykmelding) },
+                            fellesformat = null,
+                            rulesetVersion = null,
+                            vedlegg = null,
+                            legekontorOrgName = null,
+                            sykmelding = sykmeldingsDokument,
+                            msgId = it[Sykmeldingsopplysning.mottakId],
+                            tlfPasient = null,
+                            validationResult = validationResult
+                        )
+                    }
+                result
+            } catch (ex: Exception) {
+                secureLog.error("Error getting sykmelding with id $sykmeldingIds", ex)
+                logger.error("Error getting sykmelding with id $sykmeldingIds")
+                throw ex
+            }
+        }
+    }
     suspend fun getFullSykmelding(sykmeldingId: String): ReceivedSykmelding? = withContext(Dispatchers.IO) {
         transaction(database) {
             try {

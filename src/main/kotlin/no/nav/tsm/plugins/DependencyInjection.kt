@@ -51,8 +51,8 @@ val migrertSykmeldingConsumer = module {
             this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding"
             this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-migrert-sykmelding-consumer"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
-            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "100"
 
         }, StringDeserializer(), JacksonKafkaDeserializer(MigrertSykmelding::class))
 
@@ -109,7 +109,7 @@ val sykmeldingConsumer = module {
             this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-ny-sykmelding-consumer"
             this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
             this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
-            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "100"
         }, StringDeserializer(), StringDeserializer())
     }
 

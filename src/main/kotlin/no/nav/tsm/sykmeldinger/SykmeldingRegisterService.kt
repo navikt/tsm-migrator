@@ -8,6 +8,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import no.nav.tsm.smregister.database.SmregisterDatabase
 import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.sykmeldinger.kafka.CompleteMigrertSykmelding
+import no.nav.tsm.sykmeldinger.kafka.MigrertReceivedSykmelding
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -30,41 +32,61 @@ class SykmeldingRegisterService(
         private val logger = LoggerFactory.getLogger(SykmeldingRegisterService::class.java)
     }
 
-    suspend fun handleMigrertSykmelding(migrertSykmelding: MigrertSykmelding) {
-        val receivedSykmelding = if (migrertSykmelding.receivedSykmelding == null) {
-            smregisterDatabase.getFullSykmelding(migrertSykmelding.sykmeldingId)
-        } else {
-            val receivedSykmelding = objectMapper.readValue<ReceivedSykmelding>(migrertSykmelding.receivedSykmelding)
-            when (receivedSykmelding.validationResult) {
-                null -> {
-                    smregisterDatabase.getFullSykmelding(migrertSykmelding.sykmeldingId)?.let { sykmeldingFromDb ->
-                        receivedSykmelding.copy(validationResult = sykmeldingFromDb.validationResult)
-                    }
-                }
-                else -> receivedSykmelding
-            }
-        }
-        if(receivedSykmelding == null) {
-            logger.warn("Received sykmelding is null for sykmeldingId: ${migrertSykmelding.sykmeldingId} ${migrertSykmelding.source}")
-        }
-
-        sendReceivedSykmelding(receivedSykmelding, migrertSykmelding)
-    }
-
     private fun sendReceivedSykmelding(
-        receivedSykmelding: ReceivedSykmelding?,
-        migrertSykmelding: MigrertSykmelding
+        completeMigrertSykmelding: CompleteMigrertSykmelding
     ) {
 
         val producerRecord = ProducerRecord(
             sykmeldingInputTopic,
-            migrertSykmelding.sykmeldingId,
-            receivedSykmelding,
+            completeMigrertSykmelding.sykmeldingId,
+            completeMigrertSykmelding.receivedSykmelding,
         )
-        producerRecord.headers().add(RecordHeader("source", migrertSykmelding.source.toByteArray()))
+        producerRecord.headers().add(RecordHeader("source", completeMigrertSykmelding.source.toByteArray()))
 
         sykmeldingInputProducer.send(
             producerRecord
         ).get()
+    }
+
+    suspend fun handleMigrertSykmeldinger(migrertSykmelding: List<MigrertSykmelding>) {
+
+        val migrertReceivedSykmeldinger = migrertSykmelding.map {
+            MigrertReceivedSykmelding(
+                sykmeldingId = it.sykmeldingId,
+                source = it.source,
+                receivedSykmelding = it.receivedSykmelding?.let { receivedSykmelding -> objectMapper.readValue(receivedSykmelding) }
+            )
+        }
+
+        val sykmeldingerToGetFromaDb = migrertReceivedSykmeldinger.filter { it.receivedSykmelding?.validationResult == null }.map { it.sykmeldingId }
+        val sykmeldingerFromDb = if(sykmeldingerToGetFromaDb.isNotEmpty()) {
+            smregisterDatabase.getFullSykmeldinger(sykmeldingerToGetFromaDb).associateBy { it.sykmelding.id }
+        } else {
+            emptyMap()
+        }
+        val missingSykmeldinger = mutableListOf<String>()
+        val completeMigrertSykmeldinger = mutableListOf<CompleteMigrertSykmelding>()
+        migrertReceivedSykmeldinger.forEach {
+            val receivedSykmelding = if(it.receivedSykmelding == null) {
+                sykmeldingerFromDb[it.sykmeldingId]
+            } else if (it.receivedSykmelding.validationResult == null) {
+                it.receivedSykmelding.copy(validationResult = sykmeldingerFromDb[it.sykmeldingId]?.validationResult)
+            } else {
+                it.receivedSykmelding
+            }
+            if(receivedSykmelding == null) {
+                missingSykmeldinger.add(it.sykmeldingId)
+            } else {
+                completeMigrertSykmeldinger.add(CompleteMigrertSykmelding(it.sykmeldingId, receivedSykmelding, it.source))
+            }
+        }
+
+        if(missingSykmeldinger.isNotEmpty()) {
+            logger.warn("Missing sykmeldinger in db: $missingSykmeldinger")
+        }
+
+        completeMigrertSykmeldinger.forEach {
+            sendReceivedSykmelding(it)
+        }
     }
 }

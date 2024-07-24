@@ -1,30 +1,50 @@
 package no.nav.tsm.sykmeldinger.kafka
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
+data class MigrertReceivedSykmelding(
+    val sykmeldingId: String,
+    val receivedSykmelding: ReceivedSykmelding?,
+    val source: String = "NO_SOURCE",
+)
+
+data class CompleteMigrertSykmelding(
+    val sykmeldingId: String,
+    val receivedSykmelding: ReceivedSykmelding,
+    val source: String = "NO_SOURCE",
+)
+
 class MigrertSykmeldingConsumer(
     private val migrertSykmeldingConsumer: KafkaConsumer<String, MigrertSykmelding>,
     private val sykmeldingRegisterService: SykmeldingRegisterService,
     private val migrertTopic: String,
 ) {
+    private val objectMapper = ObjectMapper().apply {
+        registerKotlinModule()
+        registerModule(JavaTimeModule())
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) }
     companion object {
         private val logger = LoggerFactory.getLogger(MigrertSykmeldingConsumer::class.java)
     }
     private val sourceMap = mutableMapOf<String, Int>()
     suspend fun start() = coroutineScope {
-
 
         launch(Dispatchers.IO) {
             while (true) {
@@ -52,12 +72,12 @@ class MigrertSykmeldingConsumer(
         migrertSykmeldingConsumer.subscribe(listOf(migrertTopic))
         while (isActive) {
             val records = migrertSykmeldingConsumer.poll(Duration.ofMillis(10_000))
+
             if (!records.isEmpty) {
+                sykmeldingRegisterService.handleMigrertSykmeldinger(records.map { it.value() })
                 records.forEach { record ->
-                    sykmeldingRegisterService.handleMigrertSykmelding(record.value())
                     sourceMap[record.value().source] = sourceMap.getOrDefault(record.value().source, 0) + 1
                 }
-                migrertSykmeldingConsumer.commitSync()
             }
         }
     }
