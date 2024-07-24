@@ -25,4 +25,5 @@
     <root level="INFO">
         <appender-ref ref="stdout_json"/>
     </root>
+    <logger name="org.apache.kafka" level="warn" />
 </configuration>
