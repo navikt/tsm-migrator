@@ -31,13 +31,6 @@ class SykmeldingConsumer(
     }
 
     private val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
-    private val topicCount = sykmeldingTopics.associateWith {
-        0
-    }.toMutableMap()
-
-    private val topicDate = sykmeldingTopics.associateWith {
-        OffsetDateTime.MIN
-    }.toMutableMap()
 
     @WithSpan
     suspend fun start() = coroutineScope(suspendFunction1())
@@ -45,15 +38,6 @@ class SykmeldingConsumer(
     private fun SykmeldingConsumer.suspendFunction1(): suspend CoroutineScope.() -> Unit =
         {
             logger.info("starting consumer for $sykmeldingTopics")
-
-            launch(Dispatchers.IO) {
-                while (isActive) {
-                    sykmeldingTopics.forEach {
-                        logger.info("Topic: $it, count: ${topicCount[it]}, date: ${topicDate[it]}")
-                    }
-                    delay(300_000)
-                }
-            }
 
             while (isActive) {
                 try {
@@ -74,15 +58,7 @@ class SykmeldingConsumer(
         kafkaConsumer.subscribe(sykmeldingTopics)
         while (isActive) {
             val records = kafkaConsumer.poll(Duration.ofMillis(10_000))
-            val topicMap = records
-                .groupBy { it.topic() }
 
-            topicMap.forEach { (topic, records) ->
-                if (records.isNotEmpty()) {
-                    topicCount[topic] = topicCount.getOrDefault(topic, 0) + records.count()
-                    topicDate[topic] = records.maxOf { Instant.ofEpochMilli(it.timestamp()).atOffset(ZoneOffset.UTC) }
-                }
-            }
             records.forEach {
                 val receivedSykmelding = it.value()
                 val sykmeldingId = it.key()

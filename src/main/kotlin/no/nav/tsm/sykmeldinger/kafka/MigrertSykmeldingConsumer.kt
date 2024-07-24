@@ -35,11 +35,6 @@ class MigrertSykmeldingConsumer(
     private val sykmeldingRegisterService: SykmeldingRegisterService,
     private val migrertTopic: String,
 ) {
-    private val objectMapper = ObjectMapper().apply {
-        registerKotlinModule()
-        registerModule(JavaTimeModule())
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) }
     companion object {
         private val logger = LoggerFactory.getLogger(MigrertSykmeldingConsumer::class.java)
     }
