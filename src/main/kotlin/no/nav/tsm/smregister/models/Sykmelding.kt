@@ -148,7 +148,7 @@ data class Adresse(
 data class AvsenderSystem(val navn: String, val versjon: String)
 
 data class SporsmalSvar(
-    val sporsmal: String,
+    val sporsmal: String?,
     val svar: String,
     val restriksjoner: List<SvarRestriksjon>
 )
