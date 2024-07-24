@@ -29,8 +29,8 @@ spec:
         pointInTimeRecovery: true
   image: {{ image }}
   replicas:
-    min: 10
-    max: 10
+    min: 5
+    max: 5
     cpuThresholdPercentage: 90
   port: 8080
   liveness:
