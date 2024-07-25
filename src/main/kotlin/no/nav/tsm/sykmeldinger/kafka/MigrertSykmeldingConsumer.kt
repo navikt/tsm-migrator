@@ -1,10 +1,5 @@
 package no.nav.tsm.sykmeldinger.kafka
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -15,18 +10,13 @@ import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
 data class MigrertReceivedSykmelding(
     val sykmeldingId: String,
     val receivedSykmelding: ReceivedSykmelding?,
-    val source: String = "NO_SOURCE",
-)
-
-data class CompleteMigrertSykmelding(
-    val sykmeldingId: String,
-    val receivedSykmelding: ReceivedSykmelding,
     val source: String = "NO_SOURCE",
 )
 
@@ -55,7 +45,7 @@ class MigrertSykmeldingConsumer(
             } catch (e: CancellationException) {
                 logger.info("Consumer cancelled")
             } catch (ex: Exception) {
-                logger.error("Error processing messages from kafka delaying 60 seconds to tray again")
+                logger.error("Error processing messages from kafka delaying 60 seconds to tray again", ex)
                 migrertSykmeldingConsumer.unsubscribe()
                 delay(60_000)
             }
