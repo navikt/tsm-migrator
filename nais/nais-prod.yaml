@@ -11,21 +11,6 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_14
-        databases:
-          - name: migrator
-            envVarPrefix: DB
-        diskAutoresize: true
-        highAvailability: false
-        diskType: SSD
-        insights:
-          enabled: true
-        flags:
-          - name: cloudsql.logical_decoding
-            value: "on"
-        pointInTimeRecovery: true
   image: {{ image }}
   replicas:
     min: 1

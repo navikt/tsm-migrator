@@ -1,16 +1,12 @@
 
 val kotlin_version="2.0.0"
 val logback_version="1.5.6"
-val postgres_version="42.7.3"
 val koin_version="3.5.6"
-val exposed_version="0.52.0"
-val flyway_version="10.15.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="7.4"
 val kafka_version="3.7.0"
 val jackson_version= "2.17.2"
 val opentelemetryVersion = "2.5.0"
-val googlePostgresVersion = "1.19.0"
 val mockkVersion = "1.13.11"
 plugins {
     kotlin("jvm") version "2.0.0"
@@ -38,15 +34,10 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-jackson-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
-    implementation("org.postgresql:postgresql:$postgres_version")
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
-    implementation("org.flywaydb:flyway-database-postgresql:$flyway_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
     implementation("io.insert-koin:koin-ktor:$koin_version")
@@ -54,7 +45,6 @@ dependencies {
     implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
     implementation("io.prometheus:simpleclient_common:$prometheus_version")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
-    implementation("com.google.cloud.sql:postgres-socket-factory:$googlePostgresVersion")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("io.mockk:mockk:$mockkVersion")

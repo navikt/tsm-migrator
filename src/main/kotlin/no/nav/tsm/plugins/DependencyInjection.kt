@@ -1,7 +1,6 @@
 package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import no.nav.tsm.smregister.database.SmregisterDatabase
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingConsumer
@@ -15,12 +14,9 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
-import org.jetbrains.exposed.sql.Database
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
-import java.sql.DriverManager
 import java.util.Properties
 
 fun Application.configureDependencyInjection() {
@@ -29,7 +25,6 @@ fun Application.configureDependencyInjection() {
 
         modules(
             environmentModule(),
-            databaseModule,
             sykmeldingConsumer,
             migrertSykmeldingConsumer,
         )
@@ -64,37 +59,14 @@ val migrertSykmeldingConsumer = module {
             this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
             this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
         })
-        val smRegisterDatabase = get<SmregisterDatabase>()
         val sykmeldingRegisterService =
-            SykmeldingRegisterService(smRegisterDatabase, producer, env.sykmeldingerInputTopic)
+            SykmeldingRegisterService(producer, env.sykmeldingerInputTopic)
         MigrertSykmeldingConsumer(
             migrertSykmeldingConsumer = consumer,
             sykmeldingRegisterService = sykmeldingRegisterService,
             migrertTopic = env.migrertSykmeldingTopic
         )
     }
-}
-
-
-val databaseModule = module {
-
-    single(named("syfosmregister")) {
-        val environment = get<Environment>()
-        val props = Properties()
-        val dbUser = environment.registerDBUsername
-        val dbPassword = environment.registerDBPassword
-        val dbName = environment.registerDBName
-        val instanceConnectionName = environment.registerDBConnectionName
-        logger.info("Connecting to database $dbName, instance $instanceConnectionName, user $dbUser")
-        val jdbcUrl = "jdbc:postgresql:///$dbName"
-        props.setProperty("user", dbUser)
-        props.setProperty("password", dbPassword)
-        props.setProperty("socketFactory", "com.google.cloud.sql.postgres.SocketFactory")
-        props.setProperty("cloudSqlInstance", instanceConnectionName)
-        Database.connect(getNewConnection = { DriverManager.getConnection(jdbcUrl, props) })
-    }
-
-    single { SmregisterDatabase(get(named("syfosmregister"))) }
 }
 
 val sykmeldingConsumer = module {

@@ -5,12 +5,6 @@ ktor:
       - no.nav.tsm.ApplicationKt.module
   deployment:
     port: 8080
-  database:
-    dbUser: $DB_USERNAME
-    dbPassword: $DB_PASSWORD
-    dbHost: $DB_HOST
-    dbPort: $DB_PORT
-    dbName: $DB_DATABASE
   kafka:
     config:
       bootstrap.servers: $KAFKA_BROKERS
@@ -21,9 +15,3 @@ ktor:
       ssl.keystore.location: $KAFKA_KEYSTORE_PATH
       ssl.keystore.password: $KAFKA_CREDSTORE_PASSWORD
       ssl.keystore.type: "PKCS12"
-register:
-  db:
-    connectionName: $REGISTER_DB_CONNECTION_NAME
-    username: $REGISTER_DB_USERNAME
-    password: $REGISTER_DB_PASSWORD
-    name: smregister

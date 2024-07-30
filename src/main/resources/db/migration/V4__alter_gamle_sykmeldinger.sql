@@ -1,1 +1,0 @@
-ALTER TABLE SYKMELDING ADD COLUMN gammel_sykmelding Text;
