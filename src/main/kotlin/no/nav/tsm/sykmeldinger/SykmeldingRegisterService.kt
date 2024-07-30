@@ -86,6 +86,7 @@ class SykmeldingRegisterService(
             MigrertReceivedSykmelding(
                 sykmeldingId = it.sykmeldingId,
                 receivedSykmelding = receivedSykmelding,
+                source = it.source
             )
         }
 
