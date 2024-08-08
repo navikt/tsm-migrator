@@ -1,17 +1,17 @@
 
-val kotlin_version="2.0.0"
+val kotlin_version="2.0.10"
 val logback_version="1.5.6"
 val koin_version="3.5.6"
 val prometheus_version="0.16.0"
-val logback_encoder_version="7.4"
-val kafka_version="3.7.0"
+val logback_encoder_version="8.0"
+val kafka_version="3.8.0"
 val jackson_version= "2.17.2"
-val opentelemetryVersion = "2.5.0"
-val mockkVersion = "1.13.11"
+val opentelemetryVersion = "2.6.0"
+val mockkVersion = "1.13.12"
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.0.10"
     id("io.ktor.plugin") version "2.3.12"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.10"
 }
 
 group = "no.nav.tsm"
