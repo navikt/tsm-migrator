@@ -6,7 +6,7 @@ val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
 val kafka_version="3.8.0"
 val jackson_version= "2.17.2"
-val opentelemetryVersion = "2.6.0"
+val opentelemetryVersion = "2.7.0"
 val mockkVersion = "1.13.12"
 plugins {
     kotlin("jvm") version "2.0.10"
