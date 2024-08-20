@@ -33,11 +33,10 @@ jobs:
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
   deploy-prod:
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    if: ${{ github.actor != 'dependabot[bot]' && github.ref_name == 'main'}} 
     name: Deploy to prod
     needs: [build]
     runs-on: ubuntu-latest
-    if: github.ref_name == 'main'
     permissions:
       contents: read
       id-token: write
