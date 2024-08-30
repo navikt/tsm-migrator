@@ -1,12 +1,13 @@
 package no.nav.tsm.smregister.models
 
+import no.nav.tsm.nysykmelding.Diagnose
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Sykmelding(
     val id: String,
     val msgId: String,
-    val pasientAktoerId: String,
+    val pasientAktoerId: String, // fjernes
     val medisinskVurdering: MedisinskVurdering,
     val skjermesForPasient: Boolean,
     val arbeidsgiver: Arbeidsgiver,
