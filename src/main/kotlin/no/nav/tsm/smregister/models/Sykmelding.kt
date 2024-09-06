@@ -1,28 +1,27 @@
 package no.nav.tsm.smregister.models
 
-import no.nav.tsm.nysykmelding.Diagnose
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Sykmelding(
-    val id: String,
-    val msgId: String,
+    val id: String, // yes
+    val msgId: String, // yes
     val pasientAktoerId: String, // fjernes
-    val medisinskVurdering: MedisinskVurdering,
-    val skjermesForPasient: Boolean,
-    val arbeidsgiver: Arbeidsgiver,
-    val perioder: List<Periode>,
-    val prognose: Prognose?,
-    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>,
-    val tiltakArbeidsplassen: String?,
-    val tiltakNAV: String?,
-    val andreTiltak: String?,
-    val meldingTilNAV: MeldingTilNAV?,
-    val meldingTilArbeidsgiver: String?,
-    val kontaktMedPasient: KontaktMedPasient,
-    val behandletTidspunkt: LocalDateTime,
-    val behandler: Behandler,
-    val avsenderSystem: AvsenderSystem,
+    val medisinskVurdering: MedisinskVurdering, // yes
+    val skjermesForPasient: Boolean, // yes
+    val arbeidsgiver: Arbeidsgiver, // yes
+    val perioder: List<Periode>, // yes
+    val prognose: Prognose?, // yes
+    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>, // yes
+    val tiltakArbeidsplassen: String?, // yes
+    val tiltakNAV: String?, // yes
+    val andreTiltak: String?, // yes
+    val meldingTilNAV: MeldingTilNAV?, // YES
+    val meldingTilArbeidsgiver: String?, // YES
+    val kontaktMedPasient: KontaktMedPasient, // YES
+    val behandletTidspunkt: LocalDateTime, // YES
+    val behandler: Behandler, // YES
+    val avsenderSystem: AvsenderSystem, // YES
     val syketilfelleStartDato: LocalDate?,
     val signaturDato: LocalDateTime,
     val navnFastlege: String?
@@ -155,19 +154,15 @@ data class SporsmalSvar(
 )
 
 enum class SvarRestriksjon(
-    val codeValue: String,
-    val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8134"
 ) {
-    SKJERMET_FOR_ARBEIDSGIVER("A", "Informasjonen skal ikke vises arbeidsgiver"),
-    SKJERMET_FOR_PASIENT("P", "Informasjonen skal ikke vises pasient"),
-    SKJERMET_FOR_NAV("N", "Informasjonen skal ikke vises NAV")
+    SKJERMET_FOR_ARBEIDSGIVER,
+    SKJERMET_FOR_PASIENT,
+    SKJERMET_FOR_NA,
 }
 
 enum class AnnenFraverGrunn(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8131"
 ) {
     GODKJENT_HELSEINSTITUSJON("1", "Når vedkommende er innlagt i en godkjent helseinstitusjon"),
     BEHANDLING_FORHINDRER_ARBEID(

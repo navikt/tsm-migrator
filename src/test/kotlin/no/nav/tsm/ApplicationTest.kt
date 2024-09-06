@@ -17,11 +17,12 @@ class ApplicationTest {
     fun testRoot() = testApplication {
         environment {
             config = MapApplicationConfig(
-                    "dbUser" to "dev",
-                    "dbPassword" to "dev",
-                    "dbHost" to "dev",
-                    "dbPort" to "dev",
-                    "dbName" to "dev")
+                "dbUser" to "dev",
+                "dbPassword" to "dev",
+                "dbHost" to "dev",
+                "dbPort" to "dev",
+                "dbName" to "dev"
+            )
         }
         application {
             routing {
@@ -36,3 +37,5 @@ class ApplicationTest {
         }
     }
 }
+
+
