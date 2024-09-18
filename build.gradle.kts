@@ -1,7 +1,7 @@
 
 val kotlin_version="2.0.20"
 val logback_version="1.5.8"
-val koin_version="3.5.6"
+val koin_version="4.0.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
 val kafka_version="3.8.0"
