@@ -5,6 +5,11 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.nav.tsm.sykmelding.validation.InvalidRule
+import no.nav.tsm.sykmelding.validation.PendingRule
+import no.nav.tsm.sykmelding.validation.ResolvedRule
+import no.nav.tsm.sykmelding.validation.Rule
+import no.nav.tsm.sykmelding.validation.RuleType
 import kotlin.reflect.KClass
 
 class SykmeldingModule : SimpleModule() {
@@ -12,10 +17,12 @@ class SykmeldingModule : SimpleModule() {
         addDeserializer(Aktivitet::class.java, AktivitetDeserializer())
         addDeserializer(ArbeidsgiverInfo::class.java, ArbeidsgiverInfoDeserializer())
         addDeserializer(IArbeid::class.java, IArbeidDeserializer())
+        addDeserializer(Rule::class.java, RuleDeserializer())
     }
 }
 
-abstract class CustomDeserializer<T: Any> : JsonDeserializer<T>() {
+
+abstract class CustomDeserializer<T : Any> : JsonDeserializer<T>() {
     abstract fun getClass(type: String): KClass<out T>
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): T {
@@ -23,6 +30,17 @@ abstract class CustomDeserializer<T: Any> : JsonDeserializer<T>() {
         val type = node.get("type").asText()
         val clazz = getClass(type)
         return p.codec.treeToValue(node, clazz.java)
+    }
+}
+
+class RuleDeserializer : CustomDeserializer<Rule>() {
+
+    override fun getClass(type: String): KClass<out Rule> {
+        return when (RuleType.valueOf(type)) {
+            RuleType.INVALID -> InvalidRule::class
+            RuleType.PENDING -> PendingRule::class
+            RuleType.RESOLVED -> ResolvedRule::class
+        }
     }
 }
 
@@ -46,7 +64,7 @@ class ArbeidsgiverInfoDeserializer : CustomDeserializer<ArbeidsgiverInfo>() {
     }
 }
 
-class AktivitetDeserializer: CustomDeserializer<Aktivitet>() {
+class AktivitetDeserializer : CustomDeserializer<Aktivitet>() {
     override fun getClass(type: String): KClass<out Aktivitet> {
         return when (Aktivitetstype.valueOf(type)) {
             Aktivitetstype.AKTIVITET_IKKE_MULIG -> AktivitetIkkeMulig::class

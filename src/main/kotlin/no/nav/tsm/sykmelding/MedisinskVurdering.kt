@@ -9,7 +9,7 @@ enum class DiagnoseSystem {
 data class DiagnoseInfo(
     val system: DiagnoseSystem,
     val kode: String,
-    val tekst: String,
+    val tekst: String?, // Fjernes?
 )
 
 enum class MedisinskArsakType {
@@ -25,15 +25,19 @@ enum class AnnenFravarArsakType {
 }
 
 data class AnnenFraverArsak(
-    val beskrivelse: String?, val arsak: AnnenFravarArsakType
+    val beskrivelse: String?, val arsak: AnnenFravarArsakType // TODO: Sjekk om det bare er en av disse som kan være satt
 )
 
 data class MedisinskArsak(
-    val beskrivelse: String, val arsak: MedisinskArsakType
+    val beskrivelse: String?, val arsak: MedisinskArsakType
 )
 
 data class ArbeidsrelatertArsak(
-    val beskrivelse: String, val arsak: ArbeidsrelatertArsakType
+    val beskrivelse: String?, val arsak: ArbeidsrelatertArsakType
+)
+
+data class Yrkesskade(
+    val yrkesskadeDato: LocalDate?
 )
 
 data class MedisinskVurdering(
@@ -41,8 +45,8 @@ data class MedisinskVurdering(
     val biDiagnoser: List<DiagnoseInfo>?,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
-    val yrkesskadeDato: LocalDate?,
-    val annenFraversArsak: AnnenFraverArsak?,
+    val yrkesskadeDato: LocalDate?, // Sjekke i spec om yrkesskadedato må være satt og kanksje egen klasse yrkessakde
     val skjermetForPasient: Boolean,
-    val syketilfelletStartDato: LocalDate
+    val syketilfelletStartDato: LocalDate?,
+    val annenFraversArsak: AnnenFraverArsak?,
 )

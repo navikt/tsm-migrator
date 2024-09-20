@@ -2,6 +2,7 @@ package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.sykmelding.SykmeldingMedBehandlingsutfall
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
@@ -35,6 +36,36 @@ fun Application.environmentModule() = module {
     single<Environment> { createEnvironment() }
 }
 
+val sykmeldingerInputConsumer = module {
+    single {
+        val env = get<Environment>()
+
+        val consumer: KafkaConsumer<String, ReceivedSykmelding> = KafkaConsumer(Properties().apply {
+            putAll(env.kafkaConfig)
+            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java.name
+            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrert-sykmelding-input"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-migrert-input-consumer"
+            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "100"
+        }, StringDeserializer(), JacksonKafkaDeserializer(ReceivedSykmelding::class))
+
+        val producer = KafkaProducer<String, SykmeldingMedBehandlingsutfall>(Properties().apply {
+            putAll(env.kafkaConfig)
+            this[ProducerConfig.ACKS_CONFIG] = "all"
+            this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+            this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-migrert-sykmelding-producer"
+            this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
+            this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
+            this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+            this[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "${env.hostname}-sykmeldingmedbehandlingsutfall-producer"
+        })
+
+
+    }
+}
+
 val migrertSykmeldingConsumer = module {
     single {
         val env = get<Environment>()
@@ -59,8 +90,10 @@ val migrertSykmeldingConsumer = module {
             this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
             this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
         })
+
         val sykmeldingRegisterService =
             SykmeldingRegisterService(producer, env.sykmeldingerInputTopic)
+
         MigrertSykmeldingConsumer(
             migrertSykmeldingConsumer = consumer,
             sykmeldingRegisterService = sykmeldingRegisterService,

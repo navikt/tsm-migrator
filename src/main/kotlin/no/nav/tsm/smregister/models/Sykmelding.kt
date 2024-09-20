@@ -157,7 +157,7 @@ enum class SvarRestriksjon(
 ) {
     SKJERMET_FOR_ARBEIDSGIVER,
     SKJERMET_FOR_PASIENT,
-    SKJERMET_FOR_NA,
+    SKJERMET_FOR_NAV,
 }
 
 enum class AnnenFraverGrunn(

@@ -4,6 +4,12 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.tsm.smregister.models.AvsenderSystem
+import no.nav.tsm.sykmelding.validation.InvalidRule
+import no.nav.tsm.sykmelding.validation.PendingRule
+import no.nav.tsm.sykmelding.validation.ResolvedRule
+import no.nav.tsm.sykmelding.validation.RuleOutcome
+import no.nav.tsm.sykmelding.validation.RuleResult
+import no.nav.tsm.sykmelding.validation.ValidationResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -17,10 +23,35 @@ class SykmeldingTest {
         .registerModule(SykmeldingModule())
     @Test
     fun testSerializationAndDeserialization() {
-        val sykmelding = SykmeldingMedBahndlingsutfall(
-            validation = ValidationResult(Result.INVALID, listOf(
-                RuleInfo("RULE_NAME", "message for sender", "message for user", Result.INVALID)
-            )),
+        val sykmelding = SykmeldingMedBehandlingsutfall(
+            kilde = SykmeldingKilde.ELEKTRONISK,
+            validation = ValidationResult(
+                status = RuleResult.INVALID,
+                rules = listOf(
+                    InvalidRule(
+                        outcome = RuleOutcome(
+                            outcome = RuleResult.INVALID,
+                            timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                        ),
+                        name = "INVALID_RULE",
+                        timestamp = OffsetDateTime.now(ZoneOffset.UTC),
+                        description = "description"
+                ),
+                    PendingRule(
+                        name = "PENDING_RULE",
+                        timestamp = OffsetDateTime.now(ZoneOffset.UTC),
+                        description = "description"
+                    ),
+                    ResolvedRule(
+                        name = "RESOLVED_RULE",
+                        timestamp = OffsetDateTime.now(ZoneOffset.UTC),
+                        description = "description",
+                        outcome = RuleOutcome(
+                            outcome = RuleResult.OK,
+                            timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                        )
+                    )
+            ),),
             sykmelding = Sykmelding(
                 id = UUID.randomUUID().toString(),
                 metadata = SykmeldingMetadata(
@@ -36,7 +67,7 @@ class SykmeldingTest {
                 arbeidsgiver = IngenArbeidsgiver(),
                 behandler = Behandler(
                     person = Person(ident = "1234567890", navn = Navn("Fornavn", "Etternanv")),
-                    adresse = Adresse("adresse", "1234", "steed", null),
+                    adresse = Adresse("adresse", "1234", "steed", "kommune", "postbox"),
                     kontaktInfo = emptyList()
                 ),
                 medisinskVurdering = MedisinskVurdering(
@@ -86,7 +117,7 @@ class SykmeldingTest {
         )
         val serializedSykmelding = objectMapper.writeValueAsString(sykmelding)
 
-        val deserializedSykmelding : SykmeldingMedBahndlingsutfall = objectMapper.readValue(serializedSykmelding)
+        val deserializedSykmelding : SykmeldingMedBehandlingsutfall = objectMapper.readValue(serializedSykmelding)
 
         assertEquals(sykmelding, deserializedSykmelding)
     }

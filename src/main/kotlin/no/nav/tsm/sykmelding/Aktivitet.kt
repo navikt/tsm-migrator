@@ -21,13 +21,13 @@ data class Behandlingsdager(
 }
 
 data class Gradert(
-    val grad: Int, override val fom: LocalDate, override val tom: LocalDate
+    val grad: Int, override val fom: LocalDate, override val tom: LocalDate, val reisetilskudd: Boolean,
 ) : Aktivitet {
     override val type = Aktivitetstype.GRADERT
 }
 
 data class Reisetilskudd(
-    val reisetilskudd: Boolean, override val fom: LocalDate, override val tom: LocalDate
+    override val fom: LocalDate, override val tom: LocalDate
 ) : Aktivitet {
     override val type = Aktivitetstype.REISETILSKUDD
 }
@@ -39,8 +39,8 @@ data class Avventende(
 }
 
 data class AktivitetIkkeMulig(
-    val medisinskArsak: MedisinskArsak,
-    val arbeidsrelatertArsak: ArbeidsrelatertArsak,
+    val medisinskArsak: MedisinskArsak?,
+    val arbeidsrelatertArsak: ArbeidsrelatertArsak?,
     override val fom: LocalDate,
     override val tom: LocalDate
 ) : Aktivitet {
