@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.tsm.sykmelding.validation.InvalidRule
 import no.nav.tsm.sykmelding.validation.PendingRule
-import no.nav.tsm.sykmelding.validation.ResolvedRule
+import no.nav.tsm.sykmelding.validation.OKRule
 import no.nav.tsm.sykmelding.validation.Rule
 import no.nav.tsm.sykmelding.validation.RuleType
 import kotlin.reflect.KClass
@@ -39,7 +39,7 @@ class RuleDeserializer : CustomDeserializer<Rule>() {
         return when (RuleType.valueOf(type)) {
             RuleType.INVALID -> InvalidRule::class
             RuleType.PENDING -> PendingRule::class
-            RuleType.RESOLVED -> ResolvedRule::class
+            RuleType.OK -> OKRule::class
         }
     }
 }

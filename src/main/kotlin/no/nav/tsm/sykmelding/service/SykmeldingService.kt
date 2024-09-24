@@ -43,13 +43,19 @@ import no.nav.tsm.sykmelding.SykmeldingMedBehandlingsutfall
 import no.nav.tsm.sykmelding.SykmeldingMetadata
 import no.nav.tsm.sykmelding.Tiltak
 import no.nav.tsm.sykmelding.validation.InvalidRule
+import no.nav.tsm.sykmelding.validation.OKRule
 import no.nav.tsm.sykmelding.validation.PendingRule
 import no.nav.tsm.sykmelding.validation.Rule
-import no.nav.tsm.sykmelding.validation.RuleOutcome
-import no.nav.tsm.sykmelding.validation.RuleResult
+import no.nav.tsm.sykmelding.validation.RuleType
 import no.nav.tsm.sykmelding.validation.ValidationResult
 import java.time.ZoneOffset
 
+enum class TilbakedatertMerknad {
+    UNDER_BEHANDLING,
+    UGYLDIG_TILBAKEDATERING,
+    TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER,
+    DELVIS_GODKJENT,
+}
 class SykmeldingService {
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
         return SykmeldingMedBehandlingsutfall(
@@ -146,7 +152,8 @@ class SykmeldingService {
             Status.OK -> mapOkOrPendingValidation(receivedSykmelding)
             Status.INVALID -> mapInvalidValidation(receivedSykmelding)
             Status.MANUAL_PROCESSING -> ValidationResult(
-                status = RuleResult.OK,
+                status = RuleType.OK,
+                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
                 rules = emptyList()
             )
         }
@@ -154,7 +161,8 @@ class SykmeldingService {
 
     private fun mapInvalidValidation(receivedSykmelding: ReceivedSykmelding): ValidationResult {
         return ValidationResult(
-            status = RuleResult.INVALID,
+            status = RuleType.INVALID,
+            timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
             rules = receivedSykmelding.validationResult.ruleHits.mapNotNull {
                 val rule = it
                 when (rule.ruleStatus) {
@@ -162,10 +170,6 @@ class SykmeldingService {
                         name = rule.ruleName,
                         timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
                         description = rule.messageForUser,
-                        outcome = RuleOutcome(
-                            outcome = RuleResult.INVALID,
-                            timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC)
-                        )
                     )
                     else -> null
                 }
@@ -176,13 +180,15 @@ class SykmeldingService {
     private fun mapOkOrPendingValidation(receivedSykmelding: ReceivedSykmelding): ValidationResult {
         if(receivedSykmelding.merknader.isNullOrEmpty()) {
             return ValidationResult(
-                status = RuleResult.OK,
+                status = RuleType.OK,
+                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
                 rules = emptyList()
             )
         }
         val rules: List<Rule> = mapTilbakedatertRules(receivedSykmelding.merknader, receivedSykmelding)
         return ValidationResult(
-            status = rules.maxOf { it.outcome.outcome },
+            status = rules.maxOf { it.type },
+            timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
             rules = rules
         )
     }
@@ -191,34 +197,29 @@ class SykmeldingService {
         merknader: List<Merknad>,
         receivedSykmelding: ReceivedSykmelding
     ) = merknader.map {
-        when (it.type) {
-            "TILBAKEDATERT" -> PendingRule(
-                name = "TILBAKEDATERT",
-                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
-                description = it.beskrivelse ?: "Tilbakedatert sykmelding",
+        when (TilbakedatertMerknad.valueOf(it.type)) {
+            TilbakedatertMerknad.UNDER_BEHANDLING -> PendingRule(
+                name = TilbakedatertMerknad.UNDER_BEHANDLING.name,
+                timestamp = it.tidspunkt ?: receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                description = it.beskrivelse ?: "Tilbakedatert sykmelding til manuell behandling",
             )
 
-            "UGYLDIG_TILBAKEDATERING" -> InvalidRule(
-                outcome = RuleOutcome(
-                    outcome = RuleResult.INVALID,
-                    timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC)
-                ),
-                name = "UGYLDIG_TILBAKEDATERING",
+            TilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> InvalidRule(
+                name = TilbakedatertMerknad.UGYLDIG_TILBAKEDATERING.name,
                 timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
                 description = it.beskrivelse ?: "Ugyldig tilbakedatering",
             )
 
-            "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" -> InvalidRule(
-                name = "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER",
+            TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> InvalidRule(
+                name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
                 timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
                 description = it.beskrivelse ?: "Tilbakedatering krever flere opplysninger",
-                outcome = RuleOutcome(
-                    outcome = RuleResult.INVALID,
-                    timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC)
-                )
             )
-
-            else -> throw IllegalArgumentException("Ukjent merknad")
+            TilbakedatertMerknad.DELVIS_GODKJENT -> OKRule(
+                name = TilbakedatertMerknad.DELVIS_GODKJENT.name,
+                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                description = it.beskrivelse ?: "Delvis godkjent tilbakedatering")
+            }
         }
     }
 
@@ -361,4 +362,4 @@ class SykmeldingService {
             HarArbeidsgiver.INGEN_ARBEIDSGIVER -> IngenArbeidsgiver()
         }
     }
-}
+

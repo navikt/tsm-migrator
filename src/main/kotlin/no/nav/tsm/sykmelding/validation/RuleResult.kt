@@ -4,16 +4,17 @@ import java.time.OffsetDateTime
 
 
 data class ValidationResult(
-    val status: RuleResult,
+    val status: RuleType,
+    val timestamp: OffsetDateTime,
     val rules: List<Rule>
 )
 
 enum class RuleType {
-    INVALID, PENDING, RESOLVED
+    OK, PENDING, INVALID
 }
 
 enum class RuleResult {
-    OK, PENDING, INVALID
+    OK, INVALID
 }
 
 enum class ValidationType {
@@ -29,38 +30,34 @@ sealed interface Rule {
     val type: RuleType
     val name: String
     val description: String
-    val timestamp: OffsetDateTime
     val validationType: ValidationType
-    val outcome: RuleOutcome
 }
 
 data class InvalidRule(
-    override val outcome: RuleOutcome,
     override val name: String,
-    override val timestamp: OffsetDateTime,
-    override val description: String
+    override val description: String,
+    val timestamp: OffsetDateTime,
+    override val validationType: ValidationType = ValidationType.AUTOMATIC
 ) : Rule {
-    override val validationType = ValidationType.AUTOMATIC
     override val type = RuleType.INVALID
+    val outcome = RuleOutcome(RuleResult.INVALID, timestamp)
 }
-
 
 data class PendingRule(
     override val name: String,
-    override val timestamp: OffsetDateTime,
+    val timestamp: OffsetDateTime,
     override val description: String,
     ) : Rule {
     override val validationType = ValidationType.MANUAL
     override val type = RuleType.PENDING
-    override val outcome = RuleOutcome(RuleResult.PENDING, timestamp)
 }
 
-data class ResolvedRule(
+data class OKRule(
     override val name: String,
-    override val timestamp: OffsetDateTime,
     override val description: String,
-    override val outcome: RuleOutcome
+    val timestamp: OffsetDateTime,
+    override val validationType: ValidationType = ValidationType.MANUAL
 ) : Rule {
-    override val type = RuleType.RESOLVED
-    override val validationType = ValidationType.MANUAL
+    override val type = RuleType.OK
+    val outcome: RuleOutcome = RuleOutcome(RuleResult.OK, timestamp)
 }

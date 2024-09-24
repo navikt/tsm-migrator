@@ -6,9 +6,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.tsm.smregister.models.AvsenderSystem
 import no.nav.tsm.sykmelding.validation.InvalidRule
 import no.nav.tsm.sykmelding.validation.PendingRule
-import no.nav.tsm.sykmelding.validation.ResolvedRule
+import no.nav.tsm.sykmelding.validation.OKRule
 import no.nav.tsm.sykmelding.validation.RuleOutcome
 import no.nav.tsm.sykmelding.validation.RuleResult
+import no.nav.tsm.sykmelding.validation.RuleType
 import no.nav.tsm.sykmelding.validation.ValidationResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -26,13 +27,10 @@ class SykmeldingTest {
         val sykmelding = SykmeldingMedBehandlingsutfall(
             kilde = SykmeldingKilde.ELEKTRONISK,
             validation = ValidationResult(
-                status = RuleResult.INVALID,
+                status = RuleType.INVALID,
+                timestamp = OffsetDateTime.now(ZoneOffset.UTC),
                 rules = listOf(
                     InvalidRule(
-                        outcome = RuleOutcome(
-                            outcome = RuleResult.INVALID,
-                            timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                        ),
                         name = "INVALID_RULE",
                         timestamp = OffsetDateTime.now(ZoneOffset.UTC),
                         description = "description"
@@ -42,14 +40,10 @@ class SykmeldingTest {
                         timestamp = OffsetDateTime.now(ZoneOffset.UTC),
                         description = "description"
                     ),
-                    ResolvedRule(
+                    OKRule(
                         name = "RESOLVED_RULE",
                         timestamp = OffsetDateTime.now(ZoneOffset.UTC),
                         description = "description",
-                        outcome = RuleOutcome(
-                            outcome = RuleResult.OK,
-                            timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                        )
                     )
             ),),
             sykmelding = Sykmelding(
