@@ -5,7 +5,7 @@ val koin_version="4.0.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
 val kafka_version="3.8.0"
-val jackson_version= "2.17.2"
+val jackson_version= "2.18.0"
 val opentelemetryVersion = "2.8.0"
 val mockkVersion = "1.13.12"
 plugins {
