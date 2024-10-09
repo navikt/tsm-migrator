@@ -1,6 +1,6 @@
 
 val kotlin_version="2.0.20"
-val logback_version="1.5.8"
+val logback_version="1.5.9"
 val koin_version="4.0.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
