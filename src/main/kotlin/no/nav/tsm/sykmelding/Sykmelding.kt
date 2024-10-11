@@ -1,24 +1,49 @@
 package no.nav.tsm.sykmelding
 
-import no.nav.tsm.smregister.models.AvsenderSystem
-import no.nav.tsm.sykmelding.validation.RuleResult
+import no.nav.tsm.sykmelding.metadata.Adresse
+import no.nav.tsm.sykmelding.metadata.Helsepersonell
+import no.nav.tsm.sykmelding.metadata.HelsepersonellKategori
+import no.nav.tsm.sykmelding.metadata.Kontaktinfo
+import no.nav.tsm.sykmelding.metadata.Meldingsinformasjon
+import no.nav.tsm.sykmelding.metadata.Navn
+import no.nav.tsm.sykmelding.metadata.PersonId
 import no.nav.tsm.sykmelding.validation.ValidationResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+
 data class SykmeldingMedBehandlingsutfall(
+    val meldingsInformasjon: Meldingsinformasjon,
     val sykmelding: Sykmelding,
     val validation: ValidationResult,
-    val kilde: SykmeldingKilde,
 )
-enum class SykmeldingKilde {
-    ELEKTRONISK, PAPIR, UTENLANDSK_PAPIR, UTENLANDS_NAV_NO, UTENLANDS_RINA
-}
+
+data class Pasient(
+    val navn: Navn?,
+    val navKontor: String?,
+    val navnFastlege: String?,
+    val fnr: String,
+    val kontaktinfo: List<Kontaktinfo>,
+)
+
+data class Behandler(
+    val navn: Navn,
+    val adresse: Adresse?,
+    val ids: List<PersonId>,
+    val kontaktinfo: List<Kontaktinfo>,
+)
+
+data class SignerendeBehandler(
+    val ids: List<PersonId>,
+    val helsepersonellKategori: HelsepersonellKategori,
+)
+
 data class Sykmelding(
     val id: String,
     val metadata: SykmeldingMetadata,
-    val pasient: Person,
+    val pasient: Pasient,
     val behandler: Behandler,
+    val signerendeBehandler: SignerendeBehandler,
     val arbeidsgiver: ArbeidsgiverInfo,
     val medisinskVurdering: MedisinskVurdering,
     val prognose: Prognose?,
@@ -28,42 +53,14 @@ data class Sykmelding(
     val aktivitet: List<Aktivitet>,
     val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>?,
 )
-
+data class AvsenderSystem(val navn: String, val versjon: String)
 data class SykmeldingMetadata(
-    val msgId: String?,
-    val regelsettVersjon: String,
-    val partnerreferanse: String?,
-    val avsenderSystem: AvsenderSystem,
     val mottattDato: OffsetDateTime,
-    val genDate: OffsetDateTime, // Todo endre navn?
+    val genDate: OffsetDateTime,
     val behandletTidspunkt: OffsetDateTime,
-)
-
-data class Navn(
-    val fornavn: String, val etternavn: String
-)
-
-data class Person(
-    val ident: String, val navn: Navn?
-)
-
-
-data class Adresse(
-    val gateAdresse: String?,
-    val postnummer: String?,
-    val land: String?,
-    val kommune: String?,
-    val postbox: String?,
-)
-
-data class Kontaktinfo( // TODO: sjekk hva det kan være
-    val type: String, val verdi: String
-)
-
-data class Behandler(
-    val person: Person,
-    val adresse: Adresse,
-    val kontaktInfo: List<Kontaktinfo>
+    val regelsettVersjon: String?,
+    val avsenderSystem: AvsenderSystem,
+    val strekkode: String?,
 )
 
 data class BistandNav(
