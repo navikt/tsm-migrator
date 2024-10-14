@@ -5,27 +5,56 @@ import java.time.OffsetDateTime
 enum class MetadataType {
     EMOTTAK,
     EMOTTAK_ENKEL,
+    UTENLANDSK_SYKMELDING,
+    PAPIRSYKMELDING_SYKMELDING,
 }
 
 sealed interface Meldingsinformasjon {
+    val msgInfo: MeldingMetadata
+    val sender: Organisasjon
+    val receiver: Organisasjon
     val type: MetadataType
     val vedlegg: List<String>?
 }
 
+data class Papirsykmelding(
+    override val msgInfo: MeldingMetadata,
+    override val sender: Organisasjon,
+    override val receiver: Organisasjon
+) : Meldingsinformasjon {
+    override val vedlegg = null
+    override val type = MetadataType.PAPIRSYKMELDING_SYKMELDING
+}
+
+data class UtenlandskSykmelding(
+    val land: String,
+    val folkeRegistertAdresseErBrakkeEllerTilsvarende: Boolean,
+    val erAdresseUtland: Boolean?,
+)
+data class Utenlandsk(
+    override val msgInfo: MeldingMetadata,
+    override val sender: Organisasjon,
+    override val receiver: Organisasjon,
+    val utenlandskSykmelding: UtenlandskSykmelding
+) : Meldingsinformasjon {
+    override val vedlegg = null
+    override val type: MetadataType = MetadataType.UTENLANDSK_SYKMELDING
+}
+
 data class EmottakEnkel(
-    val msgInfo: MeldingMetadata,
-    val sender: Organisasjon,
-    val receiver: Organisasjon,
+    override val msgInfo: MeldingMetadata,
+    override val sender: Organisasjon,
+    override val receiver: Organisasjon,
     override val vedlegg: List<String>?,
 ) : Meldingsinformasjon {
     override val type = MetadataType.EMOTTAK_ENKEL
 }
 
 data class EDIEmottak(
-    val msgInfo: MeldingMetadata,
     val mottakenhetBlokk: MottakenhetBlokk,
-    val sender: Organisasjon,
-    val receiver: Organisasjon,
+    override val msgInfo: MeldingMetadata,
+    override val sender: Organisasjon,
+    override val receiver: Organisasjon,
     val pasient: Pasient?,
     override val vedlegg: List<String>?,
 ) : Meldingsinformasjon {
