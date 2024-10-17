@@ -4,7 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopping
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.tsm.sykmelding.SykmeldingReformatService
+import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
 

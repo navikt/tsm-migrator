@@ -1,21 +1,21 @@
-package no.nav.tsm.sykmelding.model
+package no.nav.tsm.reformat.sykmelding.model
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.nav.tsm.sykmelding.model.metadata.EDIEmottak
-import no.nav.tsm.sykmelding.model.metadata.EmottakEnkel
-import no.nav.tsm.sykmelding.model.metadata.Meldingsinformasjon
-import no.nav.tsm.sykmelding.model.metadata.MetadataType
-import no.nav.tsm.sykmelding.model.metadata.Papirsykmelding
-import no.nav.tsm.sykmelding.model.metadata.Utenlandsk
-import no.nav.tsm.sykmelding.validation.InvalidRule
-import no.nav.tsm.sykmelding.validation.PendingRule
-import no.nav.tsm.sykmelding.validation.OKRule
-import no.nav.tsm.sykmelding.validation.Rule
-import no.nav.tsm.sykmelding.validation.RuleType
+import no.nav.tsm.reformat.sykmelding.model.metadata.EDIEmottak
+import no.nav.tsm.reformat.sykmelding.model.metadata.EmottakEnkel
+import no.nav.tsm.reformat.sykmelding.model.metadata.Meldingsinformasjon
+import no.nav.tsm.reformat.sykmelding.model.metadata.MetadataType
+import no.nav.tsm.reformat.sykmelding.model.metadata.Papirsykmelding
+import no.nav.tsm.reformat.sykmelding.model.metadata.Utenlandsk
+import no.nav.tsm.reformat.sykmelding.validation.InvalidRule
+import no.nav.tsm.reformat.sykmelding.validation.PendingRule
+import no.nav.tsm.reformat.sykmelding.validation.OKRule
+import no.nav.tsm.reformat.sykmelding.validation.Rule
+import no.nav.tsm.reformat.sykmelding.validation.RuleType
 import kotlin.reflect.KClass
 
 class SykmeldingModule : SimpleModule() {

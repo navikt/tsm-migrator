@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding.util
+package no.nav.tsm.reformat.sykmelding.util
 
 import com.migesok.jaxb.adapter.javatime.LocalDateTimeXmlAdapter
 import com.migesok.jaxb.adapter.javatime.LocalDateXmlAdapter

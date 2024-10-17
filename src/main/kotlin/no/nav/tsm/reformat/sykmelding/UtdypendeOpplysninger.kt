@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding
+package no.nav.tsm.reformat.sykmelding
 
 data class SporsmalSvar(
     val sporsmal: String?, val svar: String, val restriksjoner: List<SvarRestriksjon>

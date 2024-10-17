@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding.validation
+package no.nav.tsm.reformat.sykmelding.validation
 
 import java.time.OffsetDateTime
 

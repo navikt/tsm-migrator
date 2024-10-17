@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding.util
+package no.nav.tsm.reformat.sykmelding.util
 
 import org.slf4j.LoggerFactory
 

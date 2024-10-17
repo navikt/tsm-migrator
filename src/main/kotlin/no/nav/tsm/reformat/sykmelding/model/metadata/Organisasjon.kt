@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding.model.metadata
+package no.nav.tsm.reformat.sykmelding.model.metadata
 
 enum class OrgIdType {
     AKO,

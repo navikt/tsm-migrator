@@ -1,14 +1,14 @@
-package no.nav.tsm.sykmelding.model
+package no.nav.tsm.reformat.sykmelding.model
 
 import no.nav.tsm.smregister.models.UtenlandskInfo
-import no.nav.tsm.sykmelding.SporsmalSvar
-import no.nav.tsm.sykmelding.model.metadata.Adresse
-import no.nav.tsm.sykmelding.model.metadata.HelsepersonellKategori
-import no.nav.tsm.sykmelding.model.metadata.Kontaktinfo
-import no.nav.tsm.sykmelding.model.metadata.Meldingsinformasjon
-import no.nav.tsm.sykmelding.model.metadata.Navn
-import no.nav.tsm.sykmelding.model.metadata.PersonId
-import no.nav.tsm.sykmelding.validation.ValidationResult
+import no.nav.tsm.reformat.sykmelding.SporsmalSvar
+import no.nav.tsm.reformat.sykmelding.model.metadata.Adresse
+import no.nav.tsm.reformat.sykmelding.model.metadata.HelsepersonellKategori
+import no.nav.tsm.reformat.sykmelding.model.metadata.Kontaktinfo
+import no.nav.tsm.reformat.sykmelding.model.metadata.Meldingsinformasjon
+import no.nav.tsm.reformat.sykmelding.model.metadata.Navn
+import no.nav.tsm.reformat.sykmelding.model.metadata.PersonId
+import no.nav.tsm.reformat.sykmelding.validation.ValidationResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 

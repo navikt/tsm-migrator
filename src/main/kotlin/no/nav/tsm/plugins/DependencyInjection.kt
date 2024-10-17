@@ -3,9 +3,9 @@ package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.sykmelding.SykmeldingReformatService
-import no.nav.tsm.sykmelding.model.SykmeldingMedBehandlingsutfall
-import no.nav.tsm.sykmelding.service.SykmeldingMapper
+import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
+import no.nav.tsm.reformat.sykmelding.model.SykmeldingMedBehandlingsutfall
+import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.sykmeldinger.SykmeldingRegisterService
 import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
@@ -61,15 +61,15 @@ val sykmeldingReformatService = module {
             this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-sykmelding-reformat-producer"
             this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
             this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
-            this[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "${env.hostname}-sykmelding-reformat-producer"
         })
 
         val reformatService = SykmeldingReformatService(
             kafkaConsumer = consumer,
             sykmeldingMapper = SykmeldingMapper(),
             kafkaProducer = producer,
-            outputTopic = env.mottattSykmeldingTopic,
-            inputTopic = env.sykmeldingerInputTopic
+            outputTopic = env.sykmeldingOutputTopic,
+            inputTopic = env.sykmeldingerInputTopic,
+            cluster = env.cluster
         )
         reformatService
     }
