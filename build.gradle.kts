@@ -8,6 +8,10 @@ val kafka_version="3.8.0"
 val jackson_version= "2.18.0"
 val opentelemetryVersion = "2.8.0"
 val mockkVersion = "1.13.12"
+val syfoXmlCodegenVersion = "2.0.1"
+val jaxbRuntimeVersion = "2.4.0-b180830.0438"
+val jaxbApiVersion = "2.4.0-b180830.0359"
+val javaTimeAdapterVersion = "1.1.3"
 plugins {
     kotlin("jvm") version "2.0.20"
     id("io.ktor.plugin") version "2.3.12"
@@ -24,8 +28,13 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+
 repositories {
     mavenCentral()
+    maven(url = "https://packages.confluent.io/maven/")
+    maven {
+        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+    }
 }
 
 dependencies {
@@ -49,6 +58,13 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("io.mockk:mockk:$mockkVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegenVersion")
+    implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegenVersion")
+    implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegenVersion")
+    implementation("no.nav.helse.xml:kith-apprec:$syfoXmlCodegenVersion")
+    implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
+    implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
+    implementation("com.migesok", "jaxb-java-time-adapters", javaTimeAdapterVersion)
 }
 
 tasks {

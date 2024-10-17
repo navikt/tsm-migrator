@@ -19,7 +19,10 @@ class JacksonKafkaDeserializer<T : Any>(private val type: KClass<T>) : Deseriali
 
     override fun configure(configs: MutableMap<String, *>, isKey: Boolean) {}
 
-    override fun deserialize(topic: String?, data: ByteArray): T {
+    override fun deserialize(topic: String, data: ByteArray?): T? {
+        if (data == null || data.isEmpty()) {
+            return null
+        }
         return objectMapper.readValue(data, type.java)
     }
 

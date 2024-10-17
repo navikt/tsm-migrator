@@ -3,6 +3,7 @@ package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.host
 import io.ktor.server.config.ApplicationConfig
+import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
 import java.util.Properties
 
 class Environment(
@@ -13,6 +14,8 @@ class Environment(
     val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
     val migrertSykmeldingTopic: String = "tsm.migrert-sykmelding",
     val sykmeldingerInputTopic: String = "tsm.sykmeldinger-input",
+    val sykmeldingOutputTopic: String = "tsm.sykmelding-raw",
+    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
 )
 
 private fun ApplicationConfig.requiredEnv(name: String) =

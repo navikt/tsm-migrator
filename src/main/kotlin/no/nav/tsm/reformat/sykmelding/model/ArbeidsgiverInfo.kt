@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding
+package no.nav.tsm.reformat.sykmelding.model
 
 import java.time.LocalDate
 
@@ -18,8 +18,8 @@ data class EnArbeidsgiver(
 }
 
 data class FlereArbeidsgivere(
-    val navn: String,
-    val yrkesbetegnelse: String,
+    val navn: String?,
+    val yrkesbetegnelse: String?,
     val stillingsprosent: Int?,
     val meldingTilArbeidsgiver: String?,
     val tiltakArbeidsplassen: String?

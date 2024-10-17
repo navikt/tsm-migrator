@@ -20,12 +20,12 @@ data class ReceivedSykmelding(
     val merknader: List<Merknad>?,
     val partnerreferanse: String?,
     val vedlegg: List<String>?,
-    val utenlandskSykmelding: UtenlandskSykmelding?,
+    val utenlandskSykmelding: UtenlandskInfo?,
     /**
      * Full fellesformat as a XML payload, this is only used for infotrygd compat and should be
      * removed in thefuture
      */
-    val fellesformat: String,
+    val fellesformat: String?,
     /** TSS-ident, this is only used for infotrygd compat and should be removed in thefuture */
     val tssid: String?,
     val validationResult: ValidationResult,
