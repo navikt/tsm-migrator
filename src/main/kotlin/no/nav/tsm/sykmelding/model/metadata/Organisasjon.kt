@@ -1,28 +1,53 @@
-package no.nav.tsm.sykmelding.metadata
+package no.nav.tsm.sykmelding.model.metadata
 
 enum class OrgIdType {
-    ENH,
-    RSH,
-    HER,
-    NPR,
-    SYS,
-    APO,
     AKO,
-    LIN,
+    APO,
+    AVD,
+    ENH,
+    HER,
     LAV,
-    LOK;
+    LIN,
+    LOK,
+    NPR,
+    RSH,
+    SYS,
+    UGYLDIG;
+
+    companion object {
+        fun parse(type: String): OrgIdType {
+            return when(type) {
+                "AKO" -> AKO
+                "APO" -> APO
+                "AVD" -> AVD
+                "ENH" -> ENH
+                "HER" -> HER
+                "LAV" -> LAV
+                "LIN" -> LIN
+                "LOK" -> LOK
+                "NPR" -> NPR
+                "RSH" -> RSH
+                "SYS" -> SYS
+                "her" -> UGYLDIG
+                else -> throw IllegalArgumentException("Unknown OrgIdType: $type")
+            }
+        }
+    }
 }
 
 enum class OrganisasjonsType {
     PRIVATE_SPESIALISTER_MED_DRIFTSAVTALER,
     TANNLEGE_TANNHELSE,
-    IKKE_OPPGITT;
+    IKKE_OPPGITT,
+    UGYLDIG;
 
     companion object {
         fun parse(v: String?): OrganisasjonsType {
             return when(v) {
                 "4" -> PRIVATE_SPESIALISTER_MED_DRIFTSAVTALER
                 "110" -> TANNLEGE_TANNHELSE
+                "NXU:IT" -> UGYLDIG
+                "NXU:IT," -> UGYLDIG
                 null -> IKKE_OPPGITT
                 else -> throw IllegalArgumentException("Ukjent organisasjonstype: $v")
             }
@@ -36,7 +61,7 @@ data class OrgId(
 )
 
 data class Organisasjon(
-    val navn: String,
+    val navn: String?,
     val type: OrganisasjonsType,
     val ids: List<OrgId>,
     val adresse: Adresse?,

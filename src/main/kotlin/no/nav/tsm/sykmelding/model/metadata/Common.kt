@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding.metadata
+package no.nav.tsm.sykmelding.model.metadata
 
 enum class AdresseType {
     BOSTEDSADRESSE,
@@ -10,10 +10,11 @@ enum class AdresseType {
     MIDLERTIDIG_ADRESSE,
     ARBEIDSADRESSE,
     UBRUKELIG_ADRESSE,
-    UKJENT;
+    UKJENT,
+    UGYLDIG;
 
     companion object {
-        fun parse(v: String): AdresseType {
+        fun parse(v: String?): AdresseType {
             return when (v) {
                 "BAD" -> UBRUKELIG_ADRESSE
                 "H" -> BOSTEDSADRESSE
@@ -24,6 +25,10 @@ enum class AdresseType {
                 "RES" -> BESOKSADRESSE
                 "TMP" -> MIDLERTIDIG_ADRESSE
                 "WP" -> ARBEIDSADRESSE
+                "2" -> UGYLDIG
+                "token" -> UGYLDIG
+                "OTHER" -> UGYLDIG
+                null -> UKJENT
                 else -> throw IllegalArgumentException("Ukjent adressestype: $v")
             }
         }
@@ -56,10 +61,12 @@ enum class KontaktinfoType {
     ARBEIDSPLASS_SENTRALBORD,
     ARBEIDSPLASS_DIREKTENUMMER,
     ARBEIDSPLASS,
-    TLF;
+    TLF,
+    IKKE_OPPGITT,
+    UGYLDIG;
 
     companion object {
-        fun parse(v: String): KontaktinfoType {
+        fun parse(v: String?): KontaktinfoType {
             return when (v) {
                 "AS" -> TELEFONSVARER
                 "EC" -> NODNUMMER
@@ -72,6 +79,11 @@ enum class KontaktinfoType {
                 "WC" -> ARBEIDSPLASS_SENTRALBORD
                 "WD" -> ARBEIDSPLASS_DIREKTENUMMER
                 "WP" -> ARBEIDSPLASS
+                null -> IKKE_OPPGITT
+                "Tel" -> UGYLDIG
+                "vTelecomToken1" -> UGYLDIG
+                "vTelecomToken2" -> UGYLDIG
+                "NONE" -> UGYLDIG
                 else -> throw IllegalArgumentException("Ukjent kontaktinfotype: $v")
             }
         }

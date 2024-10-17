@@ -1,4 +1,4 @@
-package no.nav.tsm.sykmelding
+package no.nav.tsm.sykmelding.model
 
 import java.time.LocalDate
 

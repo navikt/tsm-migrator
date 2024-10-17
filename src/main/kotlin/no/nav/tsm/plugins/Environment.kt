@@ -13,6 +13,7 @@ class Environment(
     val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
     val migrertSykmeldingTopic: String = "tsm.migrert-sykmelding",
     val sykmeldingerInputTopic: String = "tsm.sykmeldinger-input",
+    val mottattSykmeldingTopic: String = "tsm.mottatt-sykmelding",
 )
 
 private fun ApplicationConfig.requiredEnv(name: String) =

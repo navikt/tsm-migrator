@@ -1,20 +1,21 @@
-package no.nav.tsm.sykmelding
+package no.nav.tsm.sykmelding.model
 
-import no.nav.tsm.sykmelding.metadata.Adresse
-import no.nav.tsm.sykmelding.metadata.Helsepersonell
-import no.nav.tsm.sykmelding.metadata.HelsepersonellKategori
-import no.nav.tsm.sykmelding.metadata.Kontaktinfo
-import no.nav.tsm.sykmelding.metadata.Meldingsinformasjon
-import no.nav.tsm.sykmelding.metadata.Navn
-import no.nav.tsm.sykmelding.metadata.PersonId
+import no.nav.tsm.smregister.models.UtenlandskInfo
+import no.nav.tsm.sykmelding.SporsmalSvar
+import no.nav.tsm.sykmelding.model.metadata.Adresse
+import no.nav.tsm.sykmelding.model.metadata.HelsepersonellKategori
+import no.nav.tsm.sykmelding.model.metadata.Kontaktinfo
+import no.nav.tsm.sykmelding.model.metadata.Meldingsinformasjon
+import no.nav.tsm.sykmelding.model.metadata.Navn
+import no.nav.tsm.sykmelding.model.metadata.PersonId
 import no.nav.tsm.sykmelding.validation.ValidationResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
 
 data class SykmeldingMedBehandlingsutfall(
-    val meldingsInformasjon: Meldingsinformasjon,
-    val sykmelding: Sykmelding,
+    val metadata: Meldingsinformasjon,
+    val sykmelding: ISykmelding,
     val validation: ValidationResult,
 )
 
@@ -38,21 +39,50 @@ data class SignerendeBehandler(
     val helsepersonellKategori: HelsepersonellKategori,
 )
 
+enum class SykmeldingType {
+    SYKMELDING,
+    UTENLANDSK_SYKMELDING
+}
+
+sealed interface ISykmelding {
+    val type: SykmeldingType
+    val id: String
+    val metadata: SykmeldingMetadata
+    val pasient: Pasient
+    val medisinskVurdering: MedisinskVurdering
+    val aktivitet: List<Aktivitet>
+}
+
+data class UtenlandskSykmelding(
+    override val id: String,
+    override val metadata: SykmeldingMetadata,
+    override val pasient: Pasient,
+    override val medisinskVurdering: MedisinskVurdering,
+    override val aktivitet: List<Aktivitet>,
+    val utenlandskInfo: UtenlandskInfo
+) : ISykmelding {
+    override val type = SykmeldingType.UTENLANDSK_SYKMELDING
+}
+
+
 data class Sykmelding(
-    val id: String,
-    val metadata: SykmeldingMetadata,
-    val pasient: Pasient,
+    override val id: String,
+    override val metadata: SykmeldingMetadata,
+    override val pasient: Pasient,
+    override val medisinskVurdering: MedisinskVurdering,
+    override val aktivitet: List<Aktivitet>,
     val behandler: Behandler,
-    val signerendeBehandler: SignerendeBehandler,
     val arbeidsgiver: ArbeidsgiverInfo,
-    val medisinskVurdering: MedisinskVurdering,
+    val signerendeBehandler: SignerendeBehandler,
     val prognose: Prognose?,
     val tiltak: Tiltak?,
     val bistandNav: BistandNav?,
     val tilbakedatering: Tilbakedatering?,
-    val aktivitet: List<Aktivitet>,
     val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>?,
-)
+) : ISykmelding {
+    override val type = SykmeldingType.SYKMELDING
+}
+
 data class AvsenderSystem(val navn: String, val versjon: String)
 data class SykmeldingMetadata(
     val mottattDato: OffsetDateTime,

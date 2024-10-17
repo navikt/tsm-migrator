@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.sykmelding.model.SykmeldingModule
 import no.nav.tsm.sykmeldinger.kafka.MigrertReceivedSykmelding
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -20,6 +21,7 @@ class SykmeldingRegisterService(
 ) {
     private val objectMapper = ObjectMapper().apply {
         registerKotlinModule()
+        registerModule(SykmeldingModule())
         registerModule(JavaTimeModule())
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)

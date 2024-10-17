@@ -1,60 +1,76 @@
-package no.nav.tsm.sykmelding.metadata
+package no.nav.tsm.sykmelding.model.metadata
 
 import java.time.OffsetDateTime
 
 enum class MetadataType {
+    ENKEL,
     EMOTTAK,
-    EMOTTAK_ENKEL,
     UTENLANDSK_SYKMELDING,
-    PAPIRSYKMELDING_SYKMELDING,
+    PAPIRSYKMELDING,
 }
 
 sealed interface Meldingsinformasjon {
-    val msgInfo: MeldingMetadata
-    val sender: Organisasjon
-    val receiver: Organisasjon
     val type: MetadataType
     val vedlegg: List<String>?
 }
 
 data class Papirsykmelding(
-    override val msgInfo: MeldingMetadata,
-    override val sender: Organisasjon,
-    override val receiver: Organisasjon
+    val msgInfo: MeldingMetadata,
+    val sender: Organisasjon,
+    val receiver: Organisasjon,
+    val journalPostId: String,
 ) : Meldingsinformasjon {
     override val vedlegg = null
-    override val type = MetadataType.PAPIRSYKMELDING_SYKMELDING
+    override val type = MetadataType.PAPIRSYKMELDING
 }
 
-data class UtenlandskSykmelding(
-    val land: String,
-    val folkeRegistertAdresseErBrakkeEllerTilsvarende: Boolean,
-    val erAdresseUtland: Boolean?,
-)
 data class Utenlandsk(
-    override val msgInfo: MeldingMetadata,
-    override val sender: Organisasjon,
-    override val receiver: Organisasjon,
-    val utenlandskSykmelding: UtenlandskSykmelding
+    val land: String,
+    val journalPostId: String,
 ) : Meldingsinformasjon {
     override val vedlegg = null
     override val type: MetadataType = MetadataType.UTENLANDSK_SYKMELDING
 }
 
 data class EmottakEnkel(
-    override val msgInfo: MeldingMetadata,
-    override val sender: Organisasjon,
-    override val receiver: Organisasjon,
+    val msgInfo: MeldingMetadata,
+    val sender: Organisasjon,
+    val receiver: Organisasjon,
     override val vedlegg: List<String>?,
 ) : Meldingsinformasjon {
-    override val type = MetadataType.EMOTTAK_ENKEL
+    override val type = MetadataType.ENKEL
 }
+
+enum class AckType {
+    JA,
+    NEI,
+    KUN_VED_FEIL,
+    IKKE_OPPGITT,
+    UGYLDIG;
+
+    companion object {
+        fun parse(value: String?): AckType {
+            return when (value) {
+                null -> IKKE_OPPGITT
+                "J" -> JA
+                "N" -> NEI
+                "F" -> KUN_VED_FEIL
+                "" -> UGYLDIG
+                else -> throw IllegalArgumentException("Unrecognized ack type: $value")
+            }
+        }
+    }
+}
+data class Ack(
+    val ackType: AckType,
+)
 
 data class EDIEmottak(
     val mottakenhetBlokk: MottakenhetBlokk,
-    override val msgInfo: MeldingMetadata,
-    override val sender: Organisasjon,
-    override val receiver: Organisasjon,
+    val ack: Ack,
+    val msgInfo: MeldingMetadata,
+    val sender: Organisasjon,
+    val receiver: Organisasjon,
     val pasient: Pasient?,
     override val vedlegg: List<String>?,
 ) : Meldingsinformasjon {
@@ -84,13 +100,13 @@ data class MottakenhetBlokk(
     val ediLogid: String,
     val avsender: String,
     val ebXMLSamtaleId: String,
-    val mottaksId: String,
+    val mottaksId: String?,
     val meldingsType: String,
     val avsenderRef: String,
-    val avsenderFnrFraDigSignatur: String,
+    val avsenderFnrFraDigSignatur: String?,
     val mottattDato: OffsetDateTime,
-    val orgnummer: String,
-    val avsenderOrgNrFraDigSignatur: String,
+    val orgnummer: String?,
+    val avsenderOrgNrFraDigSignatur: String?,
     val partnerReferanse: String,
     val herIdentifikator: String,
     val ebRole: String,

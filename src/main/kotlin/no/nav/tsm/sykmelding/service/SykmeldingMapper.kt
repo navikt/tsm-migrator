@@ -18,130 +18,171 @@ import no.nav.tsm.smregister.models.Periode
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.Status
 import no.nav.tsm.smregister.models.SvarRestriksjon
-import no.nav.tsm.sykmelding.Aktivitet
-import no.nav.tsm.sykmelding.AktivitetIkkeMulig
-import no.nav.tsm.sykmelding.AnnenFravarArsakType
-import no.nav.tsm.sykmelding.AnnenFraverArsak
-import no.nav.tsm.sykmelding.ArbeidsgiverInfo
-import no.nav.tsm.sykmelding.ArbeidsrelatertArsak
-import no.nav.tsm.sykmelding.ArbeidsrelatertArsakType
-import no.nav.tsm.sykmelding.AvsenderSystem
-import no.nav.tsm.sykmelding.Avventende
-import no.nav.tsm.sykmelding.Behandler
-import no.nav.tsm.sykmelding.Behandlingsdager
-import no.nav.tsm.sykmelding.BistandNav
-import no.nav.tsm.sykmelding.DiagnoseInfo
-import no.nav.tsm.sykmelding.DiagnoseSystem
-import no.nav.tsm.sykmelding.EnArbeidsgiver
-import no.nav.tsm.sykmelding.ErIArbeid
-import no.nav.tsm.sykmelding.ErIkkeIArbeid
-import no.nav.tsm.sykmelding.FlereArbeidsgivere
-import no.nav.tsm.sykmelding.Gradert
-import no.nav.tsm.sykmelding.IArbeid
-import no.nav.tsm.sykmelding.IngenArbeidsgiver
-import no.nav.tsm.sykmelding.MedisinskArsak
-import no.nav.tsm.sykmelding.MedisinskArsakType
-import no.nav.tsm.sykmelding.MedisinskVurdering
-import no.nav.tsm.sykmelding.Prognose
-import no.nav.tsm.sykmelding.Reisetilskudd
-import no.nav.tsm.sykmelding.SignerendeBehandler
+import no.nav.tsm.smregister.models.UtenlandskInfo
+import no.nav.tsm.sykmelding.model.Aktivitet
+import no.nav.tsm.sykmelding.model.AktivitetIkkeMulig
+import no.nav.tsm.sykmelding.model.AnnenFravarArsakType
+import no.nav.tsm.sykmelding.model.AnnenFraverArsak
+import no.nav.tsm.sykmelding.model.ArbeidsgiverInfo
+import no.nav.tsm.sykmelding.model.ArbeidsrelatertArsak
+import no.nav.tsm.sykmelding.model.ArbeidsrelatertArsakType
+import no.nav.tsm.sykmelding.model.AvsenderSystem
+import no.nav.tsm.sykmelding.model.Avventende
+import no.nav.tsm.sykmelding.model.Behandler
+import no.nav.tsm.sykmelding.model.Behandlingsdager
+import no.nav.tsm.sykmelding.model.BistandNav
+import no.nav.tsm.sykmelding.model.DiagnoseInfo
+import no.nav.tsm.sykmelding.model.DiagnoseSystem
+import no.nav.tsm.sykmelding.model.EnArbeidsgiver
+import no.nav.tsm.sykmelding.model.ErIArbeid
+import no.nav.tsm.sykmelding.model.ErIkkeIArbeid
+import no.nav.tsm.sykmelding.model.FlereArbeidsgivere
+import no.nav.tsm.sykmelding.model.Gradert
+import no.nav.tsm.sykmelding.model.IArbeid
+import no.nav.tsm.sykmelding.model.IngenArbeidsgiver
+import no.nav.tsm.sykmelding.model.MedisinskArsak
+import no.nav.tsm.sykmelding.model.MedisinskArsakType
+import no.nav.tsm.sykmelding.model.MedisinskVurdering
+import no.nav.tsm.sykmelding.model.Prognose
+import no.nav.tsm.sykmelding.model.Reisetilskudd
+import no.nav.tsm.sykmelding.model.SignerendeBehandler
 import no.nav.tsm.sykmelding.SporsmalSvar
-import no.nav.tsm.sykmelding.Sykmelding
-import no.nav.tsm.sykmelding.SykmeldingMedBehandlingsutfall
-import no.nav.tsm.sykmelding.SykmeldingMetadata
-import no.nav.tsm.sykmelding.Tilbakedatering
-import no.nav.tsm.sykmelding.Tiltak
-import no.nav.tsm.sykmelding.Yrkesskade
-import no.nav.tsm.sykmelding.metadata.Adresse
-import no.nav.tsm.sykmelding.metadata.AdresseType
-import no.nav.tsm.sykmelding.metadata.EDIEmottak
-import no.nav.tsm.sykmelding.metadata.EmottakEnkel
-import no.nav.tsm.sykmelding.metadata.Helsepersonell
-import no.nav.tsm.sykmelding.metadata.HelsepersonellKategori
-import no.nav.tsm.sykmelding.metadata.Kjonn
-import no.nav.tsm.sykmelding.metadata.Kontaktinfo
-import no.nav.tsm.sykmelding.metadata.KontaktinfoType
-import no.nav.tsm.sykmelding.metadata.MeldingMetadata
-import no.nav.tsm.sykmelding.metadata.Meldingstype
-import no.nav.tsm.sykmelding.metadata.MottakenhetBlokk
-import no.nav.tsm.sykmelding.metadata.Navn
-import no.nav.tsm.sykmelding.metadata.OrgId
-import no.nav.tsm.sykmelding.metadata.OrgIdType
-import no.nav.tsm.sykmelding.metadata.Organisasjon
-import no.nav.tsm.sykmelding.metadata.OrganisasjonsType
-import no.nav.tsm.sykmelding.metadata.Papirsykmelding
-import no.nav.tsm.sykmelding.metadata.Pasient
-import no.nav.tsm.sykmelding.metadata.PersonId
-import no.nav.tsm.sykmelding.metadata.PersonIdType
-import no.nav.tsm.sykmelding.metadata.RolleTilPasient
-import no.nav.tsm.sykmelding.metadata.UnderOrganisasjon
-import no.nav.tsm.sykmelding.metadata.Utenlandsk
-import no.nav.tsm.sykmelding.metadata.UtenlandskSykmelding
+import no.nav.tsm.sykmelding.model.Sykmelding
+import no.nav.tsm.sykmelding.model.SykmeldingMedBehandlingsutfall
+import no.nav.tsm.sykmelding.model.SykmeldingMetadata
+import no.nav.tsm.sykmelding.model.Tilbakedatering
+import no.nav.tsm.sykmelding.model.Tiltak
+import no.nav.tsm.sykmelding.model.Yrkesskade
+import no.nav.tsm.sykmelding.model.metadata.Ack
+import no.nav.tsm.sykmelding.model.metadata.AckType
+import no.nav.tsm.sykmelding.model.metadata.Adresse
+import no.nav.tsm.sykmelding.model.metadata.AdresseType
+import no.nav.tsm.sykmelding.model.metadata.EDIEmottak
+import no.nav.tsm.sykmelding.model.metadata.EmottakEnkel
+import no.nav.tsm.sykmelding.model.metadata.Helsepersonell
+import no.nav.tsm.sykmelding.model.metadata.HelsepersonellKategori
+import no.nav.tsm.sykmelding.model.metadata.Kjonn
+import no.nav.tsm.sykmelding.model.metadata.Kontaktinfo
+import no.nav.tsm.sykmelding.model.metadata.KontaktinfoType
+import no.nav.tsm.sykmelding.model.metadata.MeldingMetadata
+import no.nav.tsm.sykmelding.model.metadata.Meldingstype
+import no.nav.tsm.sykmelding.model.metadata.MottakenhetBlokk
+import no.nav.tsm.sykmelding.model.metadata.Navn
+import no.nav.tsm.sykmelding.model.metadata.OrgId
+import no.nav.tsm.sykmelding.model.metadata.OrgIdType
+import no.nav.tsm.sykmelding.model.metadata.Organisasjon
+import no.nav.tsm.sykmelding.model.metadata.OrganisasjonsType
+import no.nav.tsm.sykmelding.model.metadata.Papirsykmelding
+import no.nav.tsm.sykmelding.model.metadata.Pasient
+import no.nav.tsm.sykmelding.model.metadata.PersonId
+import no.nav.tsm.sykmelding.model.metadata.PersonIdType
+import no.nav.tsm.sykmelding.model.metadata.RolleTilPasient
+import no.nav.tsm.sykmelding.model.metadata.UnderOrganisasjon
+import no.nav.tsm.sykmelding.model.metadata.Utenlandsk
+import no.nav.tsm.sykmelding.model.UtenlandskSykmelding
+import no.nav.tsm.sykmelding.util.XmlStuff
 import no.nav.tsm.sykmelding.util.get
 import no.nav.tsm.sykmelding.util.getIdentType
-import no.nav.tsm.sykmelding.util.safeUnmarshal
 import no.nav.tsm.sykmelding.validation.InvalidRule
 import no.nav.tsm.sykmelding.validation.OKRule
 import no.nav.tsm.sykmelding.validation.PendingRule
 import no.nav.tsm.sykmelding.validation.Rule
 import no.nav.tsm.sykmelding.validation.RuleType
 import no.nav.tsm.sykmelding.validation.ValidationResult
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.ZoneId
+import java.time.ZoneOffset.UTC
+import java.time.format.DateTimeParseException
+import java.util.GregorianCalendar
 
 enum class TilbakedatertMerknad {
     UNDER_BEHANDLING,
     UGYLDIG_TILBAKEDATERING,
     TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER,
     DELVIS_GODKJENT,
+    TILBAKEDATERT_PAPIRSYKMELDING,
 }
-
-class SykmeldingService {
-    fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall? {
-        return when {
-            receivedSykmelding.utenlandskSykmelding != null -> toUtenlandssykmelding(receivedSykmelding)
-            receivedSykmelding.fellesformat != null -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
-            receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(receivedSykmelding)
-            else -> emottakEnkel(receivedSykmelding)
+class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception: Exception) : Exception() {
+    override val message: String?
+        get() = exception.message
+}
+class SykmeldingMapper {
+    val xmlStuff = XmlStuff()
+    fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
+        try {
+            return when {
+                receivedSykmelding.utenlandskSykmelding != null -> toUtenlandssykmeldingMedBehandlingsutfall(receivedSykmelding)
+                receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(
+                    receivedSykmelding
+                )
+                receivedSykmelding.fellesformat != null -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
+                else -> emottakEnkel(receivedSykmelding)
+            }
+        } catch (e: Exception) {
+            throw MappingException(receivedSykmelding, e)
         }
     }
 
     private fun toPapirsykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
-        requireNotNull(receivedSykmelding.utenlandskSykmelding) { "UtenlandskSykmelding is required for utenlandssykmelding" }
-        requireNotNull(receivedSykmelding.fellesformat) { "Fellesformat is required for utenlandssykmelding" }
+        requireNotNull(receivedSykmelding.fellesformat) { "Fellesformat is required for papirsykmelding" }
 
-        val unmashalledSykmelding = safeUnmarshal(receivedSykmelding.fellesformat)
+        val unmashalledSykmelding = xmlStuff.unmarshal(receivedSykmelding.fellesformat)
         val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
         return SykmeldingMedBehandlingsutfall(
             validation = mapValidationResult(receivedSykmelding),
-            meldingsInformasjon = Papirsykmelding(
+            metadata = Papirsykmelding(
                 sender = toSender(msgHead.msgInfo.sender),
                 receiver = toReceiver(msgHead.msgInfo.receiver),
                 msgInfo = toMeldingMetadata(receivedSykmelding, msgHead),
+                journalPostId = receivedSykmelding.sykmelding.avsenderSystem.versjon
             ),
             sykmelding = toSykmelding(receivedSykmelding),
         )
     }
 
-    private fun toUtenlandssykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
+    private fun toUtenlandssykmeldingMedBehandlingsutfall(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
         requireNotNull(receivedSykmelding.utenlandskSykmelding) { "UtenlandskSykmelding is required for utenlandssykmelding" }
-        requireNotNull(receivedSykmelding.fellesformat) { "Fellesformat is required for utenlandssykmelding" }
-        val unmashalledSykmelding = safeUnmarshal(receivedSykmelding.fellesformat)
-        val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
+
         val sykmeldingMedBehandlingsutfall = SykmeldingMedBehandlingsutfall(
             validation = mapValidationResult(receivedSykmelding),
-            meldingsInformasjon = Utenlandsk(
-                msgInfo = toMeldingMetadata(receivedSykmelding, msgHead),
-                receiver = toReceiver(msgHead.msgInfo.receiver),
-                sender = toSender(msgHead.msgInfo.sender),
-                utenlandskSykmelding = UtenlandskSykmelding(
-                    land = receivedSykmelding.utenlandskSykmelding.land,
-                    folkeRegistertAdresseErBrakkeEllerTilsvarende = receivedSykmelding.utenlandskSykmelding.folkeRegistertAdresseErBrakkeEllerTilsvarende,
-                    erAdresseUtland = receivedSykmelding.utenlandskSykmelding.erAdresseUtland,
-            )),
-            sykmelding = toSykmelding(receivedSykmelding),
+            metadata = Utenlandsk(
+                land = receivedSykmelding.utenlandskSykmelding.land,
+                journalPostId = receivedSykmelding.sykmelding.avsenderSystem.versjon
+            ),
+            sykmelding = toUtenlandskSykmelding(receivedSykmelding),
         )
         return sykmeldingMedBehandlingsutfall
+    }
+
+    private fun toUtenlandskSykmelding(
+        receivedSykmelding: ReceivedSykmelding,
+    ): UtenlandskSykmelding {
+        requireNotNull(receivedSykmelding.utenlandskSykmelding)
+        return UtenlandskSykmelding(
+            id = receivedSykmelding.sykmelding.id,
+            metadata = SykmeldingMetadata(
+                mottattDato = receivedSykmelding.mottattDato.atOffset(UTC),
+                genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
+                behandletTidspunkt = receivedSykmelding.sykmelding.behandletTidspunkt.atOffset(UTC),
+                regelsettVersjon = receivedSykmelding.rulesetVersion,
+                strekkode = null,
+                avsenderSystem = AvsenderSystem(
+                    navn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                    versjon = receivedSykmelding.sykmelding.avsenderSystem.versjon
+                ),
+            ),
+            pasient = toPasient(receivedSykmelding),
+            medisinskVurdering = mapMedisinskVurdering(receivedSykmelding.sykmelding),
+            aktivitet = receivedSykmelding.sykmelding.perioder.map {
+                mapAktivitet(it)
+            },
+            utenlandskInfo = UtenlandskInfo(
+                land = receivedSykmelding.utenlandskSykmelding.land,
+                folkeRegistertAdresseErBrakkeEllerTilsvarende = receivedSykmelding.utenlandskSykmelding.folkeRegistertAdresseErBrakkeEllerTilsvarende,
+                erAdresseUtland = receivedSykmelding.utenlandskSykmelding.erAdresseUtland
+            )
+        )
     }
 
     private fun toMeldingMetadata(
@@ -149,7 +190,7 @@ class SykmeldingService {
         msgHead: XMLMsgHead
     ) = MeldingMetadata(
         type = Meldingstype.SYKMELDING,
-        genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(ZoneOffset.UTC),
+        genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
         msgId = receivedSykmelding.msgId ?: throw IllegalArgumentException("Mangler msgId"),
         migVersjon = msgHead.msgInfo.miGversion,
     )
@@ -165,13 +206,13 @@ class SykmeldingService {
         ids = organisation.ident.map {
             OrgId(
                 id = it.id,
-                type = OrgIdType.valueOf(it.typeId.v),
+                type = OrgIdType.parse(it.typeId.v),
             )
         },
         adresse = toAdresse(organisation.address),
         kontaktinfo = organisation.teleCom.map {
             Kontaktinfo(
-                type = KontaktinfoType.valueOf(it.typeTelecom.v),
+                type = KontaktinfoType.parse(it.typeTelecom?.v),
                 value = it.teleAddress.v,
             )
         },
@@ -180,71 +221,80 @@ class SykmeldingService {
     )
 
     private fun tilHelsepersonell(healthcareProfessional: XMLHealthcareProfessional?): Helsepersonell? {
-        if(healthcareProfessional == null) return null
-
+        if (healthcareProfessional == null) return null
+        val invalidName = healthcareProfessional.givenName == null || healthcareProfessional.familyName == null
+        val name = if(!invalidName) {
+            Navn(
+                fornavn = healthcareProfessional.givenName,
+                mellomnavn = healthcareProfessional.middleName,
+                etternavn = healthcareProfessional.familyName,
+            )
+        } else {
+            null
+        }
         return Helsepersonell(
             ids = healthcareProfessional.ident.map {
                 PersonId(
                     id = it.id,
-                    type = PersonIdType.valueOf(it.typeId.v),
+                    type = PersonIdType.parse(it.typeId.v),
                 )
             },
-            navn = Navn(
-                fornavn = healthcareProfessional.givenName,
-                mellomnavn = healthcareProfessional.middleName,
-                etternavn = healthcareProfessional.familyName,
-            ),
-            adresse = toAdresse(healthcareProfessional.address),
+            navn = name,
+            adresse = toAdresse(healthcareProfessional?.address),
             kontaktinfo = healthcareProfessional.teleCom.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.valueOf(it.typeTelecom.v),
+                    type = KontaktinfoType.parse(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
             kjonn = healthcareProfessional.sex?.let { Kjonn.parse(it.v) },
-            nasjonalitet = healthcareProfessional.nationality.v,
+            nasjonalitet = healthcareProfessional.nationality?.v,
             fodselsdato = healthcareProfessional.dateOfBirth,
-            helsepersonellKategori = HelsepersonellKategori.parse(healthcareProfessional.typeHealthcareProfessional.v),
-            rolleTilPasient = RolleTilPasient.parse(healthcareProfessional.roleToPatient.v),
+            helsepersonellKategori = HelsepersonellKategori.parse(healthcareProfessional.typeHealthcareProfessional?.v),
+            rolleTilPasient = RolleTilPasient.parse(healthcareProfessional.roleToPatient?.v),
 
-        )
+            )
     }
 
-    private fun toAdresse(address: XMLAddress) = Adresse(
-        gateadresse = address.streetAdr,
-        postnummer = address.postalCode,
-        poststed = address.city,
-        postboks = address.postbox,
-        kommune = address.county.v,
-        land = address.country.v,
-        type = AdresseType.parse(address.type.v),
-    )
+    private fun toAdresse(address: XMLAddress?) : Adresse? {
+        if (address == null) return null
+        return Adresse(
+            gateadresse = address.streetAdr,
+            postnummer = address.postalCode,
+            poststed = address.city,
+            postboks = address.postbox,
+            kommune = address.county?.v,
+            land = address.country?.v,
+            type = AdresseType.parse(address.type?.v),
+        )
+    }
 
     private fun toAdresse(address: Address) = Adresse(
         gateadresse = address.streetAdr,
         postnummer = address.postalCode,
         poststed = address.city,
         postboks = address.postbox,
-        kommune = address.county.v,
-        land = address.country.v,
-        type = AdresseType.parse(address.type.v),
+        kommune = address.county?.v,
+        land = address.country?.v,
+        type = AdresseType.parse(address.type?.v),
     )
 
     private fun tilUnderorganisasjon(organisation: XMLOrganisation?): UnderOrganisasjon? {
-        if(organisation == null) return null
+        if (organisation == null) return null
         return UnderOrganisasjon(
             navn = organisation.organisationName,
-            type = organisation.typeOrganisation?.let { OrganisasjonsType.parse(it.v ) } ?: OrganisasjonsType.IKKE_OPPGITT,
+            type = organisation.typeOrganisation?.let { OrganisasjonsType.parse(it.v) }
+                ?: OrganisasjonsType.IKKE_OPPGITT,
             kontaktinfo = organisation.teleCom.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.valueOf(it.typeTelecom.v),
+                    type = KontaktinfoType.parse(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
             ids = organisation.ident.map {
                 OrgId(
                     id = it.id,
-                    type = OrgIdType.valueOf(it.typeId.v),
+                    type = OrgIdType.parse(it.typeId.v),
                 )
             },
             adresse = toAdresse(organisation.address),
@@ -257,14 +307,15 @@ class SykmeldingService {
 
     private fun fromReceivedSykmeldignAndFellesformat(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
         requireNotNull(receivedSykmelding.fellesformat)
-        val unmashalledSykmelding = safeUnmarshal(receivedSykmelding.fellesformat)
+        val unmashalledSykmelding = xmlStuff.unmarshal(receivedSykmelding.fellesformat)
         val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
         val mottakenhetBlokk = unmashalledSykmelding.get<XMLMottakenhetBlokk>()
+
         val ediEmottak = toEdiEmottak(mottakenhetBlokk, msgHead, receivedSykmelding)
-        if(msgHead.document.size > 1) {
+        if (msgHead.document.size > 1) {
             throw IllegalArgumentException("Forventet kun en dokument for ${receivedSykmelding.sykmelding.id}")
         }
-        if(msgHead.document.single().refDoc.content.any.size > 1) {
+        if (msgHead.document.single().refDoc.content.any.size > 1) {
             throw IllegalArgumentException("Forventet kun en helseopplysninger for ${receivedSykmelding.sykmelding.id}")
         }
 
@@ -272,12 +323,13 @@ class SykmeldingService {
                 as HelseOpplysningerArbeidsuforhet
 
         val sykmeldingPasient = toSykmeldingPasient(xmlSykmelding.pasient)
+
         val sykmelding = Sykmelding(
             id = receivedSykmelding.sykmelding.id,
             metadata = SykmeldingMetadata(
-                mottattDato = ediEmottak.mottakenhetBlokk.mottattDato,
+                mottattDato = receivedSykmelding.mottattDato.atOffset(UTC),
                 genDate = ediEmottak.msgInfo.genDate,
-                behandletTidspunkt = receivedSykmelding.sykmelding.behandletTidspunkt.atOffset(ZoneOffset.UTC),
+                behandletTidspunkt = receivedSykmelding.sykmelding.behandletTidspunkt.atOffset(UTC),
                 regelsettVersjon = xmlSykmelding.regelSettVersjon,
                 avsenderSystem = AvsenderSystem(
                     navn = receivedSykmelding.sykmelding.avsenderSystem.navn,
@@ -296,12 +348,14 @@ class SykmeldingService {
                 ids = xmlSykmelding.behandler.id.map {
                     PersonId(
                         id = it.id,
-                        type = PersonIdType.valueOf(it.typeId.v),
+                        type = PersonIdType.parse(it.typeId.v),
                     )
                 },
-                kontaktinfo = xmlSykmelding.behandler.kontaktInfo.map {
+                kontaktinfo = xmlSykmelding.behandler.kontaktInfo.filter {
+                    it.teleAddress.v != null
+                }.map {
                     Kontaktinfo(
-                        type = KontaktinfoType.valueOf(it.typeTelecom.v),
+                        type = KontaktinfoType.parse(it.typeTelecom?.v),
                         value = it.teleAddress.v,
                     )
                 },
@@ -320,18 +374,28 @@ class SykmeldingService {
         )
 
         return SykmeldingMedBehandlingsutfall(
-            meldingsInformasjon = ediEmottak,
+            metadata = ediEmottak,
             sykmelding = sykmelding,
             validation = mapValidationResult(receivedSykmelding),
         )
     }
 
+    private fun toOffsetDateTime(genDate: String): OffsetDateTime {
+        try {
+            return OffsetDateTime.parse(genDate).withOffsetSameInstant(UTC)
+        } catch (ex : DateTimeParseException) {
+            return LocalDateTime.parse(genDate).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime().withOffsetSameInstant(UTC);
+        }
+    }
+
+    private fun toOffsetDateTime(date: GregorianCalendar): OffsetDateTime {
+       return date.toZonedDateTime().toOffsetDateTime().withOffsetSameInstant(UTC)
+    }
 
 
+    private fun toSykmeldingPasient(pasient: HelseOpplysningerArbeidsuforhet.Pasient): no.nav.tsm.sykmelding.model.Pasient {
 
-    private fun toSykmeldingPasient(pasient: HelseOpplysningerArbeidsuforhet.Pasient): no.nav.tsm.sykmelding.Pasient {
-
-        return no.nav.tsm.sykmelding.Pasient(
+        return no.nav.tsm.sykmelding.model.Pasient(
             navn = Navn(
                 fornavn = pasient.navn.fornavn,
                 mellomnavn = pasient.navn.mellomnavn,
@@ -342,7 +406,7 @@ class SykmeldingService {
             navKontor = pasient.navKontor,
             kontaktinfo = pasient.kontaktInfo.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.valueOf(it.typeTelecom.v),
+                    type = KontaktinfoType.parse(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
@@ -362,8 +426,7 @@ class SykmeldingService {
             meldingsType = mottakenhetBlokk.meldingsType,
             avsenderRef = mottakenhetBlokk.avsenderRef,
             avsenderFnrFraDigSignatur = mottakenhetBlokk.avsenderFnrFraDigSignatur,
-            mottattDato = mottakenhetBlokk.mottattDatotid.toGregorianCalendar().toZonedDateTime()
-                .toOffsetDateTime(),
+            mottattDato = toOffsetDateTime(mottakenhetBlokk.mottattDatotid.toGregorianCalendar()),
             orgnummer = mottakenhetBlokk.orgNummer,
             avsenderOrgNrFraDigSignatur = mottakenhetBlokk.avsenderOrgNrFraDigSignatur,
             partnerReferanse = mottakenhetBlokk.partnerReferanse,
@@ -374,7 +437,7 @@ class SykmeldingService {
         ),
         msgInfo = MeldingMetadata(
             type = Meldingstype.parse(msgHead.msgInfo.type.v),
-            genDate = OffsetDateTime.parse(msgHead.msgInfo.genDate),
+            genDate = toOffsetDateTime(msgHead.msgInfo.genDate),
             msgId = receivedSykmelding.msgId ?: throw IllegalArgumentException("Mangler msgId"),
             migVersjon = msgHead.msgInfo.msgId,
         ),
@@ -382,6 +445,7 @@ class SykmeldingService {
         receiver = toReceiver(msgHead.msgInfo.receiver),
         pasient = toPasient(msgHead.msgInfo.patient),
         vedlegg = receivedSykmelding.vedlegg,
+        ack = Ack(AckType.parse(msgHead.msgInfo.ack?.v))
     )
 
     private fun toPasient(xmlPasient: XMLPatient?): Pasient? {
@@ -391,7 +455,7 @@ class SykmeldingService {
             ids = xmlPasient.ident.map {
                 PersonId(
                     id = it.id,
-                    type = PersonIdType.valueOf(it.typeId.v),
+                    type = PersonIdType.parse(it.typeId.v),
                 )
             },
             navn = Navn(
@@ -400,12 +464,12 @@ class SykmeldingService {
                 etternavn = xmlPasient.familyName,
             ),
             fodselsdato = xmlPasient.dateOfBirth,
-            kjonn = Kjonn.parse(xmlPasient.sex.v),
-            nasjonalitet = xmlPasient.nationality.v,
+            kjonn = Kjonn.parse(xmlPasient.sex?.v),
+            nasjonalitet = xmlPasient.nationality?.v,
             adresse = toAdresse(xmlPasient.address),
             kontaktinfo = xmlPasient.teleCom.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.valueOf(it.typeTelecom.v),
+                    type = KontaktinfoType.parse(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
@@ -417,7 +481,7 @@ class SykmeldingService {
         val emottakEnkel = EmottakEnkel(
             msgInfo = MeldingMetadata(
                 type = Meldingstype.SYKMELDING,
-                genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(ZoneOffset.UTC),
+                genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
                 msgId = receivedSykmelding.msgId ?: throw IllegalArgumentException("Mangler msgId"),
                 migVersjon = null,
             ),
@@ -473,57 +537,60 @@ class SykmeldingService {
         val validation = mapValidationResult(receivedSykmelding)
         val sykmelding = toSykmelding(receivedSykmelding)
         return SykmeldingMedBehandlingsutfall(
-            meldingsInformasjon = emottakEnkel,
+            metadata = emottakEnkel,
             sykmelding = sykmelding,
             validation = validation,
         )
     }
 
-    private fun SykmeldingService.toSykmelding(
+    private fun toSykmelding(
         receivedSykmelding: ReceivedSykmelding,
-    ) = Sykmelding(
-        id = receivedSykmelding.sykmelding.id,
-        metadata = SykmeldingMetadata(
-            mottattDato = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
-            genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(ZoneOffset.UTC),
-            behandletTidspunkt = receivedSykmelding.sykmelding.behandletTidspunkt.atOffset(ZoneOffset.UTC),
-            regelsettVersjon = receivedSykmelding.rulesetVersion,
-            strekkode = null,
-            avsenderSystem = AvsenderSystem(
-                navn = receivedSykmelding.sykmelding.avsenderSystem.navn,
-                versjon = receivedSykmelding.sykmelding.avsenderSystem.versjon
+    ): Sykmelding {
+        return Sykmelding(
+            id = receivedSykmelding.sykmelding.id,
+            metadata = SykmeldingMetadata(
+                mottattDato = receivedSykmelding.mottattDato.atOffset(UTC),
+                genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
+                behandletTidspunkt = receivedSykmelding.sykmelding.behandletTidspunkt.atOffset(UTC),
+                regelsettVersjon = receivedSykmelding.rulesetVersion,
+                strekkode = null,
+                avsenderSystem = AvsenderSystem(
+                    navn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                    versjon = receivedSykmelding.sykmelding.avsenderSystem.versjon
+                ),
             ),
-        ),
-        pasient = toPasient(receivedSykmelding),
-        behandler = toBehandler(receivedSykmelding),
-        signerendeBehandler = toSignerendeBehandler(receivedSykmelding),
-        arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
-        medisinskVurdering = mapMedisinskVurdering(receivedSykmelding.sykmelding),
-        prognose = mapPrognose(receivedSykmelding.sykmelding),
-        tiltak = toTiltak(receivedSykmelding),
-        bistandNav = toBistandNav(receivedSykmelding),
-        tilbakedatering = toTilbakedatering(receivedSykmelding),
-        aktivitet = receivedSykmelding.sykmelding.perioder.map {
-            mapAktivitet(it)
-        },
-        utdypendeOpplysninger = toUtdypendeOpplysninger(receivedSykmelding),
-    )
+            pasient = toPasient(receivedSykmelding),
+            behandler = toBehandler(receivedSykmelding),
+            signerendeBehandler = toSignerendeBehandler(receivedSykmelding),
+            arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
+            medisinskVurdering = mapMedisinskVurdering(receivedSykmelding.sykmelding),
+            prognose = mapPrognose(receivedSykmelding.sykmelding),
+            tiltak = toTiltak(receivedSykmelding),
+            bistandNav = toBistandNav(receivedSykmelding),
+            tilbakedatering = toTilbakedatering(receivedSykmelding),
+            aktivitet = receivedSykmelding.sykmelding.perioder.map {
+                mapAktivitet(it)
+            },
+            utdypendeOpplysninger = toUtdypendeOpplysninger(receivedSykmelding),
+        )
+    }
 
-    private fun toTilbakedatering(receivedSykmelding: ReceivedSykmelding) : Tilbakedatering? {
+
+    private fun toTilbakedatering(receivedSykmelding: ReceivedSykmelding): Tilbakedatering? {
         val kontaktMedPasient = receivedSykmelding.sykmelding.kontaktMedPasient
-        if(kontaktMedPasient.kontaktDato == null && kontaktMedPasient.begrunnelseIkkeKontakt.isNullOrBlank()) return null
+        if (kontaktMedPasient.kontaktDato == null && kontaktMedPasient.begrunnelseIkkeKontakt.isNullOrBlank()) return null
 
         return Tilbakedatering(
-                kontaktDato = kontaktMedPasient.kontaktDato,
-                begrunnelse = kontaktMedPasient.begrunnelseIkkeKontakt,
-            )
-        }
+            kontaktDato = kontaktMedPasient.kontaktDato,
+            begrunnelse = kontaktMedPasient.begrunnelseIkkeKontakt,
+        )
+    }
 
 
-    private fun toBistandNav(receivedSykmelding: ReceivedSykmelding) : BistandNav? {
+    private fun toBistandNav(receivedSykmelding: ReceivedSykmelding): BistandNav? {
 
         val meldingTilNav = receivedSykmelding.sykmelding.meldingTilNAV ?: return null
-        if(meldingTilNav.bistandUmiddelbart || !meldingTilNav.beskrivBistand.isNullOrBlank()) {
+        if (meldingTilNav.bistandUmiddelbart || !meldingTilNav.beskrivBistand.isNullOrBlank()) {
             return BistandNav(
                 bistandUmiddelbart = meldingTilNav.bistandUmiddelbart,
                 beskrivBistand = meldingTilNav.beskrivBistand,
@@ -532,7 +599,7 @@ class SykmeldingService {
         return null
     }
 
-    private fun toTiltak(receivedSykmelding: ReceivedSykmelding) : Tiltak? {
+    private fun toTiltak(receivedSykmelding: ReceivedSykmelding): Tiltak? {
         return receivedSykmelding.sykmelding.tiltakNAV?.let {
             Tiltak(
                 tiltakNAV = it,
@@ -541,7 +608,7 @@ class SykmeldingService {
         }
     }
 
-    private fun toSignerendeBehandler(receivedSykmelding: ReceivedSykmelding) : SignerendeBehandler {
+    private fun toSignerendeBehandler(receivedSykmelding: ReceivedSykmelding): SignerendeBehandler {
         return SignerendeBehandler(
             ids = listOfNotNull(
                 receivedSykmelding.legeHprNr?.let {
@@ -627,10 +694,10 @@ class SykmeldingService {
         )
     }
 
-    private fun toPasient(receivedSykmelding: ReceivedSykmelding): no.nav.tsm.sykmelding.Pasient {
+    private fun toPasient(receivedSykmelding: ReceivedSykmelding): no.nav.tsm.sykmelding.model.Pasient {
         val ident = receivedSykmelding.personNrPasient
 
-        return no.nav.tsm.sykmelding.Pasient(
+        return no.nav.tsm.sykmelding.model.Pasient(
             fnr = ident,
             navn = null,
             kontaktinfo = receivedSykmelding.tlfPasient?.let { listOf(Kontaktinfo(KontaktinfoType.TLF, it)) }
@@ -649,7 +716,7 @@ class SykmeldingService {
             Status.INVALID -> mapInvalidValidation(receivedSykmelding)
             Status.MANUAL_PROCESSING -> ValidationResult(
                 status = RuleType.OK,
-                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 rules = emptyList()
             )
         }
@@ -658,13 +725,13 @@ class SykmeldingService {
     private fun mapInvalidValidation(receivedSykmelding: ReceivedSykmelding): ValidationResult {
         return ValidationResult(
             status = RuleType.INVALID,
-            timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+            timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
             rules = receivedSykmelding.validationResult!!.ruleHits.mapNotNull {
                 val rule = it
                 when (rule.ruleStatus) {
                     Status.INVALID -> InvalidRule(
                         name = rule.ruleName,
-                        timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                        timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                         description = rule.messageForUser,
                     )
 
@@ -678,14 +745,14 @@ class SykmeldingService {
         if (receivedSykmelding.merknader.isNullOrEmpty()) {
             return ValidationResult(
                 status = RuleType.OK,
-                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 rules = emptyList()
             )
         }
         val rules: List<Rule> = mapTilbakedatertRules(receivedSykmelding.merknader, receivedSykmelding)
         return ValidationResult(
             status = rules.maxOf { it.type },
-            timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+            timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
             rules = rules
         )
     }
@@ -697,27 +764,33 @@ class SykmeldingService {
         when (TilbakedatertMerknad.valueOf(it.type)) {
             TilbakedatertMerknad.UNDER_BEHANDLING -> PendingRule(
                 name = TilbakedatertMerknad.UNDER_BEHANDLING.name,
-                timestamp = it.tidspunkt ?: receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                timestamp = it.tidspunkt ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatert sykmelding til manuell behandling",
             )
 
             TilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> InvalidRule(
                 name = TilbakedatertMerknad.UGYLDIG_TILBAKEDATERING.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Ugyldig tilbakedatering",
             )
 
             TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> InvalidRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatering krever flere opplysninger",
             )
 
             TilbakedatertMerknad.DELVIS_GODKJENT -> OKRule(
                 name = TilbakedatertMerknad.DELVIS_GODKJENT.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Delvis godkjent tilbakedatering"
             )
+            TilbakedatertMerknad.TILBAKEDATERT_PAPIRSYKMELDING -> OKRule(
+                name = TilbakedatertMerknad.TILBAKEDATERT_PAPIRSYKMELDING.name,
+                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                description = it.beskrivelse ?: "Tilbakedatert papirsykmelding"
+            )
+
         }
     }
 }
@@ -727,21 +800,28 @@ private fun mapMedisinskVurdering(sykmelding: no.nav.tsm.smregister.models.Sykme
     return MedisinskVurdering(
         hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.let(toDiagnoseInfo()),
         biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser.map(toDiagnoseInfo()),
-        annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.let {
-            AnnenFraverArsak(
-                it.beskrivelse, when (it.grunn.single()) {
-                    AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON -> AnnenFravarArsakType.GODKJENT_HELSEINSTITUSJON
-                    AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID -> AnnenFravarArsakType.BEHANDLING_FORHINDRER_ARBEID
-                    AnnenFraverGrunn.ARBEIDSRETTET_TILTAK -> AnnenFravarArsakType.ARBEIDSRETTET_TILTAK
-                    AnnenFraverGrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND -> AnnenFravarArsakType.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND
-                    AnnenFraverGrunn.NODVENDIG_KONTROLLUNDENRSOKELSE -> AnnenFravarArsakType.NODVENDIG_KONTROLLUNDENRSOKELSE
-                    AnnenFraverGrunn.SMITTEFARE -> AnnenFravarArsakType.SMITTEFARE
-                    AnnenFraverGrunn.ABORT -> AnnenFravarArsakType.ABORT
-                    AnnenFraverGrunn.UFOR_GRUNNET_BARNLOSHET -> AnnenFravarArsakType.UFOR_GRUNNET_BARNLOSHET
-                    AnnenFraverGrunn.DONOR -> AnnenFravarArsakType.DONOR
-                    AnnenFraverGrunn.BEHANDLING_STERILISERING -> AnnenFravarArsakType.BEHANDLING_STERILISERING
-                }
-            )
+        annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.let { it ->
+            if(it.beskrivelse == null && it.grunn.isEmpty()) {
+                null
+            }
+            else {
+                AnnenFraverArsak(
+                    it.beskrivelse, it.grunn.map { grunn ->
+                        when (grunn) {
+                            AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON -> AnnenFravarArsakType.GODKJENT_HELSEINSTITUSJON
+                            AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID -> AnnenFravarArsakType.BEHANDLING_FORHINDRER_ARBEID
+                            AnnenFraverGrunn.ARBEIDSRETTET_TILTAK -> AnnenFravarArsakType.ARBEIDSRETTET_TILTAK
+                            AnnenFraverGrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND -> AnnenFravarArsakType.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND
+                            AnnenFraverGrunn.NODVENDIG_KONTROLLUNDENRSOKELSE -> AnnenFravarArsakType.NODVENDIG_KONTROLLUNDENRSOKELSE
+                            AnnenFraverGrunn.SMITTEFARE -> AnnenFravarArsakType.SMITTEFARE
+                            AnnenFraverGrunn.ABORT -> AnnenFravarArsakType.ABORT
+                            AnnenFraverGrunn.UFOR_GRUNNET_BARNLOSHET -> AnnenFravarArsakType.UFOR_GRUNNET_BARNLOSHET
+                            AnnenFraverGrunn.DONOR -> AnnenFravarArsakType.DONOR
+                            AnnenFraverGrunn.BEHANDLING_STERILISERING -> AnnenFravarArsakType.BEHANDLING_STERILISERING
+                        }
+                    }
+                )
+            }
         },
         svangerskap = sykmelding.medisinskVurdering.svangerskap,
         yrkesskade = when(sykmelding.medisinskVurdering.yrkesskade) {
@@ -759,7 +839,8 @@ private fun toDiagnoseInfo() = { diagnose: Diagnose ->
         system = when (diagnose.system) {
             "2.16.578.1.12.4.1.1.7170" -> DiagnoseSystem.ICPC2
             "2.16.578.1.12.4.1.1.7110" -> DiagnoseSystem.ICD10
-            else -> throw IllegalArgumentException("Ukjent diagnose system")
+            "2.16.578.1.12.4.1.1.7171" -> DiagnoseSystem.ICPC2B
+            else -> throw IllegalArgumentException("Ukjent diagnose system ${diagnose.system}")
         },
     )
 }
@@ -800,9 +881,6 @@ private fun mapArbeid(
 
 private fun mapAktivitet(periode: Periode): Aktivitet {
     if (periode.aktivitetIkkeMulig != null) {
-        if (periode.aktivitetIkkeMulig.medisinskArsak == null && periode.aktivitetIkkeMulig.arbeidsrelatertArsak == null) {
-            throw IllegalArgumentException("Mangler medisinsk eller arbeidsrelatert årsak")
-        }
         return AktivitetIkkeMulig(
             medisinskArsak = periode.aktivitetIkkeMulig.medisinskArsak?.let {
                 MedisinskArsak(
@@ -866,9 +944,8 @@ private fun mapArbeidsgiver(sykmelding: no.nav.tsm.smregister.models.Sykmelding)
         HarArbeidsgiver.FLERE_ARBEIDSGIVERE -> FlereArbeidsgivere(
             meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
             tiltakArbeidsplassen = sykmelding.tiltakArbeidsplassen,
-            navn = sykmelding.arbeidsgiver.navn ?: throw IllegalArgumentException("Arbeidsgiver mangler navn"),
-            yrkesbetegnelse = sykmelding.arbeidsgiver.yrkesbetegnelse
-                ?: throw IllegalArgumentException("Arbeidsgiver mangler yrkesbetegnelse"),
+            navn = sykmelding.arbeidsgiver.navn,
+            yrkesbetegnelse = sykmelding.arbeidsgiver.yrkesbetegnelse,
             stillingsprosent = sykmelding.arbeidsgiver.stillingsprosent,
         )
 

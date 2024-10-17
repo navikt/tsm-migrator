@@ -1,9 +1,9 @@
-package no.nav.tsm.sykmelding
+package no.nav.tsm.sykmelding.model
 
 import java.time.LocalDate
 
 enum class DiagnoseSystem {
-    ICPC2, ICD10,
+    ICPC2, ICD10, ICPC2B
 }
 
 data class DiagnoseInfo(
@@ -24,7 +24,7 @@ enum class AnnenFravarArsakType {
 }
 
 data class AnnenFraverArsak(
-    val beskrivelse: String?, val arsak: AnnenFravarArsakType
+    val beskrivelse: String?, val arsak: List<AnnenFravarArsakType>?
 )
 
 data class MedisinskArsak(
