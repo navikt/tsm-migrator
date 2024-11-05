@@ -3,19 +3,14 @@ package no.nav.tsm.sykmeldinger.kafka
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import java.time.Duration
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class SykmeldingConsumer(
     private val kafkaConsumer: KafkaConsumer<String, String>,
@@ -33,9 +28,9 @@ class SykmeldingConsumer(
     private val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
 
     @WithSpan
-    suspend fun start() = coroutineScope(suspendFunction1())
+    suspend fun start() = coroutineScope(runKafkaConsumer())
 
-    private fun SykmeldingConsumer.suspendFunction1(): suspend CoroutineScope.() -> Unit =
+    private fun runKafkaConsumer(): suspend CoroutineScope.() -> Unit =
         {
             logger.info("starting consumer for $sykmeldingTopics")
 

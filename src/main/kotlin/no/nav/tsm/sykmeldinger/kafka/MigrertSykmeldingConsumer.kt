@@ -29,16 +29,8 @@ class MigrertSykmeldingConsumer(
         private val logger = LoggerFactory.getLogger(MigrertSykmeldingConsumer::class.java)
     }
     private val sourceMap = mutableMapOf<String, Int>()
-    suspend fun start() = coroutineScope {
 
-        launch(Dispatchers.IO) {
-            while (true) {
-                sourceMap.forEach { (source, count) ->
-                    logger.info("Source: $source, count: $count")
-                }
-                delay(60_000)
-            }
-        }
+    suspend fun start() = coroutineScope {
         while (isActive) {
             try {
                 consumeMessages()
