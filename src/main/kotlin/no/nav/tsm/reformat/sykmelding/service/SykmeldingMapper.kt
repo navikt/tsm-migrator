@@ -107,7 +107,7 @@ class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception
         get() = exception.message
 }
 class SykmeldingMapper {
-    val xmlStuff = XmlStuff()
+    private val xmlStuff = XmlStuff()
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
         try {
             return when {
@@ -239,7 +239,7 @@ class SykmeldingMapper {
                 )
             },
             navn = name,
-            adresse = toAdresse(healthcareProfessional?.address),
+            adresse = toAdresse(healthcareProfessional.address),
             kontaktinfo = healthcareProfessional.teleCom.map {
                 Kontaktinfo(
                     type = KontaktinfoType.parse(it.typeTelecom?.v),
@@ -380,10 +380,10 @@ class SykmeldingMapper {
     }
 
     private fun toOffsetDateTime(genDate: String): OffsetDateTime {
-        try {
-            return OffsetDateTime.parse(genDate).withOffsetSameInstant(UTC)
+        return try {
+            OffsetDateTime.parse(genDate).withOffsetSameInstant(UTC)
         } catch (ex : DateTimeParseException) {
-            return LocalDateTime.parse(genDate).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime().withOffsetSameInstant(UTC);
+            LocalDateTime.parse(genDate).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime().withOffsetSameInstant(UTC);
         }
     }
 
@@ -499,7 +499,7 @@ class SykmeldingMapper {
                 helsepersonell = null,
             ),
             sender = Organisasjon(
-                navn = receivedSykmelding.legekontorOrgName ?: "Ukjent",
+                navn = receivedSykmelding.legekontorOrgName,
                 type = OrganisasjonsType.IKKE_OPPGITT,
                 ids = listOfNotNull(
                     when {
@@ -616,12 +616,10 @@ class SykmeldingMapper {
                         type = PersonIdType.HPR,
                     )
                 },
-                receivedSykmelding.personNrLege.let {
-                    PersonId(
-                        id = it,
-                        type = PersonIdType.FNR,
-                    )
-                },
+                PersonId(
+                    id = receivedSykmelding.personNrLege,
+                    type = PersonIdType.FNR,
+                ),
             ),
             helsepersonellKategori = HelsepersonellKategori.parse(receivedSykmelding.legeHelsepersonellkategori),
         )
@@ -665,9 +663,7 @@ class SykmeldingMapper {
             true -> Adresse(
                 type = AdresseType.UKJENT,
                 gateadresse = behandler.adresse.gate,
-                postnummer = behandler.adresse.postnummer?.let {
-                    it.toString().padStart(4, '0')
-                },
+                postnummer = behandler.adresse.postnummer?.toString()?.padStart(4, '0'),
                 kommune = behandler.adresse.kommune,
                 postboks = behandler.adresse.postboks,
                 land = behandler.adresse.land?.let {
@@ -710,7 +706,7 @@ class SykmeldingMapper {
     private fun mapValidationResult(
         receivedSykmelding: ReceivedSykmelding,
     ): ValidationResult {
-        return when (receivedSykmelding.validationResult!!.status) {
+        return when (receivedSykmelding.validationResult.status) {
             Status.OK -> mapOkOrPendingValidation(receivedSykmelding)
             Status.INVALID -> mapInvalidValidation(receivedSykmelding)
             Status.MANUAL_PROCESSING -> ValidationResult(
@@ -725,7 +721,7 @@ class SykmeldingMapper {
         return ValidationResult(
             status = RuleType.INVALID,
             timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
-            rules = receivedSykmelding.validationResult!!.ruleHits.mapNotNull {
+            rules = receivedSykmelding.validationResult.ruleHits.mapNotNull {
                 val rule = it
                 when (rule.ruleStatus) {
                     Status.INVALID -> InvalidRule(
@@ -789,7 +785,6 @@ class SykmeldingMapper {
                 timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatert papirsykmelding"
             )
-
         }
     }
 }
