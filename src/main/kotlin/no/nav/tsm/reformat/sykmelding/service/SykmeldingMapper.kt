@@ -645,7 +645,16 @@ class SykmeldingMapper {
 
     private fun toBehandler(receivedSykmelding: ReceivedSykmelding): Behandler {
         val behandler = receivedSykmelding.sykmelding.behandler
-        val ids = mutableListOf(PersonId(behandler.fnr, getIdentType(behandler.fnr)))
+        val ids = try {
+            mutableListOf(PersonId(behandler.fnr, getIdentType(behandler.fnr)))
+        } catch (ex: Exception) {
+            val ids = checkLegeFnrForErrors(behandler.fnr, receivedSykmelding.personNrLege)
+            if (ids.isNullOrEmpty()) {
+                throw ex
+            }
+            ids
+        }
+
         if (behandler.her != null) {
             ids.add(PersonId(behandler.her, PersonIdType.HER))
         }
@@ -687,6 +696,25 @@ class SykmeldingMapper {
             adresse = adresse,
             kontaktinfo = behandler.tlf?.let { listOf(Kontaktinfo(KontaktinfoType.TLF, it)) } ?: emptyList(),
         )
+    }
+
+    fun checkLegeFnrForErrors(
+        behandler: String,
+        personNrLege: String
+    ): MutableList<PersonId>? {
+        var correctNumbers = 0
+        behandler.forEachIndexed { index, c ->
+            if (personNrLege[index] == c) {
+                correctNumbers++
+            }
+        }
+        return if (correctNumbers >= 9 && behandler.toCharArray().sorted()
+                .toString() == personNrLege.toCharArray().sorted().toString()
+        ) {
+            mutableListOf(PersonId(personNrLege, getIdentType(personNrLege)))
+        } else {
+            null
+        }
     }
 
     private fun toPasient(receivedSykmelding: ReceivedSykmelding): no.nav.tsm.reformat.sykmelding.model.Pasient {
