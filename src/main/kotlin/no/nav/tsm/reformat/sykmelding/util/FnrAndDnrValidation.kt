@@ -41,5 +41,5 @@ fun getIdentType(ident: String): PersonIdType {
         }
     }
     secureLog.error("incorrect person ident: $ident")
-    throw IllegalArgumentException("Invalid person ident")
+    return PersonIdType.UGYLDIG
 }
