@@ -89,6 +89,7 @@ import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.Status
 import no.nav.tsm.smregister.models.SvarRestriksjon
 import no.nav.tsm.smregister.models.UtenlandskInfo
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -108,6 +109,8 @@ class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception
         get() = exception.message
 }
 class SykmeldingMapper {
+    private val log = LoggerFactory.getLogger(SykmeldingMapper::class.java)
+
     private val xmlStuff = XmlStuff()
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
         try {
@@ -117,10 +120,11 @@ class SykmeldingMapper {
                     receivedSykmelding
                 )
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt" -> toEgenmeldtSykmelding(receivedSykmelding)
-                receivedSykmelding.fellesformat != null -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
+                !receivedSykmelding.fellesformat.isNullOrBlank() -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
                 else -> emottakEnkel(receivedSykmelding)
             }
         } catch (e: Exception) {
+
             throw MappingException(receivedSykmelding, e)
         }
     }
