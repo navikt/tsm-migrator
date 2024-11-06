@@ -7,11 +7,19 @@ enum class MetadataType {
     EMOTTAK,
     UTENLANDSK_SYKMELDING,
     PAPIRSYKMELDING,
+    EGENMELDT,
 }
 
 sealed interface Meldingsinformasjon {
     val type: MetadataType
     val vedlegg: List<String>?
+}
+
+data class Egenmeldt(
+    val msgInfo: MeldingMetadata,
+) : Meldingsinformasjon {
+    override val type: MetadataType = MetadataType.EGENMELDT
+    override val vedlegg: List<String> = emptyList()
 }
 
 data class Papirsykmelding(

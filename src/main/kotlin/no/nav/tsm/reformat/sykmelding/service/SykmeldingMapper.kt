@@ -10,15 +10,7 @@ import no.nav.helse.msgHead.XMLReceiver
 import no.nav.helse.msgHead.XMLSender
 import no.nav.helse.sm2013.Address
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.tsm.smregister.models.AnnenFraverGrunn
-import no.nav.tsm.smregister.models.Diagnose
-import no.nav.tsm.smregister.models.HarArbeidsgiver
-import no.nav.tsm.smregister.models.Merknad
-import no.nav.tsm.smregister.models.Periode
-import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.smregister.models.Status
-import no.nav.tsm.smregister.models.SvarRestriksjon
-import no.nav.tsm.smregister.models.UtenlandskInfo
+import no.nav.tsm.reformat.sykmelding.SporsmalSvar
 import no.nav.tsm.reformat.sykmelding.model.Aktivitet
 import no.nav.tsm.reformat.sykmelding.model.AktivitetIkkeMulig
 import no.nav.tsm.reformat.sykmelding.model.AnnenFravarArsakType
@@ -46,18 +38,19 @@ import no.nav.tsm.reformat.sykmelding.model.MedisinskVurdering
 import no.nav.tsm.reformat.sykmelding.model.Prognose
 import no.nav.tsm.reformat.sykmelding.model.Reisetilskudd
 import no.nav.tsm.reformat.sykmelding.model.SignerendeBehandler
-import no.nav.tsm.reformat.sykmelding.SporsmalSvar
 import no.nav.tsm.reformat.sykmelding.model.Sykmelding
 import no.nav.tsm.reformat.sykmelding.model.SykmeldingMedBehandlingsutfall
 import no.nav.tsm.reformat.sykmelding.model.SykmeldingMetadata
 import no.nav.tsm.reformat.sykmelding.model.Tilbakedatering
 import no.nav.tsm.reformat.sykmelding.model.Tiltak
+import no.nav.tsm.reformat.sykmelding.model.UtenlandskSykmelding
 import no.nav.tsm.reformat.sykmelding.model.Yrkesskade
 import no.nav.tsm.reformat.sykmelding.model.metadata.Ack
 import no.nav.tsm.reformat.sykmelding.model.metadata.AckType
 import no.nav.tsm.reformat.sykmelding.model.metadata.Adresse
 import no.nav.tsm.reformat.sykmelding.model.metadata.AdresseType
 import no.nav.tsm.reformat.sykmelding.model.metadata.EDIEmottak
+import no.nav.tsm.reformat.sykmelding.model.metadata.Egenmeldt
 import no.nav.tsm.reformat.sykmelding.model.metadata.EmottakEnkel
 import no.nav.tsm.reformat.sykmelding.model.metadata.Helsepersonell
 import no.nav.tsm.reformat.sykmelding.model.metadata.HelsepersonellKategori
@@ -78,17 +71,24 @@ import no.nav.tsm.reformat.sykmelding.model.metadata.PersonIdType
 import no.nav.tsm.reformat.sykmelding.model.metadata.RolleTilPasient
 import no.nav.tsm.reformat.sykmelding.model.metadata.UnderOrganisasjon
 import no.nav.tsm.reformat.sykmelding.model.metadata.Utenlandsk
-import no.nav.tsm.reformat.sykmelding.model.UtenlandskSykmelding
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
 import no.nav.tsm.reformat.sykmelding.util.get
 import no.nav.tsm.reformat.sykmelding.util.getIdentType
-import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.reformat.sykmelding.validation.InvalidRule
 import no.nav.tsm.reformat.sykmelding.validation.OKRule
 import no.nav.tsm.reformat.sykmelding.validation.PendingRule
 import no.nav.tsm.reformat.sykmelding.validation.Rule
 import no.nav.tsm.reformat.sykmelding.validation.RuleType
 import no.nav.tsm.reformat.sykmelding.validation.ValidationResult
+import no.nav.tsm.smregister.models.AnnenFraverGrunn
+import no.nav.tsm.smregister.models.Diagnose
+import no.nav.tsm.smregister.models.HarArbeidsgiver
+import no.nav.tsm.smregister.models.Merknad
+import no.nav.tsm.smregister.models.Periode
+import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.smregister.models.Status
+import no.nav.tsm.smregister.models.SvarRestriksjon
+import no.nav.tsm.smregister.models.UtenlandskInfo
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -116,12 +116,26 @@ class SykmeldingMapper {
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(
                     receivedSykmelding
                 )
+                receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt" -> toEgenmeldtSykmelding(receivedSykmelding)
                 receivedSykmelding.fellesformat != null -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
                 else -> emottakEnkel(receivedSykmelding)
             }
         } catch (e: Exception) {
             throw MappingException(receivedSykmelding, e)
         }
+    }
+
+    private fun toEgenmeldtSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
+        requireNotNull(receivedSykmelding.fellesformat) { "Fellesformat is required for egenmeldt sykmelding" }
+        val unmashalledSykmelding = xmlStuff.unmarshal(receivedSykmelding.fellesformat)
+        val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
+        return SykmeldingMedBehandlingsutfall(
+            validation = mapValidationResult(receivedSykmelding),
+            metadata = Egenmeldt(
+                msgInfo = toMeldingMetadata(receivedSykmelding, msgHead),
+            ),
+            sykmelding = toSykmelding(receivedSykmelding)
+        )
     }
 
     private fun toPapirsykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingMedBehandlingsutfall {
