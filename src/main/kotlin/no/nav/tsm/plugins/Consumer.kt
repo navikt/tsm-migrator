@@ -4,18 +4,17 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopping
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
-import no.nav.tsm.sykmeldinger.kafka.MigrertSykmeldingConsumer
-import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
+import no.nav.tsm.sykmeldinger.input.SykmeldingInputConsumer
 
-fun Application.configureConsumer(sykmeldingConsumer: SykmeldingConsumer, migrertSykmeldingConsumer: MigrertSykmeldingConsumer, sykmeldingReformatService: SykmeldingReformatService) {
-    //val sykmeldingConsumerJob = launch(Dispatchers.IO) { sykmeldingConsumer.start() }
-    val migrertSykmeldingConsumerJob = launch(Dispatchers.IO) { migrertSykmeldingConsumer.start() }
-    val sykmeldingReformatJob = launch(Dispatchers.IO) { sykmeldingReformatService.start() }
-
+fun Application.configureConsumer(sykmeldingInputConsumer: SykmeldingInputConsumer) {
+    //val sykmeldingConsumerJob = launch(Dispatchers.IO) { sykmeldingConsumer.start() } // fra ok-sykmelding, manuell-sykmelding, avvist sykmelding til migrert sykmelding
+    //val migrertSykmeldingConsumerJob = launch(Dispatchers.IO) { migrertSykmeldingConsumer.start() } // fra migrert-sykmelding til sykmeldinger-input
+    //val sykmeldingReformatJob = launch(Dispatchers.IO) { sykmeldingReformatService.start() }
+    val sykmeldingInputConsumerJob = launch(Dispatchers.Default) { sykmeldingInputConsumer.start() }
     environment.monitor.subscribe(ApplicationStopping) {
         //sykmeldingConsumerJob.cancel()
-        migrertSykmeldingConsumerJob.cancel()
-        sykmeldingReformatJob.cancel()
+        //migrertSykmeldingConsumerJob.cancel()
+        //sykmeldingReformatJob.cancel()
+        sykmeldingInputConsumerJob.cancel()
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.tsm.sykmeldinger.kafka.util
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -12,9 +13,10 @@ class JacksonKafkaDeserializer<T : Any>(private val type: KClass<T>) : Deseriali
     private val objectMapper: ObjectMapper =
         jacksonObjectMapper().apply {
             registerModule(JavaTimeModule())
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
             configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
         }
 
     override fun configure(configs: MutableMap<String, *>, isKey: Boolean) {}
