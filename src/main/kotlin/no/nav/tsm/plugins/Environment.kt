@@ -16,6 +16,7 @@ class Environment(
     val sykmeldingerInputTopic: String = "tsm.sykmeldinger-input",
     val sykmeldingOutputTopic: String = "tsm.sykmelding-raw",
     val teamsykmeldingSykmeldingTopic: String = "tsm.teamsykmelding-sykmeldinger",
+    val teamsykmeldingSykmeldingAvroTopic: String = "tsm.teamsykmelding-sykmeldinger-avro",
     val cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
 )
 

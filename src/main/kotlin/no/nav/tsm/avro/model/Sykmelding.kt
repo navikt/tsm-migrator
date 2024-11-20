@@ -1,9 +1,13 @@
-package no.nav.tsm.smregister.models
+package no.nav.tsm.avro.model
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import no.nav.tsm.smregister.models.SporsmalSvar
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Serializable
 data class Sykmelding(
     val id: String, // yes
     val msgId: String, // yes
@@ -20,27 +24,31 @@ data class Sykmelding(
     val meldingTilNAV: MeldingTilNAV?, // YES
     val meldingTilArbeidsgiver: String?, // YES
     val kontaktMedPasient: KontaktMedPasient, // YES
-    val behandletTidspunkt: LocalDateTime, // YES
+    @Contextual
+    val behandletTidspunkt: Instant, // YES
     val behandler: Behandler, // YES
     val avsenderSystem: AvsenderSystem, // YES
+    @Contextual
     val syketilfelleStartDato: LocalDate?,
-    val signaturDato: LocalDateTime,
+    @Contextual
+    val signaturDato: Instant,
     val navnFastlege: String?
 )
-
+@Serializable
 data class MedisinskVurdering(
     val hovedDiagnose: Diagnose?,
     val biDiagnoser: List<Diagnose>,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
+    @Contextual
     val yrkesskadeDato: LocalDate?,
     val annenFraversArsak: AnnenFraversArsak?
 )
-
+@Serializable
 data class Diagnose(val system: String, val kode: String, val tekst: String?)
-
+@Serializable
 data class AnnenFraversArsak(val beskrivelse: String?, val grunn: List<AnnenFraverGrunn>)
-
+@Serializable
 data class Arbeidsgiver(
     val harArbeidsgiver: HarArbeidsgiver,
     val navn: String?,
@@ -57,9 +65,11 @@ enum class HarArbeidsgiver(
     FLERE_ARBEIDSGIVERE("2", "Flere arbeidsgivere"),
     INGEN_ARBEIDSGIVER("3", "Ingen arbeidsgiver")
 }
-
+@Serializable
 data class Periode(
+    @Contextual
     val fom: LocalDate,
+    @Contextual
     val tom: LocalDate,
     val aktivitetIkkeMulig: AktivitetIkkeMulig?,
     val avventendeInnspillTilArbeidsgiver: String?,
@@ -67,17 +77,17 @@ data class Periode(
     val gradert: Gradert?,
     val reisetilskudd: Boolean
 )
-
+@Serializable
 data class AktivitetIkkeMulig(
     val medisinskArsak: MedisinskArsak?,
     val arbeidsrelatertArsak: ArbeidsrelatertArsak?
 )
-
+@Serializable
 data class ArbeidsrelatertArsak(
     val beskrivelse: String?,
     val arsak: List<ArbeidsrelatertArsakType>
 )
-
+@Serializable
 data class MedisinskArsak(val beskrivelse: String?, val arsak: List<MedisinskArsakType>)
 
 enum class ArbeidsrelatertArsakType(
@@ -99,33 +109,37 @@ enum class MedisinskArsakType(
     AKTIVITET_FORHINDRER_BEDRING("3", "Aktivitet vil hindre/forsinke bedring av helsetilstanden"),
     ANNET("9", "Annet")
 }
-
+@Serializable
 data class Gradert(val reisetilskudd: Boolean, val grad: Int)
-
+@Serializable
 data class Prognose(
     val arbeidsforEtterPeriode: Boolean,
     val hensynArbeidsplassen: String?,
     val erIArbeid: ErIArbeid?,
     val erIkkeIArbeid: ErIkkeIArbeid?
 )
-
+@Serializable
 data class ErIArbeid(
     val egetArbeidPaSikt: Boolean,
     val annetArbeidPaSikt: Boolean,
+    @Contextual
     val arbeidFOM: LocalDate?,
+    @Contextual
     val vurderingsdato: LocalDate?
 )
-
+@Serializable
 data class ErIkkeIArbeid(
     val arbeidsforPaSikt: Boolean,
+    @Contextual
     val arbeidsforFOM: LocalDate?,
+    @Contextual
     val vurderingsdato: LocalDate?
 )
-
+@Serializable
 data class MeldingTilNAV(val bistandUmiddelbart: Boolean, val beskrivBistand: String?)
-
-data class KontaktMedPasient(val kontaktDato: LocalDate?, val begrunnelseIkkeKontakt: String?)
-
+@Serializable
+data class KontaktMedPasient(@Contextual val kontaktDato: LocalDate?, val begrunnelseIkkeKontakt: String?)
+@Serializable
 data class Behandler(
     val fornavn: String,
     val mellomnavn: String?,
@@ -137,7 +151,7 @@ data class Behandler(
     val adresse: Adresse,
     val tlf: String?
 )
-
+@Serializable
 data class Adresse(
     val gate: String?,
     val postnummer: Int?,
@@ -145,22 +159,8 @@ data class Adresse(
     val postboks: String?,
     val land: String?
 )
-
-data class AvsenderSystem(val navn: String, val versjon: String)
-
 @Serializable
-data class SporsmalSvar(
-    val sporsmal: String?,
-    val svar: String,
-    val restriksjoner: List<SvarRestriksjon>
-)
-
-enum class SvarRestriksjon(
-) {
-    SKJERMET_FOR_ARBEIDSGIVER,
-    SKJERMET_FOR_PASIENT,
-    SKJERMET_FOR_NAV,
-}
+data class AvsenderSystem(val navn: String, val versjon: String)
 
 enum class AnnenFraverGrunn(
     val codeValue: String,
