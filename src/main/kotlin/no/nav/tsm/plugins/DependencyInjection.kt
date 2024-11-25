@@ -27,7 +27,7 @@ fun Application.configureDependencyInjection() {
         modules(
             environmentModule(),
             sykmeldingConsumer,
-            //sykmeldingReformatService
+            sykmeldingReformatService
         )
     }
 }

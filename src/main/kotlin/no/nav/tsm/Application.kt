@@ -14,5 +14,5 @@ fun main(args: Array<String>) {
 fun Application.module() {
     configureDependencyInjection()
     configureMonitoring()
-    configureConsumer(get())
+    configureConsumer(get(), get())
 }
