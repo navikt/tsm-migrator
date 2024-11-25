@@ -6,16 +6,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import no.nav.tsm.sykmeldinger.kafka.model.MigrertSykmelding
+import no.nav.tsm.smregister.models.ReceivedSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import java.time.Duration
 
 class SykmeldingConsumer(
-    private val kafkaConsumer: KafkaConsumer<String, String>,
-    private val kafkaProducer: KafkaProducer<String, MigrertSykmelding>,
-    private val tsmMigrertTopic: String,
+    private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding?>,
+    private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
+    private val teamsykmeldingSykmeldigerTopic: String,
     okSykmeldingTopic: String,
     manuellBehandlingSykmeldingTopic: String,
     avvistSykmeldingTopic: String
@@ -57,11 +57,14 @@ class SykmeldingConsumer(
             records.forEach {
                 val receivedSykmelding = it.value()
                 val sykmeldingId = it.key()
+                if(receivedSykmelding == null) {
+                    logger.info("tombstoning sykmelding with id: $sykmeldingId")
+                }
                 kafkaProducer.send(
                     ProducerRecord(
-                        tsmMigrertTopic,
+                        teamsykmeldingSykmeldigerTopic,
                         sykmeldingId,
-                        MigrertSykmelding(sykmeldingId, null, receivedSykmelding, it.topic())
+                        receivedSykmelding
                     )
                 ).get()
             }
