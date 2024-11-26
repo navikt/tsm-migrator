@@ -782,19 +782,16 @@ class SykmeldingMapper {
                 timestamp = it.tidspunkt ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatert sykmelding til manuell behandling",
             )
-
             TilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> InvalidRule(
                 name = TilbakedatertMerknad.UGYLDIG_TILBAKEDATERING.name,
                 timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Ugyldig tilbakedatering",
             )
-
-            TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> InvalidRule(
+            TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> PendingRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
                 timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatering krever flere opplysninger",
             )
-
             TilbakedatertMerknad.DELVIS_GODKJENT -> OKRule(
                 name = TilbakedatertMerknad.DELVIS_GODKJENT.name,
                 timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
