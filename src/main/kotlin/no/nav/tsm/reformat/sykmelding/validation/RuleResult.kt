@@ -37,7 +37,7 @@ data class InvalidRule(
     override val name: String,
     override val description: String,
     val timestamp: OffsetDateTime,
-    override val validationType: ValidationType = ValidationType.AUTOMATIC
+    override val validationType: ValidationType,
 ) : Rule {
     override val type = RuleType.INVALID
     val outcome = RuleOutcome(RuleResult.INVALID, timestamp)
@@ -47,8 +47,8 @@ data class PendingRule(
     override val name: String,
     val timestamp: OffsetDateTime,
     override val description: String,
+    override val validationType: ValidationType
     ) : Rule {
-    override val validationType = ValidationType.MANUAL
     override val type = RuleType.PENDING
 }
 
@@ -56,7 +56,7 @@ data class OKRule(
     override val name: String,
     override val description: String,
     val timestamp: OffsetDateTime,
-    override val validationType: ValidationType = ValidationType.MANUAL
+    override val validationType: ValidationType
 ) : Rule {
     override val type = RuleType.OK
     val outcome: RuleOutcome = RuleOutcome(RuleResult.OK, timestamp)
