@@ -1,21 +1,21 @@
 
-val kotlin_version="2.0.20"
-val logback_version="1.5.8"
+val kotlin_version="2.1.0"
+val logback_version="1.5.15"
 val koin_version="4.0.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
-val kafka_version="3.8.0"
-val jackson_version= "2.18.0"
-val opentelemetryVersion = "2.8.0"
-val mockkVersion = "1.13.12"
+val kafka_version="7.8.0-ce"
+val jackson_version= "2.18.2"
+val opentelemetryVersion = "2.10.0"
+val mockkVersion = "1.13.14"
 val syfoXmlCodegenVersion = "2.0.1"
-val jaxbRuntimeVersion = "2.4.0-b180830.0438"
+val jaxbRuntimeVersion = "4.0.5"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val javaTimeAdapterVersion = "1.1.3"
 plugins {
-    kotlin("jvm") version "2.0.20"
-    id("io.ktor.plugin") version "2.3.12"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.1.0"
+    id("io.ktor.plugin") version "3.0.3"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
 }
 
 group = "no.nav.tsm"
@@ -57,7 +57,7 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("io.mockk:mockk:$mockkVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
     implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegenVersion")
     implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegenVersion")
     implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegenVersion")
