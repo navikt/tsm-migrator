@@ -3,7 +3,7 @@ package no.nav.tsm.reformat.sykmelding.model
 import java.time.LocalDate
 
 enum class DiagnoseSystem {
-    ICPC2, ICD10, ICPC2B, UGYLDIG
+    ICPC2, ICD10, ICPC2B, PHBU, UGYLDIG
 }
 
 data class DiagnoseInfo(
