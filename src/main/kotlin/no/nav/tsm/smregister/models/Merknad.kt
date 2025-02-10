@@ -5,6 +5,6 @@ import java.time.OffsetDateTime
 data class Merknad(
     val type: String,
     val beskrivelse: String?,
-    val tidspunkt: OffsetDateTime?
+    val timestamp: OffsetDateTime?
 )
 

@@ -740,7 +740,7 @@ class SykmeldingMapper {
             Status.INVALID -> mapInvalidValidation(receivedSykmelding)
             Status.MANUAL_PROCESSING -> ValidationResult(
                 status = RuleType.OK,
-                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 rules = emptyList()
             )
         }
@@ -755,7 +755,7 @@ class SykmeldingMapper {
                 when (rule.ruleStatus) {
                     Status.INVALID -> InvalidRule(
                         name = rule.ruleName,
-                        timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                        timestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                         description = rule.messageForUser,
                         validationType = ValidationType.AUTOMATIC
                     )
@@ -767,17 +767,18 @@ class SykmeldingMapper {
     }
 
     private fun mapOkOrPendingValidation(receivedSykmelding: ReceivedSykmelding): ValidationResult {
+        val validationResultTimestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC)
         if (receivedSykmelding.merknader.isNullOrEmpty()) {
             return ValidationResult(
                 status = RuleType.OK,
-                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = validationResultTimestamp,
                 rules = emptyList()
             )
         }
         val rules: List<Rule> = mapTilbakedatertRules(receivedSykmelding.merknader, receivedSykmelding)
         return ValidationResult(
             status = rules.maxOf { it.type },
-            timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+            timestamp = validationResultTimestamp,
             rules = rules
         )
     }
@@ -789,31 +790,31 @@ class SykmeldingMapper {
         when (OldTilbakedatertMerknad.valueOf(it.type)) {
             OldTilbakedatertMerknad.UNDER_BEHANDLING -> PendingRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_UNDER_BEHANDLING.name,
-                timestamp = it.tidspunkt ?: receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = it.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatert sykmelding til manuell behandling",
                 ValidationType.AUTOMATIC,
             )
             OldTilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> InvalidRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_UGYLDIG_TILBAKEDATERING.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = it.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Ugyldig tilbakedatering",
                 validationType = ValidationType.MANUAL,
             )
             OldTilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> PendingRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = it.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatering krever flere opplysninger",
                 validationType = ValidationType.MANUAL,
             )
             OldTilbakedatertMerknad.DELVIS_GODKJENT -> OKRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_DELVIS_GODKJENT.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = it.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Delvis godkjent tilbakedatering",
                 validationType = ValidationType.MANUAL,
             )
             OldTilbakedatertMerknad.TILBAKEDATERT_PAPIRSYKMELDING -> OKRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_TILBAKEDATERT_PAPIRSYKMELDING.name,
-                timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = it.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 description = it.beskrivelse ?: "Tilbakedatert papirsykmelding",
                 validationType = ValidationType.AUTOMATIC,
             )
