@@ -8,7 +8,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.reformat.sykmelding.model.SykmeldingMedBehandlingsutfall
+import no.nav.tsm.reformat.sykmelding.model.SykmeldingRecord
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.reformat.sykmelding.util.secureLog
@@ -29,7 +29,7 @@ private val objectMapper: ObjectMapper =
 class SykmeldingReformatService(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding>,
     private val sykmeldingMapper: SykmeldingMapper,
-    private val kafkaProducer: KafkaProducer<String, SykmeldingMedBehandlingsutfall>,
+    private val kafkaProducer: KafkaProducer<String, SykmeldingRecord>,
     private val outputTopic: String,
     private val inputTopic: String,
     private val cluster: String,

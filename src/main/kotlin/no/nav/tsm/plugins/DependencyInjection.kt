@@ -3,7 +3,7 @@ package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
-import no.nav.tsm.reformat.sykmelding.model.SykmeldingMedBehandlingsutfall
+import no.nav.tsm.reformat.sykmelding.model.SykmeldingRecord
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
@@ -51,7 +51,7 @@ val sykmeldingReformatService = module {
             this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
         }, StringDeserializer(), JacksonKafkaDeserializer(ReceivedSykmelding::class))
 
-        val producer = KafkaProducer<String, SykmeldingMedBehandlingsutfall>(Properties().apply {
+        val producer = KafkaProducer<String, SykmeldingRecord>(Properties().apply {
             putAll(env.kafkaConfig)
             this[ProducerConfig.ACKS_CONFIG] = "all"
             this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
