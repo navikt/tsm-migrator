@@ -5,7 +5,7 @@ import no.nav.tsm.reformat.sykmelding.SporsmalSvar
 import no.nav.tsm.reformat.sykmelding.model.metadata.Adresse
 import no.nav.tsm.reformat.sykmelding.model.metadata.HelsepersonellKategori
 import no.nav.tsm.reformat.sykmelding.model.metadata.Kontaktinfo
-import no.nav.tsm.reformat.sykmelding.model.metadata.Metadata
+import no.nav.tsm.reformat.sykmelding.model.metadata.MessageMetadata
 import no.nav.tsm.reformat.sykmelding.model.metadata.Navn
 import no.nav.tsm.reformat.sykmelding.model.metadata.PersonId
 import no.nav.tsm.reformat.sykmelding.validation.ValidationResult
@@ -13,7 +13,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 data class SykmeldingRecord(
-    val metadata: Metadata,
+    val metadata: MessageMetadata,
     val sykmelding: Sykmelding,
     val validation: ValidationResult,
 )

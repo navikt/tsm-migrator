@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.tsm.reformat.sykmelding.model.metadata.EDIEmottak
 import no.nav.tsm.reformat.sykmelding.model.metadata.Egenmeldt
 import no.nav.tsm.reformat.sykmelding.model.metadata.EmottakEnkel
-import no.nav.tsm.reformat.sykmelding.model.metadata.Metadata
+import no.nav.tsm.reformat.sykmelding.model.metadata.MessageMetadata
 import no.nav.tsm.reformat.sykmelding.model.metadata.MetadataType
 import no.nav.tsm.reformat.sykmelding.model.metadata.Papir
 import no.nav.tsm.reformat.sykmelding.model.metadata.Utenlandsk
@@ -26,7 +26,7 @@ class SykmeldingModule : SimpleModule() {
         addDeserializer(ArbeidsgiverInfo::class.java, ArbeidsgiverInfoDeserializer())
         addDeserializer(IArbeid::class.java, IArbeidDeserializer())
         addDeserializer(Rule::class.java, RuleDeserializer())
-        addDeserializer(Metadata::class.java, MeldingsinformasjonDeserializer())
+        addDeserializer(MessageMetadata::class.java, MeldingsinformasjonDeserializer())
     }
 }
 
@@ -45,13 +45,13 @@ class SykmeldingDeserializer : CustomDeserializer<Sykmelding>() {
     override fun getClass(type: String): KClass<out Sykmelding> {
         return when (SykmeldingType.valueOf(type)) {
             SykmeldingType.XML -> XmlSykmelding::class
-            SykmeldingType.PAPIR -> XmlSykmelding::class
+            SykmeldingType.PAPIR -> Papirsykmelding::class
             SykmeldingType.UTENLANDSK -> UtenlandskSykmelding::class
         }
     }
 }
-class MeldingsinformasjonDeserializer : CustomDeserializer<Metadata>() {
-    override fun getClass(type: String): KClass<out Metadata> {
+class MeldingsinformasjonDeserializer : CustomDeserializer<MessageMetadata>() {
+    override fun getClass(type: String): KClass<out MessageMetadata> {
         return when (MetadataType.valueOf(type)) {
             MetadataType.ENKEL -> EmottakEnkel::class
             MetadataType.EMOTTAK -> EDIEmottak::class

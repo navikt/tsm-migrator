@@ -10,38 +10,38 @@ enum class MetadataType {
     EGENMELDT,
 }
 
-sealed interface Metadata {
+sealed interface MessageMetadata {
     val type: MetadataType
 }
 
 data class Egenmeldt(
-    val msgInfo: MeldingMetadata,
-) : Metadata {
+    val msgInfo: MessageInfo,
+) : MessageMetadata {
     override val type: MetadataType = MetadataType.EGENMELDT
 }
 
 data class Papir(
-    val msgInfo: MeldingMetadata,
+    val msgInfo: MessageInfo,
     val sender: Organisasjon,
     val receiver: Organisasjon,
     val journalPostId: String,
-) : Metadata {
+) : MessageMetadata {
     override val type = MetadataType.PAPIRSYKMELDING
 }
 
 data class Utenlandsk(
     val land: String,
     val journalPostId: String,
-) : Metadata {
+) : MessageMetadata {
     override val type: MetadataType = MetadataType.UTENLANDSK_SYKMELDING
 }
 
 data class EmottakEnkel(
-    val msgInfo: MeldingMetadata,
+    val msgInfo: MessageInfo,
     val sender: Organisasjon,
     val receiver: Organisasjon,
     val vedlegg: List<String>?,
-) : Metadata {
+) : MessageMetadata {
     override val type = MetadataType.ENKEL
 }
 
@@ -72,12 +72,12 @@ data class Ack(
 data class EDIEmottak(
     val mottakenhetBlokk: MottakenhetBlokk,
     val ack: Ack,
-    val msgInfo: MeldingMetadata,
+    val msgInfo: MessageInfo,
     val sender: Organisasjon,
     val receiver: Organisasjon,
     val pasient: Pasient?,
     val vedlegg: List<String>?,
-) : Metadata {
+) : MessageMetadata {
     override val type = MetadataType.EMOTTAK
 }
 
@@ -93,7 +93,7 @@ enum class Meldingstype {
 }
 
 
-data class MeldingMetadata(
+data class MessageInfo(
     val type: Meldingstype,
     val genDate: OffsetDateTime,
     val msgId: String,

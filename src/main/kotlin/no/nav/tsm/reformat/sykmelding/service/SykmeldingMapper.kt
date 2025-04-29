@@ -59,7 +59,7 @@ import no.nav.tsm.reformat.sykmelding.model.metadata.HelsepersonellKategori
 import no.nav.tsm.reformat.sykmelding.model.metadata.Kjonn
 import no.nav.tsm.reformat.sykmelding.model.metadata.Kontaktinfo
 import no.nav.tsm.reformat.sykmelding.model.metadata.KontaktinfoType
-import no.nav.tsm.reformat.sykmelding.model.metadata.MeldingMetadata
+import no.nav.tsm.reformat.sykmelding.model.metadata.MessageInfo
 import no.nav.tsm.reformat.sykmelding.model.metadata.Meldingstype
 import no.nav.tsm.reformat.sykmelding.model.metadata.MottakenhetBlokk
 import no.nav.tsm.reformat.sykmelding.model.metadata.Navn
@@ -215,7 +215,7 @@ class SykmeldingMapper {
     private fun toMeldingMetadata(
         receivedSykmelding: ReceivedSykmelding,
         msgHead: XMLMsgHead
-    ) = MeldingMetadata(
+    ) = MessageInfo(
         type = Meldingstype.SYKMELDING,
         genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
         msgId = receivedSykmelding.msgId ?: throw IllegalArgumentException("Mangler msgId"),
@@ -465,7 +465,7 @@ class SykmeldingMapper {
             ebService = mottakenhetBlokk.ebService,
             ebAction = mottakenhetBlokk.ebAction,
         ),
-        msgInfo = MeldingMetadata(
+        msgInfo = MessageInfo(
             type = Meldingstype.parse(msgHead.msgInfo.type.v),
             genDate = toOffsetDateTime(msgHead.msgInfo.genDate),
             msgId = receivedSykmelding.msgId ?: throw IllegalArgumentException("Mangler msgId"),
@@ -509,7 +509,7 @@ class SykmeldingMapper {
 
     private fun emottakEnkel(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
         val emottakEnkel = EmottakEnkel(
-            msgInfo = MeldingMetadata(
+            msgInfo = MessageInfo(
                 type = Meldingstype.SYKMELDING,
                 genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
                 msgId = receivedSykmelding.msgId ?: throw IllegalArgumentException("Mangler msgId"),
@@ -831,7 +831,7 @@ class SykmeldingMapper {
                 ValidationType.AUTOMATIC,
                 reason = Reason(
                     sykmelder = "Sykmeldingen er til manuell behandling",
-                    sykmeldt = "Sykmeldingen blir manuell behandlet fordi den er tilbakedatert"
+                    sykmeldt = "Sykmeldingen blir manuelt behandlet fordi den er tilbakedatert"
                 )
             )
             OldTilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> InvalidRule(
@@ -846,7 +846,7 @@ class SykmeldingMapper {
                 name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
                 timestamp = timestamp,
                 validationType = ValidationType.MANUAL,
-                reason = Reason(sykmeldt = "Sykmeldingen blir manuell behandlet fordi den er tilbakedatert",
+                reason = Reason(sykmeldt = "Sykmeldingen blir manuelt behandlet fordi den er tilbakedatert",
                     "Tilbakedatering krever flere opplysninger")
             )
             OldTilbakedatertMerknad.DELVIS_GODKJENT -> OKRule(
@@ -868,7 +868,7 @@ private fun mapMedisinskVurdering(sykmelding: no.nav.tsm.smregister.models.Sykme
     return MedisinskVurdering(
         hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.let(toDiagnoseInfo()),
         biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser.map(toDiagnoseInfo()),
-        annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.let { it ->
+        annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.let {
             if(it.beskrivelse == null && it.grunn.isEmpty()) {
                 null
             }
