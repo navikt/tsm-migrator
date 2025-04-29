@@ -10,33 +10,29 @@ enum class MetadataType {
     EGENMELDT,
 }
 
-sealed interface Meldingsinformasjon {
+sealed interface Metadata {
     val type: MetadataType
-    val vedlegg: List<String>?
 }
 
 data class Egenmeldt(
     val msgInfo: MeldingMetadata,
-) : Meldingsinformasjon {
+) : Metadata {
     override val type: MetadataType = MetadataType.EGENMELDT
-    override val vedlegg: List<String> = emptyList()
 }
 
-data class Papirsykmelding(
+data class Papir(
     val msgInfo: MeldingMetadata,
     val sender: Organisasjon,
     val receiver: Organisasjon,
     val journalPostId: String,
-) : Meldingsinformasjon {
-    override val vedlegg = null
+) : Metadata {
     override val type = MetadataType.PAPIRSYKMELDING
 }
 
 data class Utenlandsk(
     val land: String,
     val journalPostId: String,
-) : Meldingsinformasjon {
-    override val vedlegg = null
+) : Metadata {
     override val type: MetadataType = MetadataType.UTENLANDSK_SYKMELDING
 }
 
@@ -44,8 +40,8 @@ data class EmottakEnkel(
     val msgInfo: MeldingMetadata,
     val sender: Organisasjon,
     val receiver: Organisasjon,
-    override val vedlegg: List<String>?,
-) : Meldingsinformasjon {
+    val vedlegg: List<String>?,
+) : Metadata {
     override val type = MetadataType.ENKEL
 }
 
@@ -80,8 +76,8 @@ data class EDIEmottak(
     val sender: Organisasjon,
     val receiver: Organisasjon,
     val pasient: Pasient?,
-    override val vedlegg: List<String>?,
-) : Meldingsinformasjon {
+    val vedlegg: List<String>?,
+) : Metadata {
     override val type = MetadataType.EMOTTAK
 }
 
