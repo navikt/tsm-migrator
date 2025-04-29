@@ -79,6 +79,7 @@ import no.nav.tsm.reformat.sykmelding.util.getIdentType
 import no.nav.tsm.reformat.sykmelding.validation.InvalidRule
 import no.nav.tsm.reformat.sykmelding.validation.OKRule
 import no.nav.tsm.reformat.sykmelding.validation.PendingRule
+import no.nav.tsm.reformat.sykmelding.validation.Reason
 import no.nav.tsm.reformat.sykmelding.validation.Rule
 import no.nav.tsm.reformat.sykmelding.validation.RuleType
 import no.nav.tsm.reformat.sykmelding.validation.ValidationResult
@@ -789,8 +790,11 @@ class SykmeldingMapper {
                     Status.INVALID -> InvalidRule(
                         name = rule.ruleName,
                         timestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
-                        description = rule.messageForUser,
-                        validationType = ValidationType.AUTOMATIC
+                        validationType = ValidationType.AUTOMATIC,
+                        reason = Reason(
+                            sykmeldt = rule.messageForUser,
+                            sykmelder = rule.messageForSender
+                        )
                     )
 
                     else -> null
@@ -824,31 +828,35 @@ class SykmeldingMapper {
             OldTilbakedatertMerknad.UNDER_BEHANDLING -> PendingRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_UNDER_BEHANDLING.name,
                 timestamp = timestamp,
-                description = it.beskrivelse ?: "Tilbakedatert sykmelding til manuell behandling",
                 ValidationType.AUTOMATIC,
+                reason = Reason(
+                    sykmelder = "Sykmeldingen er til manuell behandling",
+                    sykmeldt = "Sykmeldingen blir manuell behandlet fordi den er tilbakedatert"
+                )
             )
             OldTilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> InvalidRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_UGYLDIG_TILBAKEDATERING.name,
                 timestamp = timestamp,
-                description = it.beskrivelse ?: "Ugyldig tilbakedatering",
                 validationType = ValidationType.MANUAL,
+                reason = Reason(
+                    sykmeldt = "Sykmeldingen er tilbakedatert uten tilstrekkelig begrunnelse fra den som sykmeldte deg.",
+                    "Ugyldig tilbakedatering")
             )
             OldTilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> PendingRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
                 timestamp = timestamp,
-                description = it.beskrivelse ?: "Tilbakedatering krever flere opplysninger",
                 validationType = ValidationType.MANUAL,
+                reason = Reason(sykmeldt = "Sykmeldingen blir manuell behandlet fordi den er tilbakedatert",
+                    "Tilbakedatering krever flere opplysninger")
             )
             OldTilbakedatertMerknad.DELVIS_GODKJENT -> OKRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_DELVIS_GODKJENT.name,
                 timestamp = timestamp,
-                description = it.beskrivelse ?: "Delvis godkjent tilbakedatering",
                 validationType = ValidationType.MANUAL,
             )
             OldTilbakedatertMerknad.TILBAKEDATERT_PAPIRSYKMELDING -> OKRule(
                 name = TilbakedatertMerknad.TILBAKEDATERING_TILBAKEDATERT_PAPIRSYKMELDING.name,
                 timestamp = timestamp,
-                description = it.beskrivelse ?: "Tilbakedatert papirsykmelding",
                 validationType = ValidationType.AUTOMATIC,
             )
         }
