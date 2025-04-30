@@ -904,6 +904,7 @@ private fun mapMedisinskVurdering(sykmelding: no.nav.tsm.smregister.models.Sykme
 private fun toDiagnoseInfo() = { diagnose: Diagnose ->
     DiagnoseInfo(
         kode = diagnose.kode,
+        tekst = diagnose.tekst,
         system = when (diagnose.system) {
             "2.16.578.1.12.4.1.1.7170" -> DiagnoseSystem.ICPC2
             "2.16.578.1.12.4.1.1.7110" -> DiagnoseSystem.ICD10
