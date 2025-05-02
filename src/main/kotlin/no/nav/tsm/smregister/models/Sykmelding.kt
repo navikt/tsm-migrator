@@ -36,7 +36,7 @@ data class MedisinskVurdering(
     val annenFraversArsak: AnnenFraversArsak?
 )
 
-data class Diagnose(val system: String, val kode: String, val tekst: String)
+data class Diagnose(val system: String, val kode: String, val tekst: String?)
 
 data class AnnenFraversArsak(val beskrivelse: String?, val grunn: List<AnnenFraverGrunn>)
 
