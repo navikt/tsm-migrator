@@ -1026,6 +1026,9 @@ private fun mapArbeidsgiver(sykmelding: no.nav.tsm.smregister.models.Sykmelding)
         HarArbeidsgiver.EN_ARBEIDSGIVER -> EnArbeidsgiver(
             meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
             tiltakArbeidsplassen = sykmelding.tiltakArbeidsplassen,
+            navn = sykmelding.arbeidsgiver.navn,
+            yrkesbetegnelse = sykmelding.arbeidsgiver.yrkesbetegnelse,
+            stillingsprosent = sykmelding.arbeidsgiver.stillingsprosent
         )
 
         HarArbeidsgiver.FLERE_ARBEIDSGIVERE -> FlereArbeidsgivere(
