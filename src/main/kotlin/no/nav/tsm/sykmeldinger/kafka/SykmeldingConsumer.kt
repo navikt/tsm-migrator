@@ -12,6 +12,10 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import java.time.Duration
 
+const val PROCESSING_TARGET_HEADER = "processing-target"
+
+const val TSM_PROCESSING_TARGET = "tsm"
+
 class SykmeldingConsumer(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding?>,
     private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
@@ -55,17 +59,26 @@ class SykmeldingConsumer(
             val records = kafkaConsumer.poll(Duration.ofMillis(10_000))
 
             records.forEach {
+                val processingTarget = it.headers().singleOrNull { header -> header.key() == PROCESSING_TARGET_HEADER }?.value()?.toString(Charsets.UTF_8)
+
                 val receivedSykmelding = it.value()
                 val sykmeldingId = it.key()
                 if(receivedSykmelding == null) {
                     logger.info("tombstoning sykmelding with id: $sykmeldingId")
                 }
+
+                val producerRecord = ProducerRecord(
+                    teamsykmeldingSykmeldigerTopic,
+                    sykmeldingId,
+                    receivedSykmelding
+                )
+
+                if(processingTarget == TSM_PROCESSING_TARGET) {
+                    logger.info("$TSM_PROCESSING_TARGET is $processingTarget, adding to headers")
+                    producerRecord.headers().add(PROCESSING_TARGET_HEADER, TSM_PROCESSING_TARGET.toByteArray(Charsets.UTF_8))
+                }
                 kafkaProducer.send(
-                    ProducerRecord(
-                        teamsykmeldingSykmeldigerTopic,
-                        sykmeldingId,
-                        receivedSykmelding
-                    )
+                    producerRecord
                 ).get()
             }
         }

@@ -12,6 +12,8 @@ import no.nav.tsm.reformat.sykmelding.model.SykmeldingRecord
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.reformat.sykmelding.util.secureLog
+import no.nav.tsm.sykmeldinger.kafka.PROCESSING_TARGET_HEADER
+import no.nav.tsm.sykmeldinger.kafka.TSM_PROCESSING_TARGET
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -56,7 +58,16 @@ class SykmeldingReformatService(
         records.forEach { record ->
             try {
                 val sykmeldingMedBehandlingsutfall = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
-                kafkaProducer.send(ProducerRecord(outputTopic, record.key(), sykmeldingMedBehandlingsutfall)).get()
+                val processingTarget = record.headers().singleOrNull { header -> header.key() == PROCESSING_TARGET_HEADER }?.value()?.toString(Charsets.UTF_8)
+
+                val producerRecord = ProducerRecord(outputTopic, record.key(), sykmeldingMedBehandlingsutfall)
+
+                if(processingTarget == TSM_PROCESSING_TARGET) {
+                    log.info("$TSM_PROCESSING_TARGET is $processingTarget, adding to headers")
+                    producerRecord.headers().add(PROCESSING_TARGET_HEADER, TSM_PROCESSING_TARGET.toByteArray(Charsets.UTF_8))
+                }
+
+                kafkaProducer.send(producerRecord).get()
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id} for p: ${record.partition()} at offset: ${record.offset()}", mappingException)
 
