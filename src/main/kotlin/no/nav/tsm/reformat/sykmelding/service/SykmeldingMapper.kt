@@ -354,7 +354,7 @@ class SykmeldingMapper {
         val behandler = Behandler(
             navn = Navn(
                 fornavn = receivedSykmelding.sykmelding.behandler.fornavn,
-                mellomnavn = receivedSykmelding.sykmelding.behandler.etternavn,
+                mellomnavn = receivedSykmelding.sykmelding.behandler.mellomnavn,
                 etternavn = receivedSykmelding.sykmelding.behandler.etternavn,
             ),
             adresse = toAdresse(xmlSykmelding.behandler.adresse),
