@@ -73,10 +73,9 @@ class SykmeldingConsumer(
                     receivedSykmelding
                 )
 
-                if(processingTarget == TSM_PROCESSING_TARGET) {
-                    logger.info("$TSM_PROCESSING_TARGET is $processingTarget, adding to headers")
-                    producerRecord.headers().add(PROCESSING_TARGET_HEADER, TSM_PROCESSING_TARGET.toByteArray(Charsets.UTF_8))
-                }
+                logger.info("processingTarget is $processingTarget, adding to headers")
+                it.headers().forEach { header -> producerRecord.headers().add(header.key(), header.value()) }
+
                 kafkaProducer.send(
                     producerRecord
                 ).get()
