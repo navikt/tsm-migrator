@@ -661,12 +661,15 @@ class SykmeldingMapper {
     }
 
     private fun toTiltak(receivedSykmelding: ReceivedSykmelding): Tiltak? {
-        return receivedSykmelding.sykmelding.tiltakNAV?.let {
+        val tiltakNav = receivedSykmelding.sykmelding.tiltakNAV
+        val andreTiltak = receivedSykmelding.sykmelding.andreTiltak
+        if(!tiltakNav.isNullOrBlank() || !andreTiltak.isNullOrBlank()) {
             Tiltak(
-                tiltakNav = it,
-                andreTiltak = receivedSykmelding.sykmelding.andreTiltak,
+                tiltakNav = tiltakNav,
+                andreTiltak = andreTiltak,
             )
         }
+        return null
     }
 
     private fun toSignerendeBehandler(receivedSykmelding: ReceivedSykmelding): Sykmelder {
