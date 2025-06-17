@@ -664,7 +664,7 @@ class SykmeldingMapper {
         val tiltakNav = receivedSykmelding.sykmelding.tiltakNAV
         val andreTiltak = receivedSykmelding.sykmelding.andreTiltak
         if(!tiltakNav.isNullOrBlank() || !andreTiltak.isNullOrBlank()) {
-            Tiltak(
+            return Tiltak(
                 tiltakNav = tiltakNav,
                 andreTiltak = andreTiltak,
             )
