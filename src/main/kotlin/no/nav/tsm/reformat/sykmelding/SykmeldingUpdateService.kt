@@ -1,34 +1,29 @@
 package no.nav.tsm.reformat.sykmelding
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import no.nav.tsm.smregister.models.ReceivedSykmelding
+import kotlinx.coroutines.launch
+import no.nav.tsm.reformat.sykmelding.model.Papirsykmelding
 import no.nav.tsm.reformat.sykmelding.model.SykmeldingRecord
+import no.nav.tsm.reformat.sykmelding.model.Tiltak
+import no.nav.tsm.reformat.sykmelding.model.XmlSykmelding
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.reformat.sykmelding.util.secureLog
-import no.nav.tsm.sykmeldinger.kafka.PROCESSING_TARGET_HEADER
-import no.nav.tsm.sykmeldinger.kafka.TSM_PROCESSING_TARGET
+import no.nav.tsm.smregister.models.ReceivedSykmelding
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
-val objectMapper: ObjectMapper =
-    jacksonObjectMapper().apply {
-        registerModule(JavaTimeModule())
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-    }
-class SykmeldingReformatService(
+
+class SykmeldingUpdateService(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding>,
     private val sykmeldingMapper: SykmeldingMapper,
     private val kafkaProducer: KafkaProducer<String, SykmeldingRecord>,
@@ -38,9 +33,18 @@ class SykmeldingReformatService(
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(SykmeldingReformatService::class.java)
+        private val stopTimestamp = OffsetDateTime.of(2025, 6, 17, 16, 0, 0, 0, ZoneOffset.UTC).toInstant().toEpochMilli()
     }
+    var counter: Int = 0
+    var totalRead: Int = 0
 
     suspend fun start() = coroutineScope {
+        launch(Dispatchers.IO) {
+            while(isActive) {
+                log.info("Reformatted: $counter, Total read: $totalRead")
+                delay(30.seconds)
+            }
+        }
         kafkaConsumer.subscribe(listOf(inputTopic))
         try {
             while (isActive) {
@@ -55,19 +59,16 @@ class SykmeldingReformatService(
     }
 
     private fun processRecords(records: ConsumerRecords<String, ReceivedSykmelding>) {
-        records.forEach { record ->
+        records.filter { it.timestamp() < stopTimestamp }.forEach { record ->
             try {
                 val sykmeldingMedBehandlingsutfall = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
-                val processingTarget = record.headers().singleOrNull { header -> header.key() == PROCESSING_TARGET_HEADER }?.value()?.toString(Charsets.UTF_8)
-
-                val producerRecord = ProducerRecord(outputTopic, record.key(), sykmeldingMedBehandlingsutfall)
-
-                if(processingTarget == TSM_PROCESSING_TARGET) {
-                    log.info("$TSM_PROCESSING_TARGET is $processingTarget, adding to headers")
-                    producerRecord.headers().add(PROCESSING_TARGET_HEADER, TSM_PROCESSING_TARGET.toByteArray(Charsets.UTF_8))
+                val shouldUpdate = shouldUpdateSykmelding(sykmeldingMedBehandlingsutfall)
+                totalRead++
+                if(shouldUpdate) {
+                    val producerRecord = ProducerRecord(outputTopic, record.key(), sykmeldingMedBehandlingsutfall)
+                    kafkaProducer.send(producerRecord).get()
+                    counter++
                 }
-
-                kafkaProducer.send(producerRecord).get()
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id} for p: ${record.partition()} at offset: ${record.offset()}", mappingException)
 
@@ -83,5 +84,20 @@ class SykmeldingReformatService(
             }
         }
     }
-}
 
+    private fun shouldUpdateSykmelding(sykmeldingRecord: SykmeldingRecord?): Boolean {
+        return when(val sykmelding = sykmeldingRecord?.sykmelding) {
+            is XmlSykmelding -> {
+                isMissingAndreTiltak(sykmelding.tiltak)
+            }
+            is Papirsykmelding -> {
+                isMissingAndreTiltak(sykmelding.tiltak)
+            }
+            else -> false
+         }
+    }
+
+    private fun isMissingAndreTiltak(tiltak: Tiltak?): Boolean {
+        return !tiltak?.andreTiltak.isNullOrBlank() && tiltak.tiltakNav == null
+    }
+}
