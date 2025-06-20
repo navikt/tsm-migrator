@@ -10,80 +10,18 @@ import no.nav.helse.msgHead.XMLReceiver
 import no.nav.helse.msgHead.XMLSender
 import no.nav.helse.sm2013.Address
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.tsm.reformat.sykmelding.SporsmalSvar
-import no.nav.tsm.reformat.sykmelding.model.Aktivitet
-import no.nav.tsm.reformat.sykmelding.model.AktivitetIkkeMulig
-import no.nav.tsm.reformat.sykmelding.model.AnnenFravarArsakType
-import no.nav.tsm.reformat.sykmelding.model.AnnenFraverArsak
-import no.nav.tsm.reformat.sykmelding.model.ArbeidsgiverInfo
-import no.nav.tsm.reformat.sykmelding.model.ArbeidsrelatertArsak
-import no.nav.tsm.reformat.sykmelding.model.ArbeidsrelatertArsakType
-import no.nav.tsm.reformat.sykmelding.model.AvsenderSystem
-import no.nav.tsm.reformat.sykmelding.model.Avventende
-import no.nav.tsm.reformat.sykmelding.model.Behandler
-import no.nav.tsm.reformat.sykmelding.model.Behandlingsdager
-import no.nav.tsm.reformat.sykmelding.model.BistandNav
-import no.nav.tsm.reformat.sykmelding.model.DiagnoseInfo
-import no.nav.tsm.reformat.sykmelding.model.DiagnoseSystem
-import no.nav.tsm.reformat.sykmelding.model.EnArbeidsgiver
-import no.nav.tsm.reformat.sykmelding.model.ErIArbeid
-import no.nav.tsm.reformat.sykmelding.model.ErIkkeIArbeid
-import no.nav.tsm.reformat.sykmelding.model.FlereArbeidsgivere
-import no.nav.tsm.reformat.sykmelding.model.Gradert
-import no.nav.tsm.reformat.sykmelding.model.IArbeid
-import no.nav.tsm.reformat.sykmelding.model.IngenArbeidsgiver
-import no.nav.tsm.reformat.sykmelding.model.MedisinskArsak
-import no.nav.tsm.reformat.sykmelding.model.MedisinskArsakType
-import no.nav.tsm.reformat.sykmelding.model.MedisinskVurdering
-import no.nav.tsm.reformat.sykmelding.model.Papirsykmelding
-import no.nav.tsm.reformat.sykmelding.model.Prognose
-import no.nav.tsm.reformat.sykmelding.model.Reisetilskudd
-import no.nav.tsm.reformat.sykmelding.model.Sykmelder
-import no.nav.tsm.reformat.sykmelding.model.Sykmelding
-import no.nav.tsm.reformat.sykmelding.model.XmlSykmelding
-import no.nav.tsm.reformat.sykmelding.model.SykmeldingMetadata
-import no.nav.tsm.reformat.sykmelding.model.SykmeldingRecord
-import no.nav.tsm.reformat.sykmelding.model.Tilbakedatering
-import no.nav.tsm.reformat.sykmelding.model.Tiltak
-import no.nav.tsm.reformat.sykmelding.model.UtenlandskSykmelding
-import no.nav.tsm.reformat.sykmelding.model.Yrkesskade
-import no.nav.tsm.reformat.sykmelding.model.metadata.Ack
-import no.nav.tsm.reformat.sykmelding.model.metadata.AckType
-import no.nav.tsm.reformat.sykmelding.model.metadata.Adresse
-import no.nav.tsm.reformat.sykmelding.model.metadata.AdresseType
-import no.nav.tsm.reformat.sykmelding.model.metadata.EDIEmottak
-import no.nav.tsm.reformat.sykmelding.model.metadata.Egenmeldt
-import no.nav.tsm.reformat.sykmelding.model.metadata.EmottakEnkel
-import no.nav.tsm.reformat.sykmelding.model.metadata.Helsepersonell
-import no.nav.tsm.reformat.sykmelding.model.metadata.HelsepersonellKategori
-import no.nav.tsm.reformat.sykmelding.model.metadata.Kjonn
-import no.nav.tsm.reformat.sykmelding.model.metadata.Kontaktinfo
-import no.nav.tsm.reformat.sykmelding.model.metadata.KontaktinfoType
-import no.nav.tsm.reformat.sykmelding.model.metadata.MessageInfo
-import no.nav.tsm.reformat.sykmelding.model.metadata.Meldingstype
-import no.nav.tsm.reformat.sykmelding.model.metadata.MottakenhetBlokk
-import no.nav.tsm.reformat.sykmelding.model.metadata.Navn
-import no.nav.tsm.reformat.sykmelding.model.metadata.OrgId
-import no.nav.tsm.reformat.sykmelding.model.metadata.OrgIdType
-import no.nav.tsm.reformat.sykmelding.model.metadata.Organisasjon
-import no.nav.tsm.reformat.sykmelding.model.metadata.OrganisasjonsType
-import no.nav.tsm.reformat.sykmelding.model.metadata.Papir
-import no.nav.tsm.reformat.sykmelding.model.metadata.PersonId
-import no.nav.tsm.reformat.sykmelding.model.metadata.PersonIdType
-import no.nav.tsm.reformat.sykmelding.model.metadata.RolleTilPasient
-import no.nav.tsm.reformat.sykmelding.model.metadata.UnderOrganisasjon
-import no.nav.tsm.reformat.sykmelding.model.metadata.Utenlandsk
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseAckType
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseAdresseType
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseHelsepersonellKategori
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseKjonn
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseKontaktinfoType
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseOrgIdType
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseOrganisasjonsType
+import no.nav.tsm.reformat.sykmelding.model.metadata.parsePersonIdType
+import no.nav.tsm.reformat.sykmelding.model.metadata.parseRolleTilPasient
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
 import no.nav.tsm.reformat.sykmelding.util.get
 import no.nav.tsm.reformat.sykmelding.util.getIdentType
-import no.nav.tsm.reformat.sykmelding.validation.InvalidRule
-import no.nav.tsm.reformat.sykmelding.validation.OKRule
-import no.nav.tsm.reformat.sykmelding.validation.PendingRule
-import no.nav.tsm.reformat.sykmelding.validation.Reason
-import no.nav.tsm.reformat.sykmelding.validation.Rule
-import no.nav.tsm.reformat.sykmelding.validation.RuleType
-import no.nav.tsm.reformat.sykmelding.validation.ValidationResult
-import no.nav.tsm.reformat.sykmelding.validation.ValidationType
 import no.nav.tsm.smregister.models.AnnenFraverGrunn
 import no.nav.tsm.smregister.models.Diagnose
 import no.nav.tsm.smregister.models.HarArbeidsgiver
@@ -92,13 +30,83 @@ import no.nav.tsm.smregister.models.Periode
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.Status
 import no.nav.tsm.smregister.models.SvarRestriksjon
-import no.nav.tsm.smregister.models.UtenlandskInfo
+import no.nav.tsm.sykmelding.input.core.model.Aktivitet
+import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
+import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
+import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
+import no.nav.tsm.sykmelding.input.core.model.ArbeidsgiverInfo
+import no.nav.tsm.sykmelding.input.core.model.ArbeidsrelatertArsak
+import no.nav.tsm.sykmelding.input.core.model.ArbeidsrelatertArsakType
+import no.nav.tsm.sykmelding.input.core.model.AvsenderSystem
+import no.nav.tsm.sykmelding.input.core.model.Avventende
+import no.nav.tsm.sykmelding.input.core.model.Behandler
+import no.nav.tsm.sykmelding.input.core.model.Behandlingsdager
+import no.nav.tsm.sykmelding.input.core.model.BistandNav
+import no.nav.tsm.sykmelding.input.core.model.DiagnoseInfo
+import no.nav.tsm.sykmelding.input.core.model.DiagnoseSystem
+import no.nav.tsm.sykmelding.input.core.model.EnArbeidsgiver
+import no.nav.tsm.sykmelding.input.core.model.ErIArbeid
+import no.nav.tsm.sykmelding.input.core.model.ErIkkeIArbeid
+import no.nav.tsm.sykmelding.input.core.model.FlereArbeidsgivere
+import no.nav.tsm.sykmelding.input.core.model.Gradert
+import no.nav.tsm.sykmelding.input.core.model.IArbeid
+import no.nav.tsm.sykmelding.input.core.model.IngenArbeidsgiver
+import no.nav.tsm.sykmelding.input.core.model.InvalidRule
+import no.nav.tsm.sykmelding.input.core.model.MedisinskArsak
+import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
+import no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering
+import no.nav.tsm.sykmelding.input.core.model.OKRule
+import no.nav.tsm.sykmelding.input.core.model.Papirsykmelding
+import no.nav.tsm.sykmelding.input.core.model.PendingRule
+import no.nav.tsm.sykmelding.input.core.model.Prognose
+import no.nav.tsm.sykmelding.input.core.model.Reason
+import no.nav.tsm.sykmelding.input.core.model.Reisetilskudd
+import no.nav.tsm.sykmelding.input.core.model.Rule
+import no.nav.tsm.sykmelding.input.core.model.RuleType
+import no.nav.tsm.sykmelding.input.core.model.SporsmalSvar
+import no.nav.tsm.sykmelding.input.core.model.Sykmelder
+import no.nav.tsm.sykmelding.input.core.model.Sykmelding
+import no.nav.tsm.sykmelding.input.core.model.SykmeldingMetadata
+import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
+import no.nav.tsm.sykmelding.input.core.model.Tilbakedatering
+import no.nav.tsm.sykmelding.input.core.model.Tiltak
+import no.nav.tsm.sykmelding.input.core.model.UtenlandskInfo
+import no.nav.tsm.sykmelding.input.core.model.UtenlandskSykmelding
+import no.nav.tsm.sykmelding.input.core.model.ValidationResult
+import no.nav.tsm.sykmelding.input.core.model.ValidationType
+import no.nav.tsm.sykmelding.input.core.model.XmlSykmelding
+import no.nav.tsm.sykmelding.input.core.model.Yrkesskade
+import no.nav.tsm.sykmelding.input.core.model.metadata.Ack
+import no.nav.tsm.sykmelding.input.core.model.metadata.Adresse
+import no.nav.tsm.sykmelding.input.core.model.metadata.AdresseType
+import no.nav.tsm.sykmelding.input.core.model.metadata.EDIEmottak
+import no.nav.tsm.sykmelding.input.core.model.metadata.Egenmeldt
+import no.nav.tsm.sykmelding.input.core.model.metadata.EmottakEnkel
+import no.nav.tsm.sykmelding.input.core.model.metadata.Helsepersonell
+import no.nav.tsm.sykmelding.input.core.model.metadata.Kontaktinfo
+import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
+import no.nav.tsm.sykmelding.input.core.model.metadata.Meldingstype
+import no.nav.tsm.sykmelding.input.core.model.metadata.MessageInfo
+import no.nav.tsm.sykmelding.input.core.model.metadata.MottakenhetBlokk
+import no.nav.tsm.sykmelding.input.core.model.metadata.Navn
+import no.nav.tsm.sykmelding.input.core.model.metadata.OrgId
+import no.nav.tsm.sykmelding.input.core.model.metadata.OrgIdType
+import no.nav.tsm.sykmelding.input.core.model.metadata.Organisasjon
+import no.nav.tsm.sykmelding.input.core.model.metadata.OrganisasjonsType
+import no.nav.tsm.sykmelding.input.core.model.metadata.Papir
+import no.nav.tsm.sykmelding.input.core.model.metadata.PersonId
+import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
+import no.nav.tsm.sykmelding.input.core.model.metadata.UnderOrganisasjon
+import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeParseException
 import java.util.GregorianCalendar
+
+typealias SykmeldingPasient = no.nav.tsm.sykmelding.input.core.model.Pasient
+typealias MetadataPasient = no.nav.tsm.sykmelding.input.core.model.metadata.Pasient
 
 enum class OldTilbakedatertMerknad {
     UNDER_BEHANDLING,
@@ -228,18 +236,18 @@ class SykmeldingMapper {
 
     private fun toOrganisasjon(organisation: XMLOrganisation) = Organisasjon(
         navn = organisation.organisationName,
-        type = organisation.typeOrganisation?.let { OrganisasjonsType.parse(it.v) }
+        type = organisation.typeOrganisation?.let { parseOrganisasjonsType(it.v) }
             ?: OrganisasjonsType.IKKE_OPPGITT,
         ids = organisation.ident.map {
             OrgId(
                 id = it.id,
-                type = OrgIdType.parse(it.typeId.v),
+                type = parseOrgIdType(it.typeId.v),
             )
         },
         adresse = toAdresse(organisation.address),
         kontaktinfo = organisation.teleCom.map {
             Kontaktinfo(
-                type = KontaktinfoType.parse(it.typeTelecom?.v),
+                type = parseKontaktinfoType(it.typeTelecom?.v),
                 value = it.teleAddress.v,
             )
         },
@@ -263,22 +271,22 @@ class SykmeldingMapper {
             ids = healthcareProfessional.ident.map {
                 PersonId(
                     id = it.id,
-                    type = PersonIdType.parse(it.typeId.v),
+                    type = parsePersonIdType(it.typeId.v),
                 )
             },
             navn = name,
             adresse = toAdresse(healthcareProfessional.address),
             kontaktinfo = healthcareProfessional.teleCom.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.parse(it.typeTelecom?.v),
+                    type = parseKontaktinfoType(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
-            kjonn = healthcareProfessional.sex?.let { Kjonn.parse(it.v) },
+            kjonn = healthcareProfessional.sex?.let { parseKjonn(it.v) },
             nasjonalitet = healthcareProfessional.nationality?.v,
             fodselsdato = healthcareProfessional.dateOfBirth,
-            helsepersonellKategori = HelsepersonellKategori.parse(healthcareProfessional.typeHealthcareProfessional?.v),
-            rolleTilPasient = RolleTilPasient.parse(healthcareProfessional.roleToPatient?.v),
+            helsepersonellKategori = parseHelsepersonellKategori(healthcareProfessional.typeHealthcareProfessional?.v),
+            rolleTilPasient = parseRolleTilPasient(healthcareProfessional.roleToPatient?.v),
 
             )
     }
@@ -292,7 +300,7 @@ class SykmeldingMapper {
             postboks = address.postbox,
             kommune = address.county?.v,
             land = address.country?.v,
-            type = AdresseType.parse(address.type?.v),
+            type = parseAdresseType(address.type?.v),
         )
     }
 
@@ -303,25 +311,25 @@ class SykmeldingMapper {
         postboks = address.postbox,
         kommune = address.county?.v,
         land = address.country?.v,
-        type = AdresseType.parse(address.type?.v),
+        type = parseAdresseType(address.type?.v),
     )
 
     private fun tilUnderorganisasjon(organisation: XMLOrganisation?): UnderOrganisasjon? {
         if (organisation == null) return null
         return UnderOrganisasjon(
             navn = organisation.organisationName,
-            type = organisation.typeOrganisation?.let { OrganisasjonsType.parse(it.v) }
+            type = organisation.typeOrganisation?.let { parseOrganisasjonsType(it.v) }
                 ?: OrganisasjonsType.IKKE_OPPGITT,
             kontaktinfo = organisation.teleCom.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.parse(it.typeTelecom?.v),
+                    type = parseKontaktinfoType(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
             ids = organisation.ident.map {
                 OrgId(
                     id = it.id,
-                    type = OrgIdType.parse(it.typeId.v),
+                    type = parseOrgIdType(it.typeId.v),
                 )
             },
             adresse = toAdresse(organisation.address),
@@ -361,14 +369,14 @@ class SykmeldingMapper {
             ids = xmlSykmelding.behandler.id.map {
                 PersonId(
                     id = it.id,
-                    type = PersonIdType.parse(it.typeId.v),
+                    type = parsePersonIdType(it.typeId.v),
                 )
             },
             kontaktinfo = xmlSykmelding.behandler.kontaktInfo.filter {
                 it.teleAddress.v != null
             }.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.parse(it.typeTelecom?.v),
+                    type = parseKontaktinfoType(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
@@ -423,9 +431,9 @@ class SykmeldingMapper {
     }
 
 
-    private fun toSykmeldingPasient(pasient: HelseOpplysningerArbeidsuforhet.Pasient): no.nav.tsm.reformat.sykmelding.model.Pasient {
+    private fun toSykmeldingPasient(pasient: HelseOpplysningerArbeidsuforhet.Pasient): SykmeldingPasient {
 
-        return no.nav.tsm.reformat.sykmelding.model.Pasient(
+        return SykmeldingPasient(
             navn = Navn(
                 fornavn = pasient.navn.fornavn,
                 mellomnavn = pasient.navn.mellomnavn,
@@ -436,7 +444,7 @@ class SykmeldingMapper {
             navKontor = pasient.navKontor,
             kontaktinfo = pasient.kontaktInfo.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.parse(it.typeTelecom?.v),
+                    type = parseKontaktinfoType(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
@@ -475,17 +483,17 @@ class SykmeldingMapper {
         receiver = toReceiver(msgHead.msgInfo.receiver),
         pasient = toPasient(msgHead.msgInfo.patient),
         vedlegg = receivedSykmelding.vedlegg,
-        ack = Ack(AckType.parse(msgHead.msgInfo.ack?.v))
+        ack = Ack(parseAckType(msgHead.msgInfo.ack?.v))
     )
 
-    private fun toPasient(xmlPasient: XMLPatient?): no.nav.tsm.reformat.sykmelding.model.metadata.Pasient? {
+    private fun toPasient(xmlPasient: XMLPatient?): MetadataPasient? {
         if (xmlPasient == null) return null
 
-        return no.nav.tsm.reformat.sykmelding.model.metadata.Pasient(
+        return MetadataPasient(
             ids = xmlPasient.ident.map {
                 PersonId(
                     id = it.id,
-                    type = PersonIdType.parse(it.typeId.v),
+                    type = parsePersonIdType(it.typeId.v),
                 )
             },
             navn = Navn(
@@ -494,12 +502,12 @@ class SykmeldingMapper {
                 etternavn = xmlPasient.familyName,
             ),
             fodselsdato = xmlPasient.dateOfBirth,
-            kjonn = Kjonn.parse(xmlPasient.sex?.v),
+            kjonn = parseKjonn(xmlPasient.sex?.v),
             nasjonalitet = xmlPasient.nationality?.v,
             adresse = toAdresse(xmlPasient.address),
             kontaktinfo = xmlPasient.teleCom.map {
                 Kontaktinfo(
-                    type = KontaktinfoType.parse(it.typeTelecom?.v),
+                    type = parseKontaktinfoType(it.typeTelecom?.v),
                     value = it.teleAddress.v,
                 )
             },
@@ -686,7 +694,7 @@ class SykmeldingMapper {
                     type = PersonIdType.FNR,
                 ),
             ),
-            helsepersonellKategori = HelsepersonellKategori.parse(receivedSykmelding.legeHelsepersonellkategori),
+            helsepersonellKategori = parseHelsepersonellKategori(receivedSykmelding.legeHelsepersonellkategori),
         )
     }
 
@@ -699,9 +707,9 @@ class SykmeldingMapper {
                     svar = questions.value.svar,
                     restriksjoner = questions.value.restriksjoner.map {
                         when (it) {
-                            SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER -> no.nav.tsm.reformat.sykmelding.SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER
-                            SvarRestriksjon.SKJERMET_FOR_PASIENT -> no.nav.tsm.reformat.sykmelding.SvarRestriksjon.SKJERMET_FOR_PASIENT
-                            SvarRestriksjon.SKJERMET_FOR_NAV -> no.nav.tsm.reformat.sykmelding.SvarRestriksjon.SKJERMET_FOR_NAV
+                            SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER -> no.nav.tsm.sykmelding.input.core.model.SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER
+                            SvarRestriksjon.SKJERMET_FOR_PASIENT -> no.nav.tsm.sykmelding.input.core.model.SvarRestriksjon.SKJERMET_FOR_PASIENT
+                            SvarRestriksjon.SKJERMET_FOR_NAV -> no.nav.tsm.sykmelding.input.core.model.SvarRestriksjon.SKJERMET_FOR_NAV
                         }
                     }
                 )
@@ -755,10 +763,10 @@ class SykmeldingMapper {
         )
     }
 
-    private fun toPasient(receivedSykmelding: ReceivedSykmelding): no.nav.tsm.reformat.sykmelding.model.Pasient {
+    private fun toPasient(receivedSykmelding: ReceivedSykmelding): SykmeldingPasient {
         val ident = receivedSykmelding.personNrPasient
 
-        return no.nav.tsm.reformat.sykmelding.model.Pasient(
+        return SykmeldingPasient(
             fnr = ident,
             navn = null,
             kontaktinfo = receivedSykmelding.tlfPasient?.let { listOf(Kontaktinfo(KontaktinfoType.TLF, it)) }
@@ -792,7 +800,8 @@ class SykmeldingMapper {
                 when (rule.ruleStatus) {
                     Status.INVALID -> InvalidRule(
                         name = rule.ruleName,
-                        timestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
+                        timestamp = receivedSykmelding.validationResult.timestamp
+                            ?: receivedSykmelding.mottattDato.atOffset(UTC),
                         validationType = ValidationType.AUTOMATIC,
                         reason = Reason(
                             sykmeldt = rule.messageForUser,

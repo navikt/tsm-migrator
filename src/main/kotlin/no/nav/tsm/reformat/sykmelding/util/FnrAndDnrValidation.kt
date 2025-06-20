@@ -1,6 +1,6 @@
 package no.nav.tsm.reformat.sykmelding.util
 
-import no.nav.tsm.reformat.sykmelding.model.metadata.PersonIdType
+import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
 
 val lookup1: IntArray = intArrayOf(3, 7, 6, 1, 8, 9, 4, 5, 2, 0)
 val lookup2: IntArray = intArrayOf(5, 4, 3, 2, 7, 6, 5, 4, 3, 2)

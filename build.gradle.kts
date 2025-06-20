@@ -1,6 +1,6 @@
 
 val kotlin_version="2.0.20"
-val logback_version="1.5.8"
+val logback_version= "1.5.13"
 val koin_version="4.0.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
@@ -12,6 +12,7 @@ val syfoXmlCodegenVersion = "2.0.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val javaTimeAdapterVersion = "1.1.3"
+val sykmelidngInputVersion = "6"
 plugins {
     kotlin("jvm") version "2.0.20"
     id("io.ktor.plugin") version "2.3.12"
@@ -54,9 +55,6 @@ dependencies {
     implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
     implementation("io.prometheus:simpleclient_common:$prometheus_version")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
-    testImplementation("io.ktor:ktor-server-tests-jvm")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-    testImplementation("io.mockk:mockk:$mockkVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegenVersion")
     implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegenVersion")
@@ -65,6 +63,10 @@ dependencies {
     implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
     implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
     implementation("com.migesok", "jaxb-java-time-adapters", javaTimeAdapterVersion)
+    implementation("no.nav.tsm.sykmelding", "input", sykmelidngInputVersion)
+    testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
 tasks {
