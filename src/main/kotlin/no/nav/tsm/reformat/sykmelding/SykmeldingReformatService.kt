@@ -11,11 +11,9 @@ import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
+import no.nav.tsm.sykmelding.input.producer.SykmeldingInputProducer
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -30,8 +28,7 @@ val objectMapper: ObjectMapper =
 class SykmeldingReformatService(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding>,
     private val sykmeldingMapper: SykmeldingMapper,
-    private val kafkaProducer: KafkaProducer<String, SykmeldingRecord>,
-    private val outputTopic: String,
+    private val kafkaProducer: SykmeldingInputProducer,
     private val inputTopic: String,
     private val cluster: String,
 ) {
@@ -56,10 +53,11 @@ class SykmeldingReformatService(
     private fun processRecords(records: ConsumerRecords<String, ReceivedSykmelding>) {
         records.forEach { record ->
             try {
-                val sykmeldingMedBehandlingsutfall = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
-                val producerRecord = ProducerRecord(outputTopic, record.key(), sykmeldingMedBehandlingsutfall)
-
-                kafkaProducer.send(producerRecord).get()
+                val sykmeldingRecord = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
+                when (sykmeldingRecord) {
+                    null -> kafkaProducer.tombstoneSykmelding(record.key())
+                    else -> kafkaProducer.sendSykmelding(sykmeldingRecord)
+                }
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id} for p: ${record.partition()} at offset: ${record.offset()}", mappingException)
 
