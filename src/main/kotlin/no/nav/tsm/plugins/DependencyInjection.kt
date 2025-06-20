@@ -57,7 +57,6 @@ val sykmeldingReformatService = module {
             kafkaConsumer = consumer,
             sykmeldingMapper = SykmeldingMapper(),
             kafkaProducer = producer,
-            outputTopic = env.sykmeldingOutputTopic,
             inputTopic = env.teamsykmeldingSykmeldingTopic,
             cluster = env.cluster
         )
