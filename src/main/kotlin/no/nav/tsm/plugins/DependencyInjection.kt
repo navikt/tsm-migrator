@@ -3,9 +3,9 @@ package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
-import no.nav.tsm.reformat.sykmelding.model.SykmeldingRecord
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaDeserializer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
