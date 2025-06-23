@@ -12,7 +12,7 @@ val syfoXmlCodegenVersion = "2.0.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val javaTimeAdapterVersion = "1.1.3"
-val sykmelidngInputVersion = "6"
+val sykmeldingInputVersion = "6"
 plugins {
     kotlin("jvm") version "2.0.20"
     id("io.ktor.plugin") version "2.3.12"
@@ -63,7 +63,7 @@ dependencies {
     implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
     implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
     implementation("com.migesok", "jaxb-java-time-adapters", javaTimeAdapterVersion)
-    implementation("no.nav.tsm.sykmelding", "input", sykmelidngInputVersion)
+    implementation("no.nav.tsm.sykmelding", "input", sykmeldingInputVersion)
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("io.mockk:mockk:$mockkVersion")
