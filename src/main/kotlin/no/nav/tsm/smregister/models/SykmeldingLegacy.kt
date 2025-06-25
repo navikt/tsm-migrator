@@ -3,7 +3,7 @@ package no.nav.tsm.smregister.models
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class Sykmelding(
+data class SykmeldingLegacy(
     val id: String, // yes
     val msgId: String, // yes
     val pasientAktoerId: String, // fjernes
@@ -60,26 +60,26 @@ enum class HarArbeidsgiver(
 data class Periode(
     val fom: LocalDate,
     val tom: LocalDate,
-    val aktivitetIkkeMulig: AktivitetIkkeMulig?,
+    val aktivitetIkkeMulig: AktivitetIkkeMuligLegacy?,
     val avventendeInnspillTilArbeidsgiver: String?,
     val behandlingsdager: Int?,
-    val gradert: Gradert?,
+    val gradert: GradertLegacy?,
     val reisetilskudd: Boolean
 )
 
-data class AktivitetIkkeMulig(
+data class AktivitetIkkeMuligLegacy(
     val medisinskArsak: MedisinskArsak?,
     val arbeidsrelatertArsak: ArbeidsrelatertArsak?
 )
 
 data class ArbeidsrelatertArsak(
     val beskrivelse: String?,
-    val arsak: List<ArbeidsrelatertArsakType>
+    val arsak: List<ArbeidsrelatertArsakTypeLegacy>
 )
 
-data class MedisinskArsak(val beskrivelse: String?, val arsak: List<MedisinskArsakType>)
+data class MedisinskArsak(val beskrivelse: String?, val arsak: List<MedisinskArsakTypeLegacy>)
 
-enum class ArbeidsrelatertArsakType(
+enum class ArbeidsrelatertArsakTypeLegacy(
     val codeValue: String,
     val text: String,
     val oid: String = "2.16.578.1.12.4.1.1.8132"
@@ -88,7 +88,7 @@ enum class ArbeidsrelatertArsakType(
     ANNET("9", "Annet")
 }
 
-enum class MedisinskArsakType(
+enum class MedisinskArsakTypeLegacy(
     val codeValue: String,
     val text: String,
     val oid: String = "2.16.578.1.12.4.1.1.8133"
@@ -99,7 +99,7 @@ enum class MedisinskArsakType(
     ANNET("9", "Annet")
 }
 
-data class Gradert(val reisetilskudd: Boolean, val grad: Int)
+data class GradertLegacy(val reisetilskudd: Boolean, val grad: Int)
 
 data class Prognose(
     val arbeidsforEtterPeriode: Boolean,

@@ -3,7 +3,7 @@ package no.nav.tsm.smregister.models
 import java.time.LocalDateTime
 
 data class ReceivedSykmelding(
-    val sykmelding: Sykmelding,
+    val sykmelding: SykmeldingLegacy,
     val personNrPasient: String,
     val tlfPasient: String?,
     val personNrLege: String,
@@ -28,5 +28,5 @@ data class ReceivedSykmelding(
     val fellesformat: String?,
     /** TSS-ident, this is only used for infotrygd compat and should be removed in thefuture */
     val tssid: String?,
-    val validationResult: ValidationResult,
+    val validationResult: ValidationResultLegacy,
 )

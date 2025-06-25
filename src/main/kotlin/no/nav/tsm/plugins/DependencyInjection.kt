@@ -2,9 +2,12 @@ package no.nav.tsm.plugins
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import no.nav.tsm.digital.DigitalSykmeldingConsumer
+import no.nav.tsm.digital.SykmeldingRecordDeserializer
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
+import no.nav.tsm.sykmelding.input.core.model.Sykmelding
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.producer.SykmeldingInputKafkaInputFactory
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
@@ -29,6 +32,7 @@ fun Application.configureDependencyInjection() {
             environmentModule(),
             sykmeldingConsumer,
             sykmeldingReformatService,
+            digitalSykmeldingConsumer
         )
     }
 }
@@ -61,6 +65,40 @@ val sykmeldingReformatService = module {
             cluster = env.cluster
         )
         reformatService
+    }
+}
+
+val digitalSykmeldingConsumer = module {
+    single {
+        val env = get<Environment>()
+        val consumer = KafkaConsumer(Properties().apply {
+            putAll(env.kafkaConfig)
+            this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = SykmeldingRecordDeserializer::class.java.name
+            this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
+            this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-digital-sykmelding"
+            this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-digital-consumer"
+            this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
+            this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
+            this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+        }, StringDeserializer(), SykmeldingRecordDeserializer())
+
+        val producer = KafkaProducer<String, ReceivedSykmelding?>(Properties().apply {
+            putAll(env.kafkaConfig)
+            this[ProducerConfig.ACKS_CONFIG] = "all"
+            this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+            this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-digital-sykmelding-producer"
+            this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
+            this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
+            this[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "gzip"
+        })
+
+        DigitalSykmeldingConsumer(
+            kafkaConsumer = consumer,
+            kafkaProducer = producer,
+            tsmSykmeldingerTopic = env.tsmSykmeldingTopic,
+            okSykmeldingTopic = env.okSykmeldingTopic,
+            cluster = env.cluster
+        )
     }
 }
 
