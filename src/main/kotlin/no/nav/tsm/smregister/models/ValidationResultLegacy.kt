@@ -2,7 +2,7 @@ package no.nav.tsm.smregister.models
 
 import java.time.OffsetDateTime
 
-data class ValidationResult(
+data class ValidationResultLegacy(
     val status: Status,
     val ruleHits: List<RuleInfo>,
     val timestamp: OffsetDateTime?,
