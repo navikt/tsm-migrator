@@ -69,6 +69,7 @@ import no.nav.tsm.sykmelding.input.core.model.Sykmelding
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingMetadata
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.Tilbakedatering
+import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
 import no.nav.tsm.sykmelding.input.core.model.Tiltak
 import no.nav.tsm.sykmelding.input.core.model.UtenlandskInfo
 import no.nav.tsm.sykmelding.input.core.model.UtenlandskSykmelding
@@ -116,13 +117,7 @@ enum class OldTilbakedatertMerknad {
     TILBAKEDATERT_PAPIRSYKMELDING,
 }
 
-enum class TilbakedatertMerknad {
-    TILBAKEDATERING_UNDER_BEHANDLING,
-    TILBAKEDATERING_UGYLDIG_TILBAKEDATERING,
-    TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER,
-    TILBAKEDATERING_DELVIS_GODKJENT,
-    TILBAKEDATERING_TILBAKEDATERT_PAPIRSYKMELDING
-}
+
 class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception: Exception) : Exception() {
     override val message: String?
         get() = exception.message
@@ -876,7 +871,7 @@ class SykmeldingMapper {
 }
 
 
-private fun mapMedisinskVurdering(sykmelding: no.nav.tsm.smregister.models.Sykmelding): MedisinskVurdering {
+private fun mapMedisinskVurdering(sykmelding: no.nav.tsm.smregister.models.SykmeldingLegacy): MedisinskVurdering {
     return MedisinskVurdering(
         hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.let(toDiagnoseInfo()),
         biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser.map(toDiagnoseInfo()),
@@ -928,7 +923,7 @@ private fun toDiagnoseInfo() = { diagnose: Diagnose ->
     )
 }
 
-private fun mapPrognose(sykmelding: no.nav.tsm.smregister.models.Sykmelding): Prognose? {
+private fun mapPrognose(sykmelding: no.nav.tsm.smregister.models.SykmeldingLegacy): Prognose? {
     return sykmelding.prognose?.let {
         Prognose(
             arbeidsforEtterPeriode = it.arbeidsforEtterPeriode,
@@ -1017,23 +1012,23 @@ private fun mapAktivitet(periode: Periode): Aktivitet {
     throw IllegalArgumentException("Ukjent aktivitetstype")
 }
 
-fun toArbeidsrelatertArsakType(arsak: no.nav.tsm.smregister.models.ArbeidsrelatertArsakType) : ArbeidsrelatertArsakType {
+fun toArbeidsrelatertArsakType(arsak: no.nav.tsm.smregister.models.ArbeidsrelatertArsakTypeLegacy) : ArbeidsrelatertArsakType {
     return when (arsak) {
-        no.nav.tsm.smregister.models.ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING
-        no.nav.tsm.smregister.models.ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakType.ANNET
+        no.nav.tsm.smregister.models.ArbeidsrelatertArsakTypeLegacy.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING
+        no.nav.tsm.smregister.models.ArbeidsrelatertArsakTypeLegacy.ANNET -> ArbeidsrelatertArsakType.ANNET
     }
 }
 
-fun toMedisinskArsakType(arsak: no.nav.tsm.smregister.models.MedisinskArsakType) : MedisinskArsakType {
+fun toMedisinskArsakType(arsak: no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy) : MedisinskArsakType {
     return when (arsak) {
-        no.nav.tsm.smregister.models.MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET -> MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET
-        no.nav.tsm.smregister.models.MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND -> MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND
-        no.nav.tsm.smregister.models.MedisinskArsakType.AKTIVITET_FORHINDRER_BEDRING -> MedisinskArsakType.AKTIVITET_FORHINDRER_BEDRING
-        no.nav.tsm.smregister.models.MedisinskArsakType.ANNET -> MedisinskArsakType.ANNET
+        no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy.TILSTAND_HINDRER_AKTIVITET -> MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET
+        no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy.AKTIVITET_FORVERRER_TILSTAND -> MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND
+        no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy.AKTIVITET_FORHINDRER_BEDRING -> MedisinskArsakType.AKTIVITET_FORHINDRER_BEDRING
+        no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy.ANNET -> MedisinskArsakType.ANNET
     }
 }
 
-private fun mapArbeidsgiver(sykmelding: no.nav.tsm.smregister.models.Sykmelding): ArbeidsgiverInfo {
+private fun mapArbeidsgiver(sykmelding: no.nav.tsm.smregister.models.SykmeldingLegacy): ArbeidsgiverInfo {
     return when (sykmelding.arbeidsgiver.harArbeidsgiver) {
         HarArbeidsgiver.EN_ARBEIDSGIVER -> EnArbeidsgiver(
             meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
