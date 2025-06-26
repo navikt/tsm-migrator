@@ -52,7 +52,7 @@ class SykmeldingReformatService(
     }
 
     private fun processRecords(records: ConsumerRecords<String, ReceivedSykmelding>) {
-        val filteredRecords = records.filter { it.value().sykmelding.avsenderSystem.navn != "syk-inn"
+        val filteredRecords = records.filter { it.value()?.sykmelding?.avsenderSystem?.navn != "syk-inn"
                 || recordContainSyfosmmanuellHeader(it) }
 
         filteredRecords.forEach { record ->
