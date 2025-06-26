@@ -9,6 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
+import no.nav.tsm.reformat.sykmelding.util.recordContainSyfosmmanuellHeader
 import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
@@ -58,7 +59,10 @@ class SykmeldingReformatService(
     }
 
     private fun processRecords(records: ConsumerRecords<String, ReceivedSykmelding>) {
-        records.forEach { record ->
+        val filteredRecords = records.filter { it.value().sykmelding.avsenderSystem.navn != "syk-inn"
+                || recordContainSyfosmmanuellHeader(it) }
+
+        filteredRecords.forEach { record ->
             try {
                 val sykmeldingRecord = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
                 val sourceNamespace = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8) ?: "teamsykmelding"
