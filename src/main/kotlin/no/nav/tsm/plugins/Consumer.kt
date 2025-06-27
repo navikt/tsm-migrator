@@ -13,10 +13,10 @@ fun Application.configureConsumer(sykmeldingConsumer: SykmeldingConsumer,
                                   digitalSykmeldingConsumer: DigitalSykmeldingConsumer) {
     val sykmeldingConsumerJob = launch(Dispatchers.IO) { sykmeldingConsumer.start() }
     val sykmeldingReformatJob = launch(Dispatchers.IO) { sykmeldingReformatService.start() }
-    //TODO("enable this") val digitalSykmeldingConsumer = launch(Dispatchers.IO) { digitalSykmeldingConsumer.start() }
+    val digitalSykmeldingConsumerJob = launch(Dispatchers.IO) { digitalSykmeldingConsumer.start() }
     environment.monitor.subscribe(ApplicationStopping) {
         sykmeldingReformatJob.cancel()
         sykmeldingConsumerJob.cancel()
-        //TODO("enable this") //digitalSykmeldingConsumer.cancel()
+        digitalSykmeldingConsumerJob.cancel()
     }
 }

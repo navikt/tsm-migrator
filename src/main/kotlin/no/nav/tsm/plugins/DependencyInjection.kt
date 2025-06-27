@@ -3,6 +3,7 @@ package no.nav.tsm.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import no.nav.tsm.digital.DigitalSykmeldingConsumer
+import no.nav.tsm.digital.ManuellOppgave
 import no.nav.tsm.digital.SykmeldingRecordDeserializer
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
@@ -92,11 +93,24 @@ val digitalSykmeldingConsumer = module {
             this[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "gzip"
         })
 
+        val producerManuellTilbakedatring = KafkaProducer<String, ManuellOppgave>(Properties().apply {
+            putAll(env.kafkaConfig)
+            this[ProducerConfig.ACKS_CONFIG] = "all"
+            this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+            this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-digital-manuell-sykmelding-producer"
+            this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
+            this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
+            this[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "gzip"
+        })
+
         DigitalSykmeldingConsumer(
             kafkaConsumer = consumer,
             kafkaProducer = producer,
+            kafkaProducerManuellTIlbakedatering = producerManuellTilbakedatring,
             tsmSykmeldingerTopic = env.tsmSykmeldingTopic,
             okSykmeldingTopic = env.okSykmeldingTopic,
+            manuellBehanldingTopic = env.manuellTilbakedateringTopic,
+
             cluster = env.cluster
         )
     }
@@ -127,6 +141,8 @@ val sykmeldingConsumer = module {
             this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
             this[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "gzip"
         })
+
+
 
         SykmeldingConsumer(
             kafkaConsumer = consumer,
