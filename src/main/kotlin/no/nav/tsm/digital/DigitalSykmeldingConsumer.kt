@@ -58,16 +58,10 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
 
     suspend fun consumeMessages() = coroutineScope {
         kafkaConsumer.subscribe(listOf(tsmSykmeldingerTopic))
-        try {
-            while (isActive) {
-                val records = kafkaConsumer.poll(10.seconds.toJavaDuration())
-                processRecords(records)
-            }
-        } catch (ex: Exception) {
-            log.error("Error processing records, stopping consuming", ex)
+        while (isActive) {
+            val records = kafkaConsumer.poll(10.seconds.toJavaDuration())
+            processRecords(records)
         }
-
-        kafkaConsumer.unsubscribe()
     }
 
     private fun processRecords(records: ConsumerRecords<String, SykmeldingRecord>) {

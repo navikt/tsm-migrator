@@ -93,7 +93,6 @@ fun SykmeldingRecord.toReceivedSykmelding() : ReceivedSykmelding {
     }
     return sykmelding
 }
-
 fun fromUtenlandsk(sykmelding: UtenlandskSykmelding, metadata: Utenlandsk, validation: ValidationResult): ReceivedSykmelding {
  TODO()
 }
