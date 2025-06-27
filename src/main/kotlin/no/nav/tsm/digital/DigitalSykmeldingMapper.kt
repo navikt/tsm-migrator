@@ -1,16 +1,41 @@
 package no.nav.tsm.digital
 
+import net.logstash.logback.argument.StructuredArguments.fields
+import no.nav.helse.eiFellesformat.XMLEIFellesformat
+import no.nav.helse.msgHead.XMLCS
+import no.nav.helse.msgHead.XMLCV
+import no.nav.helse.msgHead.XMLDocument
+import no.nav.helse.msgHead.XMLHealthcareProfessional
+import no.nav.helse.msgHead.XMLIdent
+import no.nav.helse.msgHead.XMLMsgHead
+import no.nav.helse.msgHead.XMLMsgInfo
+import no.nav.helse.msgHead.XMLOrganisation
+import no.nav.helse.msgHead.XMLReceiver
+import no.nav.helse.msgHead.XMLRefDoc
+import no.nav.helse.msgHead.XMLSender
+import no.nav.helse.sm2013.Address
+import no.nav.helse.sm2013.ArsakType
+import no.nav.helse.sm2013.CS
+import no.nav.helse.sm2013.CV
+import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.helse.sm2013.Ident
+import no.nav.helse.sm2013.NavnType
+import no.nav.helse.sm2013.TeleCom
+import no.nav.helse.sm2013.URL
 import no.nav.tsm.reformat.sykmelding.service.OldTilbakedatertMerknad
+import no.nav.tsm.reformat.sykmelding.util.XmlStuff
 import no.nav.tsm.smregister.models.Adresse
 import no.nav.tsm.smregister.models.AktivitetIkkeMuligLegacy
 import no.nav.tsm.smregister.models.AnnenFraverGrunn
 import no.nav.tsm.smregister.models.AnnenFraversArsak
+import no.nav.tsm.smregister.models.Arbeidsgiver
 import no.nav.tsm.smregister.models.ArbeidsrelatertArsak
 import no.nav.tsm.smregister.models.ArbeidsrelatertArsakTypeLegacy
 import no.nav.tsm.smregister.models.AvsenderSystem
 import no.nav.tsm.smregister.models.Behandler
 import no.nav.tsm.smregister.models.Diagnose
 import no.nav.tsm.smregister.models.GradertLegacy
+import no.nav.tsm.smregister.models.HarArbeidsgiver
 import no.nav.tsm.smregister.models.KontaktMedPasient
 import no.nav.tsm.smregister.models.MedisinskArsak
 import no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy
@@ -22,17 +47,22 @@ import no.nav.tsm.smregister.models.RuleInfo
 import no.nav.tsm.smregister.models.Status
 import no.nav.tsm.smregister.models.SykmeldingLegacy
 import no.nav.tsm.smregister.models.ValidationResultLegacy
+import no.nav.tsm.sykmelding.input.core.model.ARBEIDSGIVER_TYPE
 import no.nav.tsm.sykmelding.input.core.model.Aktivitet
 import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
 import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
 import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
+import no.nav.tsm.sykmelding.input.core.model.ArbeidsgiverInfo
 import no.nav.tsm.sykmelding.input.core.model.ArbeidsrelatertArsakType
 import no.nav.tsm.sykmelding.input.core.model.Avventende
 import no.nav.tsm.sykmelding.input.core.model.Behandlingsdager
 import no.nav.tsm.sykmelding.input.core.model.DiagnoseInfo
 import no.nav.tsm.sykmelding.input.core.model.DiagnoseSystem
 import no.nav.tsm.sykmelding.input.core.model.DigitalSykmelding
+import no.nav.tsm.sykmelding.input.core.model.EnArbeidsgiver
+import no.nav.tsm.sykmelding.input.core.model.FlereArbeidsgivere
 import no.nav.tsm.sykmelding.input.core.model.Gradert
+import no.nav.tsm.sykmelding.input.core.model.IngenArbeidsgiver
 import no.nav.tsm.sykmelding.input.core.model.InvalidRule
 import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
 import no.nav.tsm.sykmelding.input.core.model.Papirsykmelding
@@ -49,7 +79,11 @@ import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Papir
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
+import org.slf4j.LoggerFactory
+import java.util.stream.Collectors
 
+private val log = LoggerFactory.getLogger("no.nav.tsm.digital.DigitalSykmeldingMapper")
+private val xmlStuff = XmlStuff()
 fun SykmeldingRecord.toReceivedSykmelding() : ReceivedSykmelding {
     val fromSykmelding = sykmelding
     val sykmelding: ReceivedSykmelding = when(fromSykmelding) {
@@ -60,7 +94,6 @@ fun SykmeldingRecord.toReceivedSykmelding() : ReceivedSykmelding {
     }
     return sykmelding
 }
-
 fun fromUtenlandsk(sykmelding: UtenlandskSykmelding, metadata: Utenlandsk, validation: ValidationResult): ReceivedSykmelding {
  TODO()
 }
@@ -74,22 +107,23 @@ fun fromXml(sykmelding: XmlSykmelding, metadata: EDIEmottak, validation: Validat
 }
 
 fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: ValidationResult): ReceivedSykmelding {
-    return ReceivedSykmelding(
+    val perioder = sykmelding.aktivitet.map { it.toPeriode() }
+    val receivedSykmelding = ReceivedSykmelding(
         sykmelding = SykmeldingLegacy(
             id = sykmelding.id,
             msgId = sykmelding.id,
             pasientAktoerId = "",
             medisinskVurdering = MedisinskVurdering(
-                hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.let { it.toDiagnose() },
+                hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.toDiagnose(),
                 biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser?.let { bidagnoser -> bidagnoser.map { it.toDiagnose() }} ?: emptyList(),
                 svangerskap = sykmelding.medisinskVurdering.svangerskap,
                 yrkesskade = sykmelding.medisinskVurdering.yrkesskade != null,
                 yrkesskadeDato = sykmelding.medisinskVurdering.yrkesskade?.yrkesskadeDato,
-                annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.let { it.toAnnenFraversArsak() },
+                annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.toAnnenFraversArsak(),
             ),
             skjermesForPasient = sykmelding.medisinskVurdering.skjermetForPasient,
-            arbeidsgiver = TODO("fix this mapping") ,
-            perioder = sykmelding.aktivitet.map { it.toPeriode() },
+            arbeidsgiver = toArbeidsgiver(sykmelding.arbeidsgiver),
+            perioder = perioder,
             prognose = null,
             tiltakArbeidsplassen = null,
             tiltakNAV = null,
@@ -119,7 +153,7 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
             syketilfelleStartDato = null,
             signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
             navnFastlege = null,
-            utdypendeOpplysninger = emptyMap()
+            utdypendeOpplysninger = emptyMap() //TODO
         ),
         utenlandskSykmelding = null,
         mottattDato = sykmelding.metadata.mottattDato.toLocalDateTime(),
@@ -145,7 +179,7 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
             timestamp = validation.timestamp
         ),
         vedlegg = null,
-        fellesformat = TODO("implement this function mapToFellesformat(sykmelding, metadata)") ,
+        fellesformat =  xmlStuff.marshal(mapToFellesformat(sykmelding, metadata, perioder)),
         merknader =  mapToMerknader(validation),
         partnerreferanse = null,
         legekontorReshId = null,
@@ -160,11 +194,37 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
         legeHprNr = sykmelding.sykmelder.ids.first { it.type == PersonIdType.HPR }.id,
         navLogId = sykmelding.id
     )
-}
-/*
 
-fun mapToFellesformat(sykmelding: DigitalSykmelding, metadata: Digital): XMLEIFellesformat {
-    val fellesformat = XMLEIFellesformat().apply {
+    return receivedSykmelding
+}
+
+fun toArbeidsgiver(it: ArbeidsgiverInfo) : Arbeidsgiver {
+    return when (it) {
+        is EnArbeidsgiver -> Arbeidsgiver(
+            harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
+            navn = it.navn,
+            yrkesbetegnelse = it.yrkesbetegnelse,
+            stillingsprosent = it.stillingsprosent,
+        )
+
+        is FlereArbeidsgivere -> Arbeidsgiver(
+            harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
+            navn = it.navn,
+            yrkesbetegnelse = it.yrkesbetegnelse,
+            stillingsprosent = it.stillingsprosent,
+        )
+
+        is IngenArbeidsgiver -> Arbeidsgiver(
+            harArbeidsgiver = HarArbeidsgiver.INGEN_ARBEIDSGIVER,
+            navn = null,
+            yrkesbetegnelse = null,
+            stillingsprosent = null,
+        )
+    }
+}
+
+fun mapToFellesformat(sykmelding: DigitalSykmelding, metadata: Digital, perioder : List<Periode>): XMLEIFellesformat {
+    return XMLEIFellesformat().apply {
         any.add(
             XMLMsgHead().apply {
                 msgInfo =
@@ -303,97 +363,62 @@ fun mapToFellesformat(sykmelding: DigitalSykmelding, metadata: Digital): XMLEIFe
                                                     tilMedisinskVurdering(
                                                         sykmelding.medisinskVurdering,
                                                     )
-                                                aktivitet =
-                                                    HelseOpplysningerArbeidsuforhet.Aktivitet()
-                                                        .apply {
-                                                            periode.addAll(
-                                                                tilPeriodeListe(
-                                                                    skanningmetadata.sykemeldinger
-                                                                        .aktivitet
-                                                                )
+                                                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet()
+                                                    .apply {
+                                                        periode.addAll(
+                                                            tilPeriodeListe(
+                                                                perioder
                                                             )
-                                                        }
-                                                prognose =
-                                                    skanningmetadata.sykemeldinger.prognose?.let {
-                                                        tilPrognose(
-                                                            skanningmetadata.sykemeldinger.prognose
                                                         )
                                                     }
-                                                utdypendeOpplysninger =
-                                                    tilUtdypendeOpplysninger(
-                                                        skanningmetadata.sykemeldinger
-                                                            .utdypendeOpplysninger
-                                                    )
+                                                prognose = null
+                                                utdypendeOpplysninger = null
                                                 tiltak =
                                                     HelseOpplysningerArbeidsuforhet.Tiltak().apply {
-                                                        tiltakArbeidsplassen =
-                                                            skanningmetadata.sykemeldinger.tiltak
-                                                                ?.tiltakArbeidsplassen
-                                                        tiltakNAV =
-                                                            skanningmetadata.sykemeldinger.tiltak
-                                                                ?.tiltakNAV
-                                                        andreTiltak =
-                                                            skanningmetadata.sykemeldinger.tiltak
-                                                                ?.andreTiltak
+                                                        tiltakArbeidsplassen = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                                                            is IngenArbeidsgiver -> null
+                                                            is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
+                                                            is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
+                                                        }
+                                                        tiltakNAV = null
+                                                        andreTiltak = null
                                                     }
                                                 meldingTilNav =
-                                                    skanningmetadata.sykemeldinger.meldingTilNAV
+                                                    sykmelding.bistandNav
                                                         ?.let {
                                                             HelseOpplysningerArbeidsuforhet
                                                                 .MeldingTilNav()
                                                                 .apply {
                                                                     beskrivBistandNAV =
-                                                                        skanningmetadata
-                                                                            .sykemeldinger
-                                                                            .meldingTilNAV
-                                                                            ?.beskrivBistandNAV
+                                                                        it.beskrivBistand
                                                                     isBistandNAVUmiddelbart =
-                                                                        skanningmetadata
-                                                                            .sykemeldinger
-                                                                            .meldingTilNAV
-                                                                            ?.isBistandNAVUmiddelbart
-                                                                            ?: false
+                                                                        it.bistandUmiddelbart
                                                                 }
                                                         }
-                                                meldingTilArbeidsgiver =
-                                                    skanningmetadata.sykemeldinger
-                                                        .meldingTilArbeidsgiver
+                                                meldingTilArbeidsgiver = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                                                    is IngenArbeidsgiver -> null
+                                                    is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
+                                                    is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
+                                                }
                                                 kontaktMedPasient =
                                                     HelseOpplysningerArbeidsuforhet
                                                         .KontaktMedPasient()
                                                         .apply {
                                                             kontaktDato =
-                                                                skanningmetadata.sykemeldinger
-                                                                    .tilbakedatering
-                                                                    ?.tilbakeDato
+                                                                sykmelding.tilbakedatering
+                                                                    ?.kontaktDato
                                                             begrunnIkkeKontakt =
-                                                                skanningmetadata.sykemeldinger
+                                                                sykmelding
                                                                     .tilbakedatering
-                                                                    ?.tilbakebegrunnelse
-                                                            behandletDato =
-                                                                velgRiktigKontaktOgSignaturDato(
-                                                                    skanningmetadata.sykemeldinger
-                                                                        .kontaktMedPasient
-                                                                        ?.behandletDato,
-                                                                    tilPeriodeListe(
-                                                                        skanningmetadata
-                                                                            .sykemeldinger
-                                                                            .aktivitet
-                                                                    )
-                                                                )
+                                                                    ?.begrunnelse
+                                                            behandletDato = sykmelding.metadata.genDate.toLocalDateTime()
                                                         }
-                                                behandler = tilBehandler(sykmelder)
+                                                behandler = tilBehandler(sykmelding.behandler)
                                                 avsenderSystem =
                                                     HelseOpplysningerArbeidsuforhet.AvsenderSystem()
                                                         .apply {
-                                                            systemNavn = "Papirsykmelding"
-                                                            systemVersjon =
-                                                                journalpostId // Dette er nødvendig
-                                                            // for at vi skal
-                                                            // slippe å opprette
-                                                            // generert PDF for
-                                                            // papirsykmeldinger i
-                                                            // syfosmsak
+                                                            systemNavn = "syk-inn"
+                                                            systemVersjon = "pilot"
                                                         }
                                                 strekkode = "123456789qwerty"
                                             },
@@ -406,6 +431,194 @@ fun mapToFellesformat(sykmelding: DigitalSykmelding, metadata: Digital): XMLEIFe
         )
     }
 }
+fun tilBehandler(sykmelder: no.nav.tsm.sykmelding.input.core.model.Behandler): HelseOpplysningerArbeidsuforhet.Behandler =
+    HelseOpplysningerArbeidsuforhet.Behandler().apply {
+        navn =
+            NavnType().apply {
+                fornavn = sykmelder.navn.fornavn
+                mellomnavn = sykmelder.navn.mellomnavn
+                etternavn = sykmelder.navn.etternavn
+            }
+        id.addAll(
+            listOf(
+                Ident().apply {
+                    id = sykmelder.ids.first {it.type == PersonIdType.FNR}.id
+                    typeId =
+                        CV().apply {
+                            dn = "Fødselsnummer"
+                            s = "2.16.578.1.12.4.1.1.8116"
+                            v = "FNR"
+                        }
+                },
+                Ident().apply {
+                    id = sykmelder.ids.first {it.type == PersonIdType.HPR}.id
+                    typeId =
+                        CV().apply {
+                            dn = "HPR-nummer"
+                            s = "2.16.578.1.12.4.1.1.8116"
+                            v = "HPR"
+                        }
+                },
+            ),
+        )
+        adresse = Address()
+        kontaktInfo.add(
+            TeleCom().apply {
+                typeTelecom =
+                    CS().apply {
+                        v = "HP"
+                        dn = "Hovedtelefon"
+                    }
+                teleAddress = URL().apply { v = "tel:55553336" }
+            },
+        )
+    }
+fun tilPeriodeListe(
+    perioder: List<Periode>
+): List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode> {
+    return ArrayList<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>().apply {
+        addAll(
+            perioder.map { tilHelseOpplysningerArbeidsuforhetPeriode(it) },
+        )
+    }
+}
+
+fun tilHelseOpplysningerArbeidsuforhetPeriode(
+    periode: Periode
+): HelseOpplysningerArbeidsuforhet.Aktivitet.Periode =
+    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+        periodeFOMDato = periode.fom
+        periodeTOMDato = periode.tom
+        aktivitetIkkeMulig =
+            if (periode.aktivitetIkkeMulig != null) {
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                    medisinskeArsaker =
+                        if (periode.aktivitetIkkeMulig.medisinskArsak != null) {
+                            ArsakType().apply {
+                                beskriv = periode.aktivitetIkkeMulig.medisinskArsak.beskrivelse
+                                arsakskode.addAll(
+                                    periode.aktivitetIkkeMulig.medisinskArsak.arsak
+                                        .stream()
+                                        .map {
+                                            CS().apply {
+                                                v = it.codeValue
+                                                dn = it.text
+                                            }
+                                        }
+                                        .collect(Collectors.toList()),
+                                )
+                            }
+                        } else {
+                            null
+                        }
+                    arbeidsplassen =
+                        if (periode.aktivitetIkkeMulig.arbeidsrelatertArsak != null) {
+                            ArsakType().apply {
+                                beskriv =
+                                    periode.aktivitetIkkeMulig.arbeidsrelatertArsak.beskrivelse
+                                arsakskode.addAll(
+                                    periode.aktivitetIkkeMulig.arbeidsrelatertArsak.arsak
+                                        .stream()
+                                        .map {
+                                            CS().apply {
+                                                v = it.codeValue
+                                                dn = it.text
+                                            }
+                                        }
+                                        .collect(Collectors.toList()),
+                                )
+                            }
+                        } else {
+                            null
+                        }
+                }
+            } else {
+                null
+            }
+        avventendeSykmelding =
+            if (periode.avventendeInnspillTilArbeidsgiver != null) {
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AvventendeSykmelding().apply {
+                    innspillTilArbeidsgiver = periode.avventendeInnspillTilArbeidsgiver
+                }
+            } else {
+                null
+            }
+
+        gradertSykmelding =
+            if (periode.gradert != null) {
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.GradertSykmelding().apply {
+                    sykmeldingsgrad = periode.gradert.grad
+                    isReisetilskudd = periode.gradert.reisetilskudd
+                }
+            } else {
+                null
+            }
+
+        behandlingsdager =
+            periode.behandlingsdager?.let { behandlingsdager ->
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.Behandlingsdager().apply {
+                    antallBehandlingsdagerUke = behandlingsdager
+                }
+            }
+
+        isReisetilskudd = periode.reisetilskudd
+    }
+
+fun tilMedisinskVurdering(
+    medisinskVurdering: no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering,
+): HelseOpplysningerArbeidsuforhet.MedisinskVurdering {
+    if (
+        medisinskVurdering.hovedDiagnose == null &&
+        medisinskVurdering.annenFraversArsak == null
+    ) {
+        log.warn("Sykmelding mangler hoveddiagnose og annenFraversArsak, avbryter..")
+        throw IllegalStateException("Sykmelding mangler hoveddiagnose")
+    }
+    val hovedDiagnose = medisinskVurdering.hovedDiagnose?.let { toDiagnose(it) }
+    val biDiagnoseListe: List<CV>? =
+        medisinskVurdering.biDiagnoser?.map {
+            toDiagnose(it)
+        }
+
+    return HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
+        if (hovedDiagnose != null) {
+            this.hovedDiagnose =
+                HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
+                    diagnosekode = hovedDiagnose
+                }
+        }
+        if (biDiagnoseListe != null && biDiagnoseListe.isNotEmpty()) {
+            biDiagnoser =
+                HelseOpplysningerArbeidsuforhet.MedisinskVurdering.BiDiagnoser().apply {
+                    diagnosekode.addAll(biDiagnoseListe)
+                }
+        }
+        isSkjermesForPasient = medisinskVurdering.skjermetForPasient
+        annenFraversArsak = medisinskVurdering.annenFraversArsak?.let {
+                ArsakType().apply {
+                    arsakskode.add(CS())
+                    beskriv = medisinskVurdering.annenFraversArsak?.beskrivelse
+                }
+            }
+        isSvangerskap = medisinskVurdering.svangerskap
+        isYrkesskade = medisinskVurdering.yrkesskade != null
+        yrkesskadeDato = medisinskVurdering.yrkesskade?.yrkesskadeDato
+    }
+}
+
+fun toDiagnose(diagnose: DiagnoseInfo): CV {
+    val system = diagnose.toDiagnose().system
+    val kode = diagnose.kode
+    val diagnose = diagnose.tekst
+
+    return CV().apply {
+        s = system
+        v = kode
+        dn = diagnose
+    }
+}
+
+
 
 fun tilArbeidsgiver(
     arbeidsgiver: ArbeidsgiverInfo,
@@ -442,7 +655,7 @@ fun tilArbeidsgiver(
             stillingsprosent = arbeidsgiver.stillingsprosent
         }
     }
-*/
+
 
 fun mapToMerknader(validation: ValidationResult): List<Merknad>? {
     val lastRule = validation.rules.sortedByDescending { it.timestamp }.firstOrNull() ?: return null
