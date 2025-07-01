@@ -1,6 +1,5 @@
 package no.nav.tsm.digital
 
-import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.msgHead.XMLCS
 import no.nav.helse.msgHead.XMLCV
@@ -94,6 +93,7 @@ fun SykmeldingRecord.toReceivedSykmelding() : ReceivedSykmelding {
     }
     return sykmelding
 }
+
 fun fromUtenlandsk(sykmelding: UtenlandskSykmelding, metadata: Utenlandsk, validation: ValidationResult): ReceivedSykmelding {
  TODO()
 }
