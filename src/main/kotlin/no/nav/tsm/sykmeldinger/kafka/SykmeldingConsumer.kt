@@ -60,14 +60,14 @@ class SykmeldingConsumer(
                 if(receivedSykmelding == null) {
                     logger.info("tombstoning sykmelding with id: $sykmeldingId")
                 }
-
+                val headers = it.headers()
                 val producerRecord = ProducerRecord(
                     teamsykmeldingSykmeldigerTopic,
+                    null,
                     sykmeldingId,
-                    receivedSykmelding
+                    receivedSykmelding,
+                    headers
                 )
-
-                it.headers().forEach { header -> producerRecord.headers().add(header.key(), header.value()) }
 
                 kafkaProducer.send(
                     producerRecord
