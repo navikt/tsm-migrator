@@ -39,6 +39,7 @@ import no.nav.tsm.smregister.models.KontaktMedPasient
 import no.nav.tsm.smregister.models.MedisinskArsak
 import no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy
 import no.nav.tsm.smregister.models.MedisinskVurdering
+import no.nav.tsm.smregister.models.MeldingTilNAV
 import no.nav.tsm.smregister.models.Merknad
 import no.nav.tsm.smregister.models.Periode
 import no.nav.tsm.smregister.models.ReceivedSykmelding
@@ -74,6 +75,7 @@ import no.nav.tsm.sykmelding.input.core.model.ValidationResult
 import no.nav.tsm.sykmelding.input.core.model.XmlSykmelding
 import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
 import no.nav.tsm.sykmelding.input.core.model.metadata.EDIEmottak
+import no.nav.tsm.sykmelding.input.core.model.metadata.HelsepersonellKategori
 import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Papir
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
@@ -94,7 +96,7 @@ fun SykmeldingRecord.toReceivedSykmelding() : ReceivedSykmelding {
     return sykmelding
 }
 fun fromUtenlandsk(sykmelding: UtenlandskSykmelding, metadata: Utenlandsk, validation: ValidationResult): ReceivedSykmelding {
- TODO()
+    TODO()
 }
 
 fun fromPapir(sykmelding: Papirsykmelding, metadata: Papir, validation: ValidationResult): ReceivedSykmelding {
@@ -124,12 +126,20 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
             arbeidsgiver = toArbeidsgiver(sykmelding.arbeidsgiver),
             perioder = perioder,
             prognose = null,
-            tiltakArbeidsplassen = null,
+            tiltakArbeidsplassen = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                is IngenArbeidsgiver -> null
+                is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
+                is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
+            },
             tiltakNAV = null,
             andreTiltak = null,
-            meldingTilNAV = null,
-            meldingTilArbeidsgiver = null,
-            kontaktMedPasient = KontaktMedPasient(null, null),
+            meldingTilNAV = sykmelding.bistandNav?.let { MeldingTilNAV(it.bistandUmiddelbart, it.beskrivBistand) },
+            meldingTilArbeidsgiver = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                is IngenArbeidsgiver -> null
+                is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
+                is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
+            },
+            kontaktMedPasient = KontaktMedPasient(sykmelding.tilbakedatering?.kontaktDato, sykmelding.tilbakedatering?.begrunnelse),
             behandletTidspunkt = sykmelding.metadata.genDate.toLocalDateTime(),
             behandler = Behandler(
                 fornavn = sykmelding.behandler.navn.fornavn,
@@ -149,9 +159,9 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
                 sykmelding.behandler.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
             ),
             avsenderSystem = AvsenderSystem("syk-inn", versjon = "pilot"),
-            syketilfelleStartDato = null,
+            syketilfelleStartDato = sykmelding.medisinskVurdering.syketilfelletStartDato,
             signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
-            navnFastlege = null,
+            navnFastlege = sykmelding.pasient.navnFastlege,
             utdypendeOpplysninger = emptyMap() //TODO
         ),
         utenlandskSykmelding = null,
@@ -186,15 +196,26 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
         legekontorOrgNr = metadata.orgnummer,
         legekontorHerId = null,
         rulesetVersion = null,
-        legeHelsepersonellkategori = sykmelding.sykmelder.helsepersonellKategori.name,
+        legeHelsepersonellkategori = tohelsepersonellKategoriLegacy(sykmelding.sykmelder.helsepersonellKategori),
         personNrLege = sykmelding.sykmelder.ids.first { it.type == PersonIdType.FNR }.id,
-        tlfPasient = null,
+        tlfPasient = sykmelding.pasient.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
         personNrPasient = sykmelding.pasient.fnr,
         legeHprNr = sykmelding.sykmelder.ids.first { it.type == PersonIdType.HPR }.id,
         navLogId = sykmelding.id
     )
 
     return receivedSykmelding
+}
+
+fun tohelsepersonellKategoriLegacy(helsepersonellKategori: HelsepersonellKategori) : String {
+    return when(helsepersonellKategori) {
+        HelsepersonellKategori.LEGE -> "LE"
+        HelsepersonellKategori.KIROPRAKTOR -> "KI"
+        HelsepersonellKategori.MANUELLTERAPEUT -> "MT"
+        HelsepersonellKategori.TANNLEGE -> "TL"
+        HelsepersonellKategori.FYSIOTERAPEUT -> "FT"
+        else -> throw IllegalArgumentException("HelsepersonellKategori ${helsepersonellKategori.name} er ikke en gyldig verdi")
+    }
 }
 
 fun toArbeidsgiver(it: ArbeidsgiverInfo) : Arbeidsgiver {

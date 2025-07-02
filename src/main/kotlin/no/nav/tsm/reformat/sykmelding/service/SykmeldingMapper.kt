@@ -44,6 +44,8 @@ import no.nav.tsm.sykmelding.input.core.model.Behandlingsdager
 import no.nav.tsm.sykmelding.input.core.model.BistandNav
 import no.nav.tsm.sykmelding.input.core.model.DiagnoseInfo
 import no.nav.tsm.sykmelding.input.core.model.DiagnoseSystem
+import no.nav.tsm.sykmelding.input.core.model.DigitalSykmelding
+import no.nav.tsm.sykmelding.input.core.model.DigitalSykmeldingMetadata
 import no.nav.tsm.sykmelding.input.core.model.EnArbeidsgiver
 import no.nav.tsm.sykmelding.input.core.model.ErIArbeid
 import no.nav.tsm.sykmelding.input.core.model.ErIkkeIArbeid
@@ -80,6 +82,7 @@ import no.nav.tsm.sykmelding.input.core.model.Yrkesskade
 import no.nav.tsm.sykmelding.input.core.model.metadata.Ack
 import no.nav.tsm.sykmelding.input.core.model.metadata.Adresse
 import no.nav.tsm.sykmelding.input.core.model.metadata.AdresseType
+import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
 import no.nav.tsm.sykmelding.input.core.model.metadata.EDIEmottak
 import no.nav.tsm.sykmelding.input.core.model.metadata.Egenmeldt
 import no.nav.tsm.sykmelding.input.core.model.metadata.EmottakEnkel
@@ -102,6 +105,7 @@ import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeParseException
 import java.util.GregorianCalendar
@@ -127,6 +131,7 @@ class SykmeldingMapper {
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
         try {
             return when {
+                receivedSykmelding.sykmelding.avsenderSystem.navn == "syk-inn" -> toDigitalSykmelding(receivedSykmelding)
                 receivedSykmelding.utenlandskSykmelding != null -> toUtenlandssykmeldingMedBehandlingsutfall(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(
                     receivedSykmelding
@@ -139,6 +144,43 @@ class SykmeldingMapper {
 
             throw MappingException(receivedSykmelding, e)
         }
+    }
+
+    private fun toDigitalSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
+        requireNotNull(receivedSykmelding.fellesformat)
+        val unmashalledSykmelding = xmlStuff.unmarshal(receivedSykmelding.fellesformat)
+        val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
+        val xmlSykmelding = msgHead.document.single().refDoc.content.any.single()
+                as HelseOpplysningerArbeidsuforhet
+        val pasientNavn = Navn(
+            fornavn = xmlSykmelding.pasient.navn.fornavn,
+            mellomnavn = xmlSykmelding.pasient.navn.mellomnavn,
+            etternavn = xmlSykmelding.pasient.navn.etternavn)
+
+        val digitalSykmelding = DigitalSykmelding(
+            id = receivedSykmelding.sykmelding.id,
+            metadata = DigitalSykmeldingMetadata(
+                mottattDato = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(ZoneOffset.UTC),
+                ),
+            pasient = toPasient(receivedSykmelding, pasientNavn),
+            medisinskVurdering = mapMedisinskVurdering(receivedSykmelding.sykmelding),
+            aktivitet = receivedSykmelding.sykmelding.perioder.map { mapAktivitet(it) },
+            behandler = toBehandler(receivedSykmelding),
+            sykmelder = toSignerendeBehandler(receivedSykmelding),
+            arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
+            tilbakedatering = toTilbakedatering(receivedSykmelding),
+            bistandNav = toBistandNav(receivedSykmelding)
+        )
+        val digital = Digital(
+            receivedSykmelding.legekontorOrgNr ?: throw IllegalArgumentException("missing legekontorOrgNr"),
+        )
+        val validation = mapValidationResult(receivedSykmelding)
+        return SykmeldingRecord(
+            validation = validation,
+            metadata = digital,
+            sykmelding = digitalSykmelding,
+        )
     }
 
     private fun toEgenmeldtSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
@@ -202,7 +244,7 @@ class SykmeldingMapper {
                     versjon = receivedSykmelding.sykmelding.avsenderSystem.versjon
                 ),
             ),
-            pasient = toPasient(receivedSykmelding),
+            pasient = toPasient(receivedSykmelding, null),
             medisinskVurdering = mapMedisinskVurdering(receivedSykmelding.sykmelding),
             aktivitet = receivedSykmelding.sykmelding.perioder.map {
                 mapAktivitet(it)
@@ -591,7 +633,7 @@ class SykmeldingMapper {
                     versjon = receivedSykmelding.sykmelding.avsenderSystem.versjon
                 ),
             ),
-            pasient = toPasient(receivedSykmelding),
+            pasient = toPasient(receivedSykmelding, null),
             behandler = toBehandler(receivedSykmelding),
             sykmelder = toSignerendeBehandler(receivedSykmelding),
             arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
@@ -623,7 +665,7 @@ class SykmeldingMapper {
                     versjon = receivedSykmelding.sykmelding.avsenderSystem.versjon
                 ),
             ),
-            pasient = toPasient(receivedSykmelding),
+            pasient = toPasient(receivedSykmelding, null),
             behandler = toBehandler(receivedSykmelding),
             sykmelder = toSignerendeBehandler(receivedSykmelding),
             arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
@@ -678,16 +720,17 @@ class SykmeldingMapper {
     private fun toSignerendeBehandler(receivedSykmelding: ReceivedSykmelding): Sykmelder {
         return Sykmelder(
             ids = listOfNotNull(
+                PersonId(
+                    id = receivedSykmelding.personNrLege,
+                    type = PersonIdType.FNR,
+                ),
                 receivedSykmelding.legeHprNr?.let {
                     PersonId(
                         id = it,
                         type = PersonIdType.HPR,
                     )
                 },
-                PersonId(
-                    id = receivedSykmelding.personNrLege,
-                    type = PersonIdType.FNR,
-                ),
+
             ),
             helsepersonellKategori = parseHelsepersonellKategori(receivedSykmelding.legeHelsepersonellkategori),
         )
@@ -758,12 +801,12 @@ class SykmeldingMapper {
         )
     }
 
-    private fun toPasient(receivedSykmelding: ReceivedSykmelding): SykmeldingPasient {
+    private fun toPasient(receivedSykmelding: ReceivedSykmelding, navn: Navn?): SykmeldingPasient {
         val ident = receivedSykmelding.personNrPasient
 
         return SykmeldingPasient(
             fnr = ident,
-            navn = null,
+            navn = navn,
             kontaktinfo = receivedSykmelding.tlfPasient?.let { listOf(Kontaktinfo(KontaktinfoType.TLF, it)) }
                 ?: emptyList(),
             navnFastlege = receivedSykmelding.sykmelding.navnFastlege,
