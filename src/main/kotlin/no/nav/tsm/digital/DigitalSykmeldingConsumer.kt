@@ -13,10 +13,13 @@ import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingType
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
 import no.nav.tsm.sykmelding.input.core.model.ValidationType
+import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_NAMESPACE
+import no.nav.tsm.sykmeldinger.kafka.util.TSM_SOURCE
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.header.Headers
 import org.slf4j.LoggerFactory
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
@@ -65,28 +68,17 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
     }
 
     private fun processRecords(records: ConsumerRecords<String, SykmeldingRecord>) {
-        records.mapNotNull { record -> record.value()?.let { it to record } }.map { (sykmeldingRecord, kafkaRecord) ->
+        records.forEach { record  ->
             try {
-                if (sykmeldingRecord.sykmelding.type == SykmeldingType.DIGITAL) {
-                    log.info("received digital sykmelding should send to old topics ${sykmeldingRecord.sykmelding.id}")
-                    val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding()
-                    if(sykmeldingRecord.validation.rules.any { it.validationType == ValidationType.MANUAL }) {
-                        log.info("Got digital sykmelding with Manual validation ${sykmeldingRecord.sykmelding.id}, should not be sendt to old topic")
-                    } else if (sykmeldingRecord.validation.status == RuleType.PENDING && sykmeldingRecord.validation.rules.singleOrNull{ it.name == TilbakedatertMerknad.TILBAKEDATERING_UNDER_BEHANDLING.name } != null) {
-                        log.info("Got digital sykmelidng with pending result, should be sent to manual behandling ${sykmeldingRecord.sykmelding.id}")
-                        val producerRecord = ProducerRecord(manuellBehanldingTopic, sykmeldingRecord.sykmelding.id, ManuellOppgave(
-                            receivedSykmelding = receivedSykmelding,
-                            validationResult = receivedSykmelding.validationResult
-                        ))
-                        kafkaProducerManuellTIlbakedatering.send(producerRecord).get()
-                    } else {
-                        log.info("Got digital sykmelding that should be synced over to old topics ${sykmeldingRecord.sykmelding.id}")
-                        val producerRecord = ProducerRecord(okSykmeldingTopic, sykmeldingRecord.sykmelding.id, receivedSykmelding)
-                        kafkaProducer.send(producerRecord).get()
-                    }
+                val sykmeldingRecord = record.value()
+                val sykmeldingId = record.key()
+                val sourceNamespace = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
+                val headers = record.headers()
+                if (sourceNamespace == TSM_SOURCE) {
+                    handleDigitalSykmelidng(sourceNamespace, sykmeldingRecord, sykmeldingId, headers)
                 }
             } catch (mappingException: MappingException) {
-                log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id}, for p: ${kafkaRecord.partition()}, o: ${kafkaRecord.offset()}", mappingException)
+                log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id}, for p: ${record.partition()}, o: ${record.offset()}", mappingException)
                 if (cluster != "dev-gcp") {
                     secureLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
                     throw mappingException
@@ -99,4 +91,52 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             }
         }
     }
+
+    private fun handleDigitalSykmelidng(
+        sourceNamespace: String?,
+        sykmeldingRecord: SykmeldingRecord?,
+        sykmeldingId: String?,
+        headers: Headers
+    ) {
+        log.info("received sykmelding from source-namespace:$sourceNamespace, should sendt to namespace: teamsykmelding, sykmeldingId: $sykmeldingId")
+        if (sykmeldingRecord == null) {
+            log.info("tombstoning sykmelding with id: $sykmeldingId")
+            kafkaProducer.send(ProducerRecord(okSykmeldingTopic, null, sykmeldingId, null, headers))
+        } else {
+            val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding()
+            if (isManualVurdering(sykmeldingRecord)) {
+                log.info("Digital sykmelding is sendt to manuell behandling $sykmeldingId")
+                val producerRecord = ProducerRecord(
+                    manuellBehanldingTopic,
+                    null,
+                    sykmeldingRecord.sykmelding.id,
+                    ManuellOppgave(
+                        receivedSykmelding = receivedSykmelding,
+                        validationResult = receivedSykmelding.validationResult
+                    ),
+                    headers
+                )
+                kafkaProducerManuellTIlbakedatering.send(producerRecord).get()
+            } else {
+                log.info("Digital sykmelding is sendt to old arc, sykmeldingId: $sykmeldingId")
+                val producerRecord = ProducerRecord(
+                    okSykmeldingTopic,
+                    null,
+                    sykmeldingRecord.sykmelding.id,
+                    receivedSykmelding,
+                    headers
+                )
+                kafkaProducer.send(producerRecord).get()
+            }
+        }
+    }
+
+    private fun isManualVurdering(sykmeldingRecord: SykmeldingRecord): Boolean {
+        val hasPendingStatus = sykmeldingRecord.validation.status == RuleType.PENDING
+        val hasOnlyOnePendingRule = sykmeldingRecord.validation.rules.size == 1
+        val isTilbakedatertPending = sykmeldingRecord.validation.rules.any { it.name == TilbakedatertMerknad.TILBAKEDATERING_UNDER_BEHANDLING.name }
+
+        return hasPendingStatus && hasOnlyOnePendingRule && isTilbakedatertPending
+    }
+
 }
