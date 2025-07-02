@@ -14,6 +14,8 @@ import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingType
 import no.nav.tsm.sykmelding.input.producer.SykmeldingInputProducer
+import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_APP
+import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_NAMESPACE
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.LoggerFactory
@@ -38,8 +40,7 @@ class SykmeldingReformatService(
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(SykmeldingReformatService::class.java)
-        private const val SOURCE_NAMESPACE = "source-namespace"
-        private const val SOURCE_APP = "source-app"
+
     }
 
     suspend fun start() = coroutineScope {
