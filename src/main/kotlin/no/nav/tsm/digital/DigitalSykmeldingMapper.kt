@@ -192,7 +192,7 @@ fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: Va
         merknader =  mapToMerknader(validation),
         partnerreferanse = null,
         legekontorReshId = null,
-        legekontorOrgName = null,
+        legekontorOrgName = "",
         legekontorOrgNr = metadata.orgnummer,
         legekontorHerId = null,
         rulesetVersion = null,
