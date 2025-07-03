@@ -44,6 +44,8 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-jackson-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-client-apache")
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
