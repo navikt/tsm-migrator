@@ -23,8 +23,6 @@ import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.Tilbakedatering
 import no.nav.tsm.sykmelding.input.core.model.ValidationResult
 import no.nav.tsm.sykmelding.input.core.model.Yrkesskade
-import no.nav.tsm.sykmelding.input.core.model.metadata.Adresse
-import no.nav.tsm.sykmelding.input.core.model.metadata.AdresseType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
 import no.nav.tsm.sykmelding.input.core.model.metadata.HelsepersonellKategori
 import no.nav.tsm.sykmelding.input.core.model.metadata.Kontaktinfo
@@ -45,7 +43,7 @@ class DigitalSykmeldingMapperTest {
     @Test
     fun testMapDigitalSykmelding() {
         val digitalSykmeldingRecord = getDigitalSykmeldingRecord()
-        val receivedSykmelding = digitalSykmeldingRecord.toReceivedSykmelding()
+        val receivedSykmelding = digitalSykmeldingRecord.toReceivedSykmelding("aktorId")
         val mappedDigitalSykmeldingRecord = sykmeldingMapper.toNewSykmelding(receivedSykmelding)
         Assert.assertEquals(digitalSykmeldingRecord, mappedDigitalSykmeldingRecord)
     }

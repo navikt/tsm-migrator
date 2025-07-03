@@ -1,19 +1,34 @@
 package no.nav.tsm.plugins
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.network.sockets.SocketTimeoutException
+import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import no.nav.syfo.pdl.TsmPdlClient
 import no.nav.tsm.digital.DigitalSykmeldingConsumer
 import no.nav.tsm.digital.ManuellOppgave
 import no.nav.tsm.digital.SykmeldingRecordDeserializer
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.sykmelding.input.core.model.Sykmelding
-import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.producer.SykmeldingInputKafkaInputFactory
 import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaDeserializer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
+import no.nav.tsm.texas.TexasClient
+import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -31,6 +46,7 @@ fun Application.configureDependencyInjection() {
 
         modules(
             environmentModule(),
+            tsmPdlModule,
             sykmeldingConsumer,
             sykmeldingReformatService,
             digitalSykmeldingConsumer
@@ -40,6 +56,32 @@ fun Application.configureDependencyInjection() {
 
 fun Application.environmentModule() = module {
     single<Environment> { createEnvironment() }
+}
+
+val tsmPdlModule = module {
+    single {
+        val env = get<Environment>()
+        val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+            install(ContentNegotiation) {
+                jackson {
+                    registerKotlinModule()
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                }
+            }
+        }
+        val httpClient = HttpClient(Apache, config)
+        val tsmPdlScope = "api://${env.cluster}.tsm.tsm-pdl-cache/.default"
+        val texasClient = TexasClient(
+            tokenEndpoint = env.texasTokenEndpoint,
+            httpClient = httpClient,
+            tsmPdlScope = tsmPdlScope,
+        )
+        TsmPdlClient(
+            texasClient = texasClient,
+            httpClient = httpClient,
+            tsmPdlUrl = env.tsmPdlCacheUrl
+        )
+    }
 }
 
 val sykmeldingReformatService = module {
@@ -111,7 +153,8 @@ val digitalSykmeldingConsumer = module {
             okSykmeldingTopic = env.okSykmeldingTopic,
             manuellBehanldingTopic = env.manuellTilbakedateringTopic,
 
-            cluster = env.cluster
+            cluster = env.cluster,
+            tsmPdlClient = get()
         )
     }
 }

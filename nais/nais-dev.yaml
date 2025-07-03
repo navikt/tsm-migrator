@@ -41,6 +41,13 @@ spec:
     enabled: false
   kafka:
     pool: nav-dev
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: tsm-pdl-cache
   envFrom:
     - secret: tsm-migrator-smregister-db
 
