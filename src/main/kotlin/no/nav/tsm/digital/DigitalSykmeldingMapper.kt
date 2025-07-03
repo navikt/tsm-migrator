@@ -85,10 +85,10 @@ import java.util.stream.Collectors
 
 private val log = LoggerFactory.getLogger("no.nav.tsm.digital.DigitalSykmeldingMapper")
 private val xmlStuff = XmlStuff()
-fun SykmeldingRecord.toReceivedSykmelding() : ReceivedSykmelding {
+fun SykmeldingRecord.toReceivedSykmelding(aktorId: String): ReceivedSykmelding {
     val fromSykmelding = sykmelding
     val sykmelding: ReceivedSykmelding = when(fromSykmelding) {
-        is DigitalSykmelding -> fromDigital(fromSykmelding, this.metadata as Digital, this.validation)
+        is DigitalSykmelding -> fromDigital(fromSykmelding, this.metadata as Digital, this.validation, aktorId)
         is XmlSykmelding -> fromXml(fromSykmelding, this.metadata as EDIEmottak, this.validation)
         is Papirsykmelding -> fromPapir(fromSykmelding, this.metadata as Papir, this.validation)
         is UtenlandskSykmelding -> fromUtenlandsk(fromSykmelding, this.metadata as Utenlandsk, this.validation)
@@ -107,13 +107,13 @@ fun fromXml(sykmelding: XmlSykmelding, metadata: EDIEmottak, validation: Validat
     TODO()
 }
 
-fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: ValidationResult): ReceivedSykmelding {
+fun fromDigital(sykmelding: DigitalSykmelding, metadata: Digital, validation: ValidationResult, aktorId: String): ReceivedSykmelding {
     val perioder = sykmelding.aktivitet.map { it.toPeriode() }
     val receivedSykmelding = ReceivedSykmelding(
         sykmelding = SykmeldingLegacy(
             id = sykmelding.id,
             msgId = sykmelding.id,
-            pasientAktoerId = "",
+            pasientAktoerId = aktorId,
             medisinskVurdering = MedisinskVurdering(
                 hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.toDiagnose(),
                 biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser?.let { bidagnoser -> bidagnoser.map { it.toDiagnose() }} ?: emptyList(),
