@@ -14,7 +14,9 @@ class Environment(
     val teamsykmeldingSykmeldingTopic: String = "tsm.teamsykmelding-sykmeldinger",
     val manuellTilbakedateringTopic: String = "teamsykmelding.sykmelding-manuell",
     val tsmSykmeldingTopic: String = "tsm.sykmeldinger",
-    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
+    val texasTokenEndpoint: String = getEnvVar("NAIS_TOKEN_ENDPOINT"),
+    val tsmPdlCacheUrl: String = "http://tsm-pdl-cache",
+    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
 )
 
 fun Application.createEnvironment(): Environment {

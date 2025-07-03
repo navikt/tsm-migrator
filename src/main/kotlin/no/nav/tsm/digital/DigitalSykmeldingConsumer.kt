@@ -4,15 +4,14 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import no.nav.syfo.pdl.TsmPdlClient
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.ValidationResultLegacy
 import no.nav.tsm.sykmelding.input.core.model.RuleType
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
-import no.nav.tsm.sykmelding.input.core.model.SykmeldingType
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
-import no.nav.tsm.sykmelding.input.core.model.ValidationType
 import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_NAMESPACE
 import no.nav.tsm.sykmeldinger.kafka.util.TSM_SOURCE
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -33,6 +32,7 @@ data class ManuellOppgave(
 class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, SykmeldingRecord>,
                                 private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
                                 private val kafkaProducerManuellTIlbakedatering: KafkaProducer<String, ManuellOppgave>,
+                                private val tsmPdlClient: TsmPdlClient,
                                 private val tsmSykmeldingerTopic: String,
                                 private val okSykmeldingTopic: String,
                                 private val manuellBehanldingTopic: String,
@@ -67,7 +67,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
         }
     }
 
-    private fun processRecords(records: ConsumerRecords<String, SykmeldingRecord>) {
+    private suspend fun processRecords(records: ConsumerRecords<String, SykmeldingRecord>) {
         records.forEach { record  ->
             try {
                 val sykmeldingRecord = record.value()
@@ -92,7 +92,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
         }
     }
 
-    private fun handleDigitalSykmelidng(
+    private suspend fun handleDigitalSykmelidng(
         sourceNamespace: String?,
         sykmeldingRecord: SykmeldingRecord?,
         sykmeldingId: String?,
@@ -103,7 +103,8 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             log.info("tombstoning sykmelding with id: $sykmeldingId")
             kafkaProducer.send(ProducerRecord(okSykmeldingTopic, null, sykmeldingId, null, headers))
         } else {
-            val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding()
+            val aktorId = tsmPdlClient.getAktorId(sykmeldingRecord.sykmelding.pasient.fnr)
+            val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding(aktorId)
             if (isManualVurdering(sykmeldingRecord)) {
                 log.info("Digital sykmelding is sendt to manuell behandling $sykmeldingId")
                 val producerRecord = ProducerRecord(
