@@ -4,6 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.server.application.Application
 
 data class TexasResponse(
     val access_token: String,
@@ -28,6 +31,7 @@ class TexasClient(
         )
 
         return httpClient.post(tokenEndpoint) {
+            contentType(ContentType.Application.Json)
             setBody(requestBody)
         }.body<TexasResponse>().access_token
 
