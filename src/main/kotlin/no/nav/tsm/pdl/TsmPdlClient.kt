@@ -11,7 +11,6 @@ import no.nav.tsm.texas.TexasClient
 import java.time.LocalDate
 
 data class PdlPerson(
-    val foedselsdato: LocalDate?,
     val identer: List<Ident>,
 )
 
