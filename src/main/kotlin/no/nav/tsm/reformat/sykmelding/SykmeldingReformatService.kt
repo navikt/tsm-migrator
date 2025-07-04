@@ -40,7 +40,8 @@ class SykmeldingReformatService(
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(SykmeldingReformatService::class.java)
-
+        private const val SOURCE_NAMESPACE = "source-namespace"
+        private const val SOURCE_APP = "source-app"
     }
 
     suspend fun start() = coroutineScope {
