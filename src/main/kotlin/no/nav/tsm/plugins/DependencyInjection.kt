@@ -98,7 +98,7 @@ val sykmeldingReformatService = module {
             this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
         }, StringDeserializer(), JacksonKafkaDeserializer(ReceivedSykmelding::class))
 
-        val producer = SykmeldingInputKafkaInputFactory.create()
+        val producer = SykmeldingInputKafkaInputFactory.naisProducer()
 
         val reformatService = SykmeldingReformatService(
             kafkaConsumer = consumer,
