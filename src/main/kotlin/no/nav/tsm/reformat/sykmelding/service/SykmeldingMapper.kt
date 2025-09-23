@@ -458,8 +458,8 @@ class SykmeldingMapper {
     private fun toOffsetDateTime(genDate: String): OffsetDateTime {
         return try {
             OffsetDateTime.parse(genDate).withOffsetSameInstant(UTC)
-        } catch (ex : DateTimeParseException) {
-            LocalDateTime.parse(genDate).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime().withOffsetSameInstant(UTC);
+        } catch (_ : DateTimeParseException) {
+            LocalDateTime.parse(genDate).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime().withOffsetSameInstant(UTC)
         }
     }
 
@@ -834,16 +834,15 @@ class SykmeldingMapper {
             status = RuleType.INVALID,
             timestamp = receivedSykmelding.mottattDato.atOffset(UTC),
             rules = receivedSykmelding.validationResult.ruleHits.mapNotNull {
-                val rule = it
-                when (rule.ruleStatus) {
+                when (it.ruleStatus) {
                     Status.INVALID -> InvalidRule(
-                        name = rule.ruleName,
+                        name = it.ruleName,
                         timestamp = receivedSykmelding.validationResult.timestamp
                             ?: receivedSykmelding.mottattDato.atOffset(UTC),
                         validationType = ValidationType.AUTOMATIC,
                         reason = Reason(
-                            sykmeldt = rule.messageForUser,
-                            sykmelder = rule.messageForSender
+                            sykmeldt = it.messageForUser,
+                            sykmelder = it.messageForSender
                         )
                     )
 

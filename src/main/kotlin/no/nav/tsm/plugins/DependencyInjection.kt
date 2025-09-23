@@ -1,18 +1,12 @@
 package no.nav.tsm.plugins
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.plugins.HttpRequestRetry
-import io.ktor.client.plugins.HttpResponseValidator
-import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -28,7 +22,6 @@ import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaDeserializer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
 import no.nav.tsm.texas.TexasClient
-import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -184,8 +177,6 @@ val sykmeldingConsumer = module {
             this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
             this[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "gzip"
         })
-
-
 
         SykmeldingConsumer(
             kafkaConsumer = consumer,

@@ -55,7 +55,7 @@ class SykmeldingConsumer(
             val records = kafkaConsumer.poll(Duration.ofMillis(10_000))
 
             records.forEach {
-                    val receivedSykmelding = it.value()
+                val receivedSykmelding = it.value()
                 val sykmeldingId = it.key()
                 if(receivedSykmelding == null) {
                     logger.info("tombstoning sykmelding with id: $sykmeldingId")

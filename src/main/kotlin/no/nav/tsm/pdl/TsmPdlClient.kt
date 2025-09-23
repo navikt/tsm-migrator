@@ -5,10 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import no.nav.tsm.texas.TexasClient
-import java.time.LocalDate
 
 data class PdlPerson(
     val identer: List<Ident>,
@@ -31,11 +28,9 @@ class TsmPdlClient(
     val httpClient: HttpClient,
     val tsmPdlUrl: String,
 ) {
-
     suspend fun getAktorId(fnr: String): String {
         val token = texasClient.getAccessToken()
         val response = httpClient.get("$tsmPdlUrl/api/person") {
-            contentType(ContentType.Application.Json)
             bearerAuth(token)
             header("Ident", fnr)
         }.body<PdlPerson>()

@@ -139,5 +139,4 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
 
         return hasPendingStatus && hasOnlyOnePendingRule && isTilbakedatertPending
     }
-
 }
