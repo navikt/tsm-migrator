@@ -85,13 +85,13 @@ import java.util.stream.Collectors
 
 private val log = LoggerFactory.getLogger("no.nav.tsm.digital.DigitalSykmeldingMapper")
 private val xmlStuff = XmlStuff()
-fun SykmeldingRecord.toReceivedSykmelding(aktorId: String, sourceNamespace: String, sourceApp: String): ReceivedSykmelding {
+fun SykmeldingRecord.toReceivedSykmelding(aktorId: String): ReceivedSykmelding {
     val fromSykmelding = sykmelding
     val sykmelding: ReceivedSykmelding = when(fromSykmelding) {
-        is DigitalSykmelding -> fromDigital(fromSykmelding, this.metadata as Digital, this.validation, aktorId, sourceNamespace, sourceApp)
-        is XmlSykmelding -> fromXml(fromSykmelding, this.metadata as EDIEmottak, this.validation, sourceNamespace, sourceApp)
-        is Papirsykmelding -> fromPapir(fromSykmelding, this.metadata as Papir, this.validation, sourceNamespace, sourceApp)
-        is UtenlandskSykmelding -> fromUtenlandsk(fromSykmelding, this.metadata as Utenlandsk, this.validation, sourceNamespace, sourceApp)
+        is DigitalSykmelding -> fromDigital(fromSykmelding, this.metadata as Digital, this.validation, aktorId)
+        is XmlSykmelding -> fromXml(fromSykmelding, this.metadata as EDIEmottak, this.validation)
+        is Papirsykmelding -> fromPapir(fromSykmelding, this.metadata as Papir, this.validation)
+        is UtenlandskSykmelding -> fromUtenlandsk(fromSykmelding, this.metadata as Utenlandsk, this.validation)
     }
     return sykmelding
 }
@@ -99,8 +99,6 @@ fun fromUtenlandsk(
     sykmelding: UtenlandskSykmelding,
     metadata: Utenlandsk,
     validation: ValidationResult,
-    sourceNamespace: String,
-    sourceApp: String
 ): ReceivedSykmelding {
     TODO()
 }
@@ -109,8 +107,6 @@ fun fromPapir(
     sykmelding: Papirsykmelding,
     metadata: Papir,
     validation: ValidationResult,
-    sourceNamespace: String,
-    sourceApp: String
 ): ReceivedSykmelding {
     TODO("Not yet implemented")
 }
@@ -119,8 +115,6 @@ fun fromXml(
     sykmelding: XmlSykmelding,
     metadata: EDIEmottak,
     validation: ValidationResult,
-    sourceNamespace: String,
-    sourceApp: String
 ): ReceivedSykmelding {
     TODO()
 }
@@ -130,8 +124,6 @@ fun fromDigital(
     metadata: Digital,
     validation: ValidationResult,
     aktorId: String,
-    sourceNamespace: String,
-    sourceApp: String
 ): ReceivedSykmelding {
     val perioder = sykmelding.aktivitet.map { it.toPeriode() }
     val receivedSykmelding = ReceivedSykmelding(
@@ -183,7 +175,7 @@ fun fromDigital(
                 ),
                 sykmelding.behandler.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
             ),
-            avsenderSystem = AvsenderSystem("$sourceNamespace:$sourceApp", versjon = "1"),
+            avsenderSystem = AvsenderSystem(sykmelding.metadata.avsenderSystem.navn, versjon = sykmelding.metadata.avsenderSystem.versjon),
             syketilfelleStartDato = sykmelding.medisinskVurdering.syketilfelletStartDato,
             signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
             navnFastlege = sykmelding.pasient.navnFastlege,

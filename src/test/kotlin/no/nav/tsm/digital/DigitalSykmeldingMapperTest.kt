@@ -2,6 +2,7 @@ package no.nav.tsm.digital
 
 
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
+import no.nav.tsm.smregister.models.AvsenderSystem
 import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
 import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
 import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
@@ -56,6 +57,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
         metadata = DigitalSykmeldingMetadata(
             mottattDato = OffsetDateTime.parse("2025-01-01T12:04:04.004Z"),
             genDate = OffsetDateTime.parse("2025-01-01T12:01:03.002Z"),
+            avsenderSystem = no.nav.tsm.sykmelding.input.core.model.AvsenderSystem("syk-inn", "1")
         ),
         pasient = Pasient(
             navn = Navn("Fornavn", "Mellomnavn", "Etternavn"),

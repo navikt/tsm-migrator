@@ -132,6 +132,7 @@ class SykmeldingMapper {
         try {
             return when {
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "syk-inn" -> toDigitalSykmelding(receivedSykmelding)
+                receivedSykmelding.sykmelding.avsenderSystem.navn.contains("FHIR") -> toDigitalSykmelding(receivedSykmelding)
                 receivedSykmelding.utenlandskSykmelding != null -> toUtenlandssykmeldingMedBehandlingsutfall(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(
                     receivedSykmelding
@@ -162,6 +163,7 @@ class SykmeldingMapper {
             metadata = DigitalSykmeldingMetadata(
                 mottattDato = receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
                 genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(ZoneOffset.UTC),
+                avsenderSystem = AvsenderSystem(receivedSykmelding.sykmelding.avsenderSystem.navn, receivedSykmelding.sykmelding.avsenderSystem.versjon),
                 ),
             pasient = toPasient(receivedSykmelding, pasientNavn),
             medisinskVurdering = mapMedisinskVurdering(receivedSykmelding.sykmelding),
