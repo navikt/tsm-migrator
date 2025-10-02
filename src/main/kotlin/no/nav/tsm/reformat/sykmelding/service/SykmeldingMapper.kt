@@ -138,6 +138,7 @@ class SykmeldingMapper {
                     receivedSykmelding
                 )
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt" -> toEgenmeldtSykmelding(receivedSykmelding)
+                receivedSykmelding.sykmelding.avsenderSystem.navn.lowercase().contains("dolly") -> emottakEnkel(receivedSykmelding)
                 !receivedSykmelding.fellesformat.isNullOrBlank() -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
                 else -> emottakEnkel(receivedSykmelding)
             }

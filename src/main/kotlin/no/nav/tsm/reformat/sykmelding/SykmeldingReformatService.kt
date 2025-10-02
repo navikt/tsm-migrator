@@ -60,8 +60,12 @@ class SykmeldingReformatService(
         records.forEach { record ->
             try {
                 val sykmeldingRecord = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
-                val sourceNamespace = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8) ?: "teamsykmelding"
-                val sourceApp = record.headers().lastHeader(SOURCE_APP)?.value()?.toString(Charsets.UTF_8) ?: getSourceAppFromSykmelding(sykmeldingRecord)
+                val sourceApp = record.headers().lastHeader(SOURCE_APP)?.value()?.toString(Charsets.UTF_8)
+                val sourceNamespace = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
+
+                requireNotNull(sourceNamespace) { "Source namespace must not be null" }
+                requireNotNull(sourceApp) { "Source app must not be null" }
+
                 val additionalHeaders = record.headers().associate { it.key() to it.value().toString(Charsets.UTF_8) }.filter { it.key != SOURCE_NAMESPACE && it.key != SOURCE_APP }
                 val sourceIsTsm = sourceNamespace == "tsm"
                 log.info("received sykmelding namespace: $sourceNamespace, app: $sourceApp, headers: ${objectMapper.writeValueAsString(additionalHeaders)}, key: ${record.key()}")

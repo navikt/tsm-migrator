@@ -75,8 +75,12 @@ import no.nav.tsm.sykmelding.input.core.model.ValidationResult
 import no.nav.tsm.sykmelding.input.core.model.XmlSykmelding
 import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
 import no.nav.tsm.sykmelding.input.core.model.metadata.EDIEmottak
+import no.nav.tsm.sykmelding.input.core.model.metadata.Egenmeldt
+import no.nav.tsm.sykmelding.input.core.model.metadata.EmottakEnkel
 import no.nav.tsm.sykmelding.input.core.model.metadata.HelsepersonellKategori
 import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
+import no.nav.tsm.sykmelding.input.core.model.metadata.MessageMetadata
+import no.nav.tsm.sykmelding.input.core.model.metadata.OrgIdType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Papir
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
@@ -89,7 +93,7 @@ fun SykmeldingRecord.toReceivedSykmelding(aktorId: String): ReceivedSykmelding {
     val fromSykmelding = sykmelding
     val sykmelding: ReceivedSykmelding = when(fromSykmelding) {
         is DigitalSykmelding -> fromDigital(fromSykmelding, this.metadata as Digital, this.validation, aktorId)
-        is XmlSykmelding -> fromXml(fromSykmelding, this.metadata as EDIEmottak, this.validation)
+        is XmlSykmelding -> fromXml(fromSykmelding, this.metadata, this.validation, aktorId)
         is Papirsykmelding -> fromPapir(fromSykmelding, this.metadata as Papir, this.validation)
         is UtenlandskSykmelding -> fromUtenlandsk(fromSykmelding, this.metadata as Utenlandsk, this.validation)
     }
@@ -113,10 +117,115 @@ fun fromPapir(
 
 fun fromXml(
     sykmelding: XmlSykmelding,
-    metadata: EDIEmottak,
+    metadata: MessageMetadata,
     validation: ValidationResult,
+    aktorId: String,
 ): ReceivedSykmelding {
-    TODO()
+
+    val perioder = sykmelding.aktivitet.map { it.toPeriode() }
+    val receivedSykmelding = ReceivedSykmelding(
+        sykmelding = SykmeldingLegacy(
+            id = sykmelding.id,
+            msgId = sykmelding.id,
+            pasientAktoerId = aktorId,
+            medisinskVurdering = MedisinskVurdering(
+                hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.toDiagnose(),
+                biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser?.let { bidagnoser -> bidagnoser.map { it.toDiagnose() }} ?: emptyList(),
+                svangerskap = sykmelding.medisinskVurdering.svangerskap,
+                yrkesskade = sykmelding.medisinskVurdering.yrkesskade != null,
+                yrkesskadeDato = sykmelding.medisinskVurdering.yrkesskade?.yrkesskadeDato,
+                annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.toAnnenFraversArsak(),
+            ),
+            skjermesForPasient = sykmelding.medisinskVurdering.skjermetForPasient,
+            arbeidsgiver = toArbeidsgiver(sykmelding.arbeidsgiver),
+            perioder = perioder,
+            prognose = null,
+            tiltakArbeidsplassen = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                is IngenArbeidsgiver -> null
+                is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
+                is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
+            },
+            tiltakNAV = null,
+            andreTiltak = null,
+            meldingTilNAV = sykmelding.bistandNav?.let { MeldingTilNAV(it.bistandUmiddelbart, it.beskrivBistand) },
+            meldingTilArbeidsgiver = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                is IngenArbeidsgiver -> null
+                is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
+                is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
+            },
+            kontaktMedPasient = KontaktMedPasient(sykmelding.tilbakedatering?.kontaktDato, sykmelding.tilbakedatering?.begrunnelse),
+            behandletTidspunkt = sykmelding.metadata.genDate.toLocalDateTime(),
+            behandler = Behandler(
+                fornavn = sykmelding.behandler.navn.fornavn,
+                mellomnavn = sykmelding.behandler.navn.mellomnavn,
+                etternavn = sykmelding.behandler.navn.etternavn,
+                aktoerId = "",
+                fnr = sykmelding.behandler.ids.first { it.type == PersonIdType.FNR }.id,
+                hpr = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HPR }?.id,
+                her = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HER }?.id,
+                Adresse(
+                    sykmelding.behandler.adresse?.gateadresse,
+                    sykmelding.behandler.adresse?.postnummer?.toInt(),
+                    sykmelding.behandler.adresse?.kommune,
+                    sykmelding.behandler.adresse?.postboks,
+                    sykmelding.behandler.adresse?.land,
+                ),
+                sykmelding.behandler.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
+            ),
+            avsenderSystem = AvsenderSystem(sykmelding.metadata.avsenderSystem.navn, versjon = sykmelding.metadata.avsenderSystem.versjon),
+            syketilfelleStartDato = sykmelding.medisinskVurdering.syketilfelletStartDato,
+            signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
+            navnFastlege = sykmelding.pasient.navnFastlege,
+            utdypendeOpplysninger = emptyMap() //TODO
+        ),
+        utenlandskSykmelding = null,
+        mottattDato = sykmelding.metadata.mottattDato.toLocalDateTime(),
+        msgId = sykmelding.id,
+        tssid = null,
+        validationResult = ValidationResultLegacy(
+            status = when(validation.status) {
+                RuleType.OK -> Status.OK
+                RuleType.PENDING -> Status.OK
+                RuleType.INVALID -> Status.INVALID
+            },
+            ruleHits = validation
+                .rules
+                .filterIsInstance<InvalidRule>()
+                .filter { it.name != TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name }
+                .map {
+                    RuleInfo(
+                        ruleName = it.name,
+                        messageForSender = it.reason.sykmelder,
+                        messageForUser = it.reason.sykmeldt,
+                        ruleStatus = Status.INVALID)
+                },
+            timestamp = validation.timestamp
+        ),
+        vedlegg = null,
+        fellesformat = xmlStuff.marshal(mapToFellesformat(sykmelding, perioder)),
+        merknader =  mapToMerknader(validation),
+        partnerreferanse = null,
+        legekontorReshId = null,
+        legekontorOrgName = "",
+        legekontorOrgNr = when(metadata) {
+            is Papir ->  metadata.sender.ids.firstOrNull { it.type == OrgIdType.ENH }?.id
+            is Digital -> metadata.orgnummer
+            is EDIEmottak -> metadata.sender.ids.firstOrNull { it.type == OrgIdType.ENH }?.id
+            is Egenmeldt -> ""
+            is EmottakEnkel -> metadata.sender.ids.firstOrNull { it.type == OrgIdType.ENH }?.id
+            is Utenlandsk -> ""
+        },
+        legekontorHerId = null,
+        rulesetVersion = null,
+        legeHelsepersonellkategori = tohelsepersonellKategoriLegacy(sykmelding.sykmelder.helsepersonellKategori),
+        personNrLege = sykmelding.sykmelder.ids.first { it.type == PersonIdType.FNR }.id,
+        tlfPasient = sykmelding.pasient.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
+        personNrPasient = sykmelding.pasient.fnr,
+        legeHprNr = sykmelding.sykmelder.ids.first { it.type == PersonIdType.HPR }.id,
+        navLogId = sykmelding.id
+    )
+
+    return receivedSykmelding
 }
 
 fun fromDigital(
@@ -205,7 +314,7 @@ fun fromDigital(
             timestamp = validation.timestamp
         ),
         vedlegg = null,
-        fellesformat =  xmlStuff.marshal(mapToFellesformat(sykmelding, metadata, perioder)),
+        fellesformat =  xmlStuff.marshal(mapToFellesformat(sykmelding, perioder)),
         merknader =  mapToMerknader(validation),
         partnerreferanse = null,
         legekontorReshId = null,
@@ -260,7 +369,216 @@ fun toArbeidsgiver(it: ArbeidsgiverInfo) : Arbeidsgiver {
     }
 }
 
-fun mapToFellesformat(sykmelding: DigitalSykmelding, metadata: Digital, perioder : List<Periode>): XMLEIFellesformat {
+fun mapToFellesformat(sykmelding: XmlSykmelding, perioder : List<Periode>): XMLEIFellesformat {
+    return XMLEIFellesformat().apply {
+        any.add(
+            XMLMsgHead().apply {
+                msgInfo =
+                    XMLMsgInfo().apply {
+                        type =
+                            XMLCS().apply {
+                                dn = "Medisinsk vurdering av arbeidsmulighet ved sykdom, sykmelding"
+                                v = "SYKMELD"
+                            }
+                        miGversion = "v1.2 2006-05-24"
+                        genDate = sykmelding.metadata.genDate.toString()
+                        msgId = sykmelding.id
+                        ack =
+                            XMLCS().apply {
+                                dn = "Ja"
+                                v = "J"
+                            }
+                        sender =
+                            XMLSender().apply {
+                                comMethod =
+                                    XMLCS().apply {
+                                        dn = "EDI"
+                                        v = "EDI"
+                                    }
+                                organisation =
+                                    XMLOrganisation().apply {
+                                        healthcareProfessional =
+                                            XMLHealthcareProfessional().apply {
+                                                givenName = sykmelding.behandler.navn.fornavn
+                                                middleName = sykmelding.behandler.navn.mellomnavn
+                                                familyName = sykmelding.behandler.navn.etternavn
+                                                ident.addAll(
+                                                    listOf(
+                                                        XMLIdent().apply {
+                                                            id = sykmelding.behandler.ids.first { it.type == PersonIdType.HPR }.id
+                                                            typeId =
+                                                                XMLCV().apply {
+                                                                    dn = "HPR-nummer"
+                                                                    s = "2.16.578.1.12.4.1.1.8116"
+                                                                    v = "HPR"
+                                                                }
+                                                        },
+                                                        XMLIdent().apply {
+                                                            id = sykmelding.behandler.ids.first { it.type == PersonIdType.FNR }.id
+                                                            typeId =
+                                                                XMLCV().apply {
+                                                                    dn = "Fødselsnummer"
+                                                                    s = "2.16.578.1.12.4.1.1.8116"
+                                                                    v = "FNR"
+                                                                }
+                                                        },
+                                                    ),
+                                                )
+                                            }
+                                    }
+                            }
+                        receiver =
+                            XMLReceiver().apply {
+                                comMethod =
+                                    XMLCS().apply {
+                                        dn = "EDI"
+                                        v = "EDI"
+                                    }
+                                organisation =
+                                    XMLOrganisation().apply {
+                                        organisationName = "NAV"
+                                        ident.addAll(
+                                            listOf(
+                                                XMLIdent().apply {
+                                                    id = "79768"
+                                                    typeId =
+                                                        XMLCV().apply {
+                                                            dn =
+                                                                "Identifikator fra Helsetjenesteenhetsregisteret (HER-id)"
+                                                            s = "2.16.578.1.12.4.1.1.9051"
+                                                            v = "HER"
+                                                        }
+                                                },
+                                                XMLIdent().apply {
+                                                    id = "889640782"
+                                                    typeId =
+                                                        XMLCV().apply {
+                                                            dn =
+                                                                "Organisasjonsnummeret i Enhetsregister (Brønøysund)"
+                                                            s = "2.16.578.1.12.4.1.1.9051"
+                                                            v = "ENH"
+                                                        }
+                                                },
+                                            ),
+                                        )
+                                    }
+                            }
+                    }
+                document.add(
+                    XMLDocument().apply {
+                        refDoc =
+                            XMLRefDoc().apply {
+                                msgType =
+                                    XMLCS().apply {
+                                        dn = "XML-instans"
+                                        v = "XML"
+                                    }
+                                content =
+                                    XMLRefDoc.Content().apply {
+                                        any.add(
+                                            HelseOpplysningerArbeidsuforhet().apply {
+                                                syketilfelleStartDato = null
+                                                pasient =
+                                                    HelseOpplysningerArbeidsuforhet.Pasient()
+                                                        .apply {
+                                                            navn =
+                                                                NavnType().apply {
+                                                                    fornavn = sykmelding.pasient.navn?.fornavn
+                                                                    mellomnavn =
+                                                                        sykmelding.pasient.navn?.mellomnavn
+                                                                    etternavn =
+                                                                        sykmelding.pasient.navn?.etternavn
+                                                                }
+                                                            fodselsnummer =
+                                                                Ident().apply {
+                                                                    id = sykmelding.pasient.fnr
+                                                                    typeId =
+                                                                        CV().apply {
+                                                                            dn = "Fødselsnummer"
+                                                                            s =
+                                                                                "2.16.578.1.12.4.1.1.8116"
+                                                                            v = "FNR"
+                                                                        }
+                                                                }
+                                                        }
+                                                arbeidsgiver =
+                                                    tilArbeidsgiver(
+                                                        sykmelding.arbeidsgiver,
+                                                    )
+                                                medisinskVurdering =
+                                                    tilMedisinskVurdering(
+                                                        sykmelding.medisinskVurdering,
+                                                    )
+                                                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet()
+                                                    .apply {
+                                                        periode.addAll(
+                                                            tilPeriodeListe(
+                                                                perioder
+                                                            )
+                                                        )
+                                                    }
+                                                prognose = null
+                                                utdypendeOpplysninger = null
+                                                tiltak =
+                                                    HelseOpplysningerArbeidsuforhet.Tiltak().apply {
+                                                        tiltakArbeidsplassen = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                                                            is IngenArbeidsgiver -> null
+                                                            is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
+                                                            is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
+                                                        }
+                                                        tiltakNAV = null
+                                                        andreTiltak = null
+                                                    }
+                                                meldingTilNav =
+                                                    sykmelding.bistandNav
+                                                        ?.let {
+                                                            HelseOpplysningerArbeidsuforhet
+                                                                .MeldingTilNav()
+                                                                .apply {
+                                                                    beskrivBistandNAV =
+                                                                        it.beskrivBistand
+                                                                    isBistandNAVUmiddelbart =
+                                                                        it.bistandUmiddelbart
+                                                                }
+                                                        }
+                                                meldingTilArbeidsgiver = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
+                                                    is IngenArbeidsgiver -> null
+                                                    is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
+                                                    is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
+                                                }
+                                                kontaktMedPasient =
+                                                    HelseOpplysningerArbeidsuforhet
+                                                        .KontaktMedPasient()
+                                                        .apply {
+                                                            kontaktDato =
+                                                                sykmelding.tilbakedatering
+                                                                    ?.kontaktDato
+                                                            begrunnIkkeKontakt =
+                                                                sykmelding
+                                                                    .tilbakedatering
+                                                                    ?.begrunnelse
+                                                            behandletDato = sykmelding.metadata.genDate.toLocalDateTime()
+                                                        }
+                                                behandler = tilBehandler(sykmelding.behandler)
+                                                avsenderSystem =
+                                                    HelseOpplysningerArbeidsuforhet.AvsenderSystem()
+                                                        .apply {
+                                                            systemNavn = "syk-inn"
+                                                            systemVersjon = "pilot"
+                                                        }
+                                                strekkode = "123456789qwerty"
+                                            },
+                                        )
+                                    }
+                            }
+                    },
+                )
+            },
+        )
+    }
+}
+
+fun mapToFellesformat(sykmelding: DigitalSykmelding, perioder : List<Periode>): XMLEIFellesformat {
     return XMLEIFellesformat().apply {
         any.add(
             XMLMsgHead().apply {
