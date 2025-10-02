@@ -60,14 +60,18 @@ class SykmeldingReformatService(
         records.forEach { record ->
             try {
                 val sykmeldingRecord = record.value()?.let { sykmeldingMapper.toNewSykmelding(it) }
-                val sourceApp = record.headers().lastHeader(SOURCE_APP)?.value()?.toString(Charsets.UTF_8)
-                val sourceNamespace = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
+                val namespaceFromHeader = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
+                val appFromHeader = record.headers().lastHeader(SOURCE_APP)?.value()?.toString(Charsets.UTF_8)
 
-                requireNotNull(sourceNamespace) { "Source namespace must not be null" }
-                requireNotNull(sourceApp) { "Source app must not be null" }
+                if(namespaceFromHeader == null || appFromHeader == null) {
+                    log.warn("Missing source namespace or app header for sykmelding with id: ${record.key()}, ")
+                }
+                val sourceNamespace = namespaceFromHeader ?: "teamsykmelding"
+                val sourceApp = appFromHeader ?: getSourceAppFromSykmelding(sykmeldingRecord)
 
                 val additionalHeaders = record.headers().associate { it.key() to it.value().toString(Charsets.UTF_8) }.filter { it.key != SOURCE_NAMESPACE && it.key != SOURCE_APP }
                 val sourceIsTsm = sourceNamespace == "tsm"
+
                 log.info("received sykmelding namespace: $sourceNamespace, app: $sourceApp, headers: ${objectMapper.writeValueAsString(additionalHeaders)}, key: ${record.key()}")
                 if(sourceIsTsm) {
                     log.info("skipping sykmelding from $sourceNamespace : $sourceApp: ${record.key()}")

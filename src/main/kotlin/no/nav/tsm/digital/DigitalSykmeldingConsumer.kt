@@ -74,13 +74,9 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                 val sykmeldingRecord = record.value()
                 val sykmeldingId = record.key()
                 val sourceNamespace = record.headers().lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
-                val sourceApp = record.headers().lastHeader(SOURCE_APP)?.value()?.toString(Charsets.UTF_8)
-                requireNotNull(sourceNamespace) { "Source namespace must not be null" }
-                requireNotNull(sourceApp) { "Source app must not be null" }
-
                 val headers = record.headers()
                 if (sourceNamespace == TSM_SOURCE) {
-                    handleDigitalSykmelidng(sourceNamespace, sourceApp, sykmeldingRecord, sykmeldingId, headers)
+                    handleDigitalSykmelidng(sourceNamespace, sykmeldingRecord, sykmeldingId, headers)
                 }
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id}, for p: ${record.partition()}, o: ${record.offset()}", mappingException)
@@ -99,7 +95,6 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
 
     private suspend fun handleDigitalSykmelidng(
         sourceNamespace: String,
-        sourceApp: String,
         sykmeldingRecord: SykmeldingRecord?,
         sykmeldingId: String?,
         headers: Headers
