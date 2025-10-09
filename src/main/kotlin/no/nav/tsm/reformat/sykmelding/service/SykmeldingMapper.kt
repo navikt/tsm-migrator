@@ -102,6 +102,7 @@ import no.nav.tsm.sykmelding.input.core.model.metadata.PersonId
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
 import no.nav.tsm.sykmelding.input.core.model.metadata.UnderOrganisasjon
 import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -127,7 +128,11 @@ class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception
         get() = exception.message
 }
 class SykmeldingMapper {
+    companion object {
+        private val log = LoggerFactory.getLogger(SykmeldingMapper::class.java)
+    }
     private val xmlStuff = XmlStuff()
+
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
         try {
             return when {
@@ -388,14 +393,14 @@ class SykmeldingMapper {
 
 
         if (msgHead.document.size > 1) {
-            throw IllegalArgumentException("Forventet kun en dokument for ${receivedSykmelding.sykmelding.id}")
+            log.warn("Forventet kun en dokument for ${receivedSykmelding.sykmelding.id}")
         }
-        if (msgHead.document.single().refDoc.content.any.size > 1) {
-            throw IllegalArgumentException("Forventet kun en helseopplysninger for ${receivedSykmelding.sykmelding.id}")
+        if (msgHead.document[0].refDoc.content.any.size > 1) {
+            log.warn("Forventet kun en helseopplysninger for ${receivedSykmelding.sykmelding.id}")
         }
 
-        val xmlSykmelding = msgHead.document.single().refDoc.content.any.single()
-                as HelseOpplysningerArbeidsuforhet
+
+        val xmlSykmelding = msgHead.document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
 
         val sykmeldingPasient = toSykmeldingPasient(xmlSykmelding.pasient)
         val sykmelder = toSignerendeBehandler(receivedSykmelding)
