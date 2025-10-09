@@ -399,9 +399,11 @@ class SykmeldingMapper {
             log.warn("Forventet kun en helseopplysninger for ${receivedSykmelding.sykmelding.id}")
         }
 
-
-        val xmlSykmelding = msgHead.document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
-
+        val helseOpplysningerArbeidsuforhet = msgHead.document.flatMap { it.refDoc.content.any }.filter { it is HelseOpplysningerArbeidsuforhet }.filterIsInstance<HelseOpplysningerArbeidsuforhet>()
+        if(helseOpplysningerArbeidsuforhet.size > 1) {
+            throw IllegalStateException("Forventet kun en HelseOpplysningerArbeidsuforhet for ${receivedSykmelding.sykmelding.id}")
+        }
+        val xmlSykmelding = helseOpplysningerArbeidsuforhet.single()
         val sykmeldingPasient = toSykmeldingPasient(xmlSykmelding.pasient)
         val sykmelder = toSignerendeBehandler(receivedSykmelding)
         val behandler = Behandler(
