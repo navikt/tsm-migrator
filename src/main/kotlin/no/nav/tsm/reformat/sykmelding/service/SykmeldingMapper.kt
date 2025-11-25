@@ -751,7 +751,7 @@ class SykmeldingMapper {
         receivedSykmelding.sykmelding.utdypendeOpplysninger.mapValues { entry ->
             entry.value.mapValues { questions ->
                 SporsmalSvar(
-                    sporsmal = questions.key,
+                    sporsmal = questions.value.sporsmal ?: questions.key,
                     svar = questions.value.svar,
                     restriksjoner = questions.value.restriksjoner.map {
                         when (it) {
