@@ -44,7 +44,9 @@ import no.nav.tsm.smregister.models.Merknad
 import no.nav.tsm.smregister.models.Periode
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.RuleInfo
+import no.nav.tsm.smregister.models.SporsmalSvar
 import no.nav.tsm.smregister.models.Status
+import no.nav.tsm.smregister.models.SvarRestriksjon
 import no.nav.tsm.smregister.models.SykmeldingLegacy
 import no.nav.tsm.smregister.models.ValidationResultLegacy
 import no.nav.tsm.sykmelding.input.core.model.ARBEIDSGIVER_TYPE
@@ -68,19 +70,17 @@ import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
 import no.nav.tsm.sykmelding.input.core.model.Papirsykmelding
 import no.nav.tsm.sykmelding.input.core.model.Reisetilskudd
 import no.nav.tsm.sykmelding.input.core.model.RuleType
+import no.nav.tsm.sykmelding.input.core.model.Sporsmalstype
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
+import no.nav.tsm.sykmelding.input.core.model.UtdypendeSporsmal
 import no.nav.tsm.sykmelding.input.core.model.UtenlandskSykmelding
 import no.nav.tsm.sykmelding.input.core.model.ValidationResult
 import no.nav.tsm.sykmelding.input.core.model.XmlSykmelding
 import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
-import no.nav.tsm.sykmelding.input.core.model.metadata.EDIEmottak
-import no.nav.tsm.sykmelding.input.core.model.metadata.Egenmeldt
-import no.nav.tsm.sykmelding.input.core.model.metadata.EmottakEnkel
 import no.nav.tsm.sykmelding.input.core.model.metadata.HelsepersonellKategori
 import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
 import no.nav.tsm.sykmelding.input.core.model.metadata.MessageMetadata
-import no.nav.tsm.sykmelding.input.core.model.metadata.OrgIdType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Papir
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
 import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
@@ -121,111 +121,32 @@ fun fromXml(
     validation: ValidationResult,
     aktorId: String,
 ): ReceivedSykmelding {
+    TODO("XML should only come from old namespace")
+}
 
-    val perioder = sykmelding.aktivitet.map { it.toPeriode() }
-    val receivedSykmelding = ReceivedSykmelding(
-        sykmelding = SykmeldingLegacy(
-            id = sykmelding.id,
-            msgId = sykmelding.id,
-            pasientAktoerId = aktorId,
-            medisinskVurdering = MedisinskVurdering(
-                hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.toDiagnose(),
-                biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser?.let { bidagnoser -> bidagnoser.map { it.toDiagnose() }} ?: emptyList(),
-                svangerskap = sykmelding.medisinskVurdering.svangerskap,
-                yrkesskade = sykmelding.medisinskVurdering.yrkesskade != null,
-                yrkesskadeDato = sykmelding.medisinskVurdering.yrkesskade?.yrkesskadeDato,
-                annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.toAnnenFraversArsak(),
-            ),
-            skjermesForPasient = sykmelding.medisinskVurdering.skjermetForPasient,
-            arbeidsgiver = toArbeidsgiver(sykmelding.arbeidsgiver),
-            perioder = perioder,
-            prognose = null,
-            tiltakArbeidsplassen = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
-                is IngenArbeidsgiver -> null
-                is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
-                is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
-            },
-            tiltakNAV = null,
-            andreTiltak = null,
-            meldingTilNAV = sykmelding.bistandNav?.let { MeldingTilNAV(it.bistandUmiddelbart, it.beskrivBistand) },
-            meldingTilArbeidsgiver = when(val arbeidsgiver = sykmelding.arbeidsgiver) {
-                is IngenArbeidsgiver -> null
-                is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
-                is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
-            },
-            kontaktMedPasient = KontaktMedPasient(sykmelding.tilbakedatering?.kontaktDato, sykmelding.tilbakedatering?.begrunnelse),
-            behandletTidspunkt = sykmelding.metadata.genDate.toLocalDateTime(),
-            behandler = Behandler(
-                fornavn = sykmelding.behandler.navn.fornavn,
-                mellomnavn = sykmelding.behandler.navn.mellomnavn,
-                etternavn = sykmelding.behandler.navn.etternavn,
-                aktoerId = "",
-                fnr = sykmelding.behandler.ids.first { it.type == PersonIdType.FNR }.id,
-                hpr = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HPR }?.id,
-                her = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HER }?.id,
-                Adresse(
-                    sykmelding.behandler.adresse?.gateadresse,
-                    sykmelding.behandler.adresse?.postnummer?.toInt(),
-                    sykmelding.behandler.adresse?.kommune,
-                    sykmelding.behandler.adresse?.postboks,
-                    sykmelding.behandler.adresse?.land,
-                ),
-                sykmelding.behandler.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
-            ),
-            avsenderSystem = AvsenderSystem(sykmelding.metadata.avsenderSystem.navn, versjon = sykmelding.metadata.avsenderSystem.versjon),
-            syketilfelleStartDato = sykmelding.medisinskVurdering.syketilfelletStartDato,
-            signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
-            navnFastlege = sykmelding.pasient.navnFastlege,
-            utdypendeOpplysninger = emptyMap() //TODO
-        ),
-        utenlandskSykmelding = null,
-        mottattDato = sykmelding.metadata.mottattDato.toLocalDateTime(),
-        msgId = sykmelding.id,
-        tssid = null,
-        validationResult = ValidationResultLegacy(
-            status = when(validation.status) {
-                RuleType.OK -> Status.OK
-                RuleType.PENDING -> Status.OK
-                RuleType.INVALID -> Status.INVALID
-            },
-            ruleHits = validation
-                .rules
-                .filterIsInstance<InvalidRule>()
-                .filter { it.name != TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name }
-                .map {
-                    RuleInfo(
-                        ruleName = it.name,
-                        messageForSender = it.reason.sykmelder,
-                        messageForUser = it.reason.sykmeldt,
-                        ruleStatus = Status.INVALID)
-                },
-            timestamp = validation.timestamp
-        ),
-        vedlegg = null,
-        fellesformat = xmlStuff.marshal(mapToFellesformat(sykmelding, perioder)),
-        merknader =  mapToMerknader(validation),
-        partnerreferanse = null,
-        legekontorReshId = null,
-        legekontorOrgName = "",
-        legekontorOrgNr = when(metadata) {
-            is Papir ->  metadata.sender.ids.firstOrNull { it.type == OrgIdType.ENH }?.id
-            is Digital -> metadata.orgnummer
-            is EDIEmottak -> metadata.sender.ids.firstOrNull { it.type == OrgIdType.ENH }?.id
-            is Egenmeldt -> ""
-            is EmottakEnkel -> metadata.sender.ids.firstOrNull { it.type == OrgIdType.ENH }?.id
-            is Utenlandsk -> ""
-        },
-        legekontorHerId = null,
-        rulesetVersion = null,
-        legeHelsepersonellkategori = tohelsepersonellKategoriLegacy(sykmelding.sykmelder.helsepersonellKategori),
-        personNrLege = sykmelding.sykmelder.ids.first { it.type == PersonIdType.FNR }.id,
-        tlfPasient = sykmelding.pasient.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
-        personNrPasient = sykmelding.pasient.fnr,
-        legeHprNr = sykmelding.sykmelder.ids.first { it.type == PersonIdType.HPR }.id,
-        navLogId = sykmelding.id
-    )
+const val uke7Prefix = "6.3"
 
-    return receivedSykmelding
+val spmUke7Mapping = mapOf<Sporsmalstype, Pair<String, String>>(
+    Sporsmalstype.MEDISINSK_OPPSUMMERING to ("$uke7Prefix.1" to "Gi en kort medisinsk oppsummering av tilstanden (sykehistorie, hovedsymptomer, pågående/planlagt behandling)"),
+    Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID to ("$uke7Prefix.2" to "Hvilke utfordringer har pasienten med å utføre gradert arbeid?"),
+    Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN to ("$uke7Prefix.3" to "Hvilke hensyn må være på plass for at pasienten kan prøves i det nåværende arbeidet? (ikke obligatorisk)"),
+)
+
+fun toUtdypendeOpplysninger(sporsmal: List<UtdypendeSporsmal>?) : Map<String, Map<String, SporsmalSvar>> {
+    if(sporsmal.isNullOrEmpty()) {
+        return emptyMap()
+    }
+
+    val uke7 = sporsmal.asSequence().map { spm ->
+        val (key, sporsmal) = spmUke7Mapping[spm.type] ?: throw IllegalArgumentException("Ugyldig sporsmalstype ${spm.type}")
+        key to SporsmalSvar(
+            sporsmal = sporsmal,
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
+            svar = spm.svar
+        )
+    }.toMap()
+
+    return mapOf(uke7Prefix to uke7)
 }
 
 fun fromDigital(
@@ -288,7 +209,7 @@ fun fromDigital(
             syketilfelleStartDato = sykmelding.medisinskVurdering.syketilfelletStartDato,
             signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
             navnFastlege = sykmelding.pasient.navnFastlege,
-            utdypendeOpplysninger = emptyMap() //TODO
+            utdypendeOpplysninger = toUtdypendeOpplysninger(sykmelding.utdypendeSporsmal),
         ),
         utenlandskSykmelding = null,
         mottattDato = sykmelding.metadata.mottattDato.toLocalDateTime(),
@@ -327,7 +248,7 @@ fun fromDigital(
         tlfPasient = sykmelding.pasient.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
         personNrPasient = sykmelding.pasient.fnr,
         legeHprNr = sykmelding.sykmelder.ids.first { it.type == PersonIdType.HPR }.id,
-        navLogId = sykmelding.id
+        navLogId = sykmelding.id,
     )
 
     return receivedSykmelding

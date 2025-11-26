@@ -2,7 +2,8 @@ package no.nav.tsm.digital
 
 
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
-import no.nav.tsm.smregister.models.AvsenderSystem
+import no.nav.tsm.smregister.models.SporsmalSvar
+import no.nav.tsm.smregister.models.SvarRestriksjon
 import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
 import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
 import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
@@ -19,9 +20,11 @@ import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
 import no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering
 import no.nav.tsm.sykmelding.input.core.model.Pasient
 import no.nav.tsm.sykmelding.input.core.model.RuleType
+import no.nav.tsm.sykmelding.input.core.model.Sporsmalstype
 import no.nav.tsm.sykmelding.input.core.model.Sykmelder
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.Tilbakedatering
+import no.nav.tsm.sykmelding.input.core.model.UtdypendeSporsmal
 import no.nav.tsm.sykmelding.input.core.model.ValidationResult
 import no.nav.tsm.sykmelding.input.core.model.Yrkesskade
 import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
@@ -47,6 +50,42 @@ class DigitalSykmeldingMapperTest {
         val receivedSykmelding = digitalSykmeldingRecord.toReceivedSykmelding("aktorId")
         val mappedDigitalSykmeldingRecord = sykmeldingMapper.toNewSykmelding(receivedSykmelding)
         Assert.assertEquals(digitalSykmeldingRecord, mappedDigitalSykmeldingRecord)
+    }
+
+    @Test
+    fun testMapDigitalSykmeldingUtdypendeOpplysninger() {
+        val spm = listOf<UtdypendeSporsmal>(
+            UtdypendeSporsmal("svar 1", Sporsmalstype.MEDISINSK_OPPSUMMERING),
+            UtdypendeSporsmal("svar 2", Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID),
+            UtdypendeSporsmal("svar 3", Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN),
+        )
+
+        val legacyUtdypendeOpplysninger = toUtdypendeOpplysninger(spm)
+
+        val expected = mapOf<String, Map<String, SporsmalSvar>>(
+            "6.3" to mapOf(
+                "6.3.1" to SporsmalSvar(
+                    "Gi en kort medisinsk oppsummering av tilstanden (sykehistorie, hovedsymptomer, pågående/planlagt behandling)",
+                    svar = "svar 1",
+                    restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+                ),
+                "6.3.2" to SporsmalSvar(
+                    "Hvilke utfordringer har pasienten med å utføre gradert arbeid?",
+                    svar = "svar 2",
+                    restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+                ),
+                "6.3.3" to SporsmalSvar(
+                    "Hvilke hensyn må være på plass for at pasienten kan prøves i det nåværende arbeidet? (ikke obligatorisk)",
+                    svar = "svar 3",
+                    restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+                ),
+            )
+        )
+
+        Assert.assertEquals(expected, legacyUtdypendeOpplysninger)
+        val digitalUtdypendeSporsmal = SykmeldingMapper().toDigitalUtdypendeSporsmal("1", legacyUtdypendeOpplysninger)
+        Assert.assertEquals(spm, digitalUtdypendeSporsmal)
+
     }
 }
 
@@ -146,7 +185,8 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
         bistandNav = BistandNav(
             beskrivBistand = "beskrivelse",
             bistandUmiddelbart = true
-        )
+        ),
+        utdypendeSporsmal = null
     )
     val validation = ValidationResult(
         RuleType.OK,
