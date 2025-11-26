@@ -10,6 +10,8 @@ import no.nav.helse.msgHead.XMLReceiver
 import no.nav.helse.msgHead.XMLSender
 import no.nav.helse.sm2013.Address
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.tsm.digital.spmUke7Mapping
+import no.nav.tsm.digital.uke7Prefix
 import no.nav.tsm.reformat.sykmelding.model.metadata.parseAckType
 import no.nav.tsm.reformat.sykmelding.model.metadata.parseAdresseType
 import no.nav.tsm.reformat.sykmelding.model.metadata.parseHelsepersonellKategori
@@ -73,6 +75,7 @@ import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.Tilbakedatering
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
 import no.nav.tsm.sykmelding.input.core.model.Tiltak
+import no.nav.tsm.sykmelding.input.core.model.UtdypendeSporsmal
 import no.nav.tsm.sykmelding.input.core.model.UtenlandskInfo
 import no.nav.tsm.sykmelding.input.core.model.UtenlandskSykmelding
 import no.nav.tsm.sykmelding.input.core.model.ValidationResult
@@ -178,7 +181,8 @@ class SykmeldingMapper {
             sykmelder = toSignerendeBehandler(receivedSykmelding),
             arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
             tilbakedatering = toTilbakedatering(receivedSykmelding),
-            bistandNav = toBistandNav(receivedSykmelding)
+            bistandNav = toBistandNav(receivedSykmelding),
+            utdypendeSporsmal = toDigitalUtdypendeSporsmal(receivedSykmelding.sykmelding.id, receivedSykmelding.sykmelding.utdypendeOpplysninger)
         )
         val digital = Digital(
             receivedSykmelding.legekontorOrgNr ?: throw IllegalArgumentException("missing legekontorOrgNr"),
@@ -189,6 +193,23 @@ class SykmeldingMapper {
             metadata = digital,
             sykmelding = digitalSykmelding,
         )
+    }
+
+    fun toDigitalUtdypendeSporsmal(sykmeldingId: String, utdypendeOpplysninger: Map<String, Map<String, no.nav.tsm.smregister.models.SporsmalSvar>>): List<UtdypendeSporsmal>? {
+        val uke7spm = utdypendeOpplysninger[uke7Prefix] ?: return null
+
+        return uke7spm.mapNotNull { (key, utdypendeSpm) ->
+            val spm = spmUke7Mapping.entries.singleOrNull { it.value.first == key }
+            if(spm == null) {
+                log.warn("Could not find uke7 spm for sykmelding: $sykmeldingId, for key: $key. Skipping.")
+                null
+            } else {
+                UtdypendeSporsmal(
+                    svar = utdypendeSpm.svar,
+                    type = spm.key,
+                )
+            }
+        }
     }
 
     private fun toEgenmeldtSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
@@ -332,7 +353,6 @@ class SykmeldingMapper {
             fodselsdato = healthcareProfessional.dateOfBirth,
             helsepersonellKategori = parseHelsepersonellKategori(healthcareProfessional.typeHealthcareProfessional?.v),
             rolleTilPasient = parseRolleTilPasient(healthcareProfessional.roleToPatient?.v),
-
             )
     }
 
