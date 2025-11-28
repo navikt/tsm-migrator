@@ -12,7 +12,6 @@ import no.nav.tsm.smregister.models.ValidationResultLegacy
 import no.nav.tsm.sykmelding.input.core.model.RuleType
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
-import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_APP
 import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_NAMESPACE
 import no.nav.tsm.sykmeldinger.kafka.util.TSM_SOURCE
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -80,15 +79,11 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                 }
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id}, for p: ${record.partition()}, o: ${record.offset()}", mappingException)
-                if (cluster != "dev-gcp") {
-                    secureLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
-                    throw mappingException
-                }
+                secureLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
+                throw mappingException
+
             } catch (ex: Exception) {
-                log.error(ex.message, ex)
-                if (cluster != "dev-gcp") {
-                    throw ex
-                }
+                throw ex
             }
         }
     }
@@ -102,7 +97,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
         log.info("received sykmelding from source-namespace:$sourceNamespace, should sendt to namespace: teamsykmelding, sykmeldingId: $sykmeldingId")
         if (sykmeldingRecord == null) {
             log.info("tombstoning sykmelding with id: $sykmeldingId")
-            kafkaProducer.send(ProducerRecord(okSykmeldingTopic, null, sykmeldingId, null, headers))
+            kafkaProducer.send(ProducerRecord(okSykmeldingTopic, null, sykmeldingId, null, headers)).get()
         } else {
             val aktorId = tsmPdlClient.getAktorId(sykmeldingRecord.sykmelding.pasient.fnr)
             val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding(aktorId)
