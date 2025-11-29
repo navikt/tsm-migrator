@@ -1,22 +1,22 @@
 
-val kotlin_version="2.0.20"
-val logback_version= "1.5.13"
-val koin_version="4.0.0"
+val kotlin_version="2.2.21"
+val logback_version= "1.5.21"
+val koin_version="4.1.1"
 val prometheus_version="0.16.0"
-val logback_encoder_version="8.0"
-val kafka_version= "3.9.1"
-val jackson_version= "2.18.0"
-val opentelemetryVersion = "2.8.0"
-val mockkVersion = "1.13.12"
+val logback_encoder_version="9.0"
+val kafka_version= "8.1.0-ce"
+val jackson_version= "2.20.1"
+val opentelemetryVersion = "2.22.0"
+val mockkVersion = "1.14.6"
 val syfoXmlCodegenVersion = "2.0.1"
-val jaxbRuntimeVersion = "2.4.0-b180830.0438"
+val jaxbRuntimeVersion = "4.0.6"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val javaTimeAdapterVersion = "1.1.3"
 val sykmelidngInputVersion = "21"
 plugins {
-    kotlin("jvm") version "2.0.20"
-    id("io.ktor.plugin") version "2.3.12"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.2.21"
+    id("io.ktor.plugin") version "3.3.3"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
 }
 
 group = "no.nav.tsm"
@@ -57,7 +57,7 @@ dependencies {
     implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
     implementation("io.prometheus:simpleclient_common:$prometheus_version")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegenVersion")
     implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegenVersion")
     implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegenVersion")
