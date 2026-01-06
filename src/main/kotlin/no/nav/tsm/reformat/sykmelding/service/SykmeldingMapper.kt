@@ -411,14 +411,6 @@ class SykmeldingMapper {
         val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
         val mottakenhetBlokk = unmashalledSykmelding.get<XMLMottakenhetBlokk>()
 
-
-        if (msgHead.document.size > 1) {
-            log.warn("Forventet kun en dokument for ${receivedSykmelding.sykmelding.id}")
-        }
-        if (msgHead.document[0].refDoc.content.any.size > 1) {
-            log.warn("Forventet kun en helseopplysninger for ${receivedSykmelding.sykmelding.id}")
-        }
-
         val helseOpplysningerArbeidsuforhet = msgHead.document.flatMap { it.refDoc.content.any }.filter { it is HelseOpplysningerArbeidsuforhet }.filterIsInstance<HelseOpplysningerArbeidsuforhet>()
         if(helseOpplysningerArbeidsuforhet.size > 1) {
             throw IllegalStateException("Forventet kun en HelseOpplysningerArbeidsuforhet for ${receivedSykmelding.sykmelding.id}")

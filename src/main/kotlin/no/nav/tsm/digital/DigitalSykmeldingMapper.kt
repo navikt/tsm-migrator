@@ -124,7 +124,7 @@ fun fromXml(
     TODO("XML should only come from old namespace")
 }
 
-const val uke7Prefix = "6.3"
+val uke7Prefix = "6.3"
 
 val spmUke7Mapping = mapOf<Sporsmalstype, Pair<String, String>>(
     Sporsmalstype.MEDISINSK_OPPSUMMERING to ("$uke7Prefix.1" to "Gi en kort medisinsk oppsummering av tilstanden (sykehistorie, hovedsymptomer, pågående/planlagt behandling)"),
@@ -137,13 +137,14 @@ fun toUtdypendeOpplysninger(sporsmal: List<UtdypendeSporsmal>?) : Map<String, Ma
         return emptyMap()
     }
 
-    val uke7 = sporsmal.asSequence().map { spm ->
-        val (key, sporsmal) = spmUke7Mapping[spm.type] ?: throw IllegalArgumentException("Ugyldig sporsmalstype ${spm.type}")
-        key to SporsmalSvar(
-            sporsmal = sporsmal,
-            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
-            svar = spm.svar
-        )
+    val uke7 = sporsmal.asSequence().mapNotNull { spm ->
+       spmUke7Mapping[spm.type]?.let { (key, ss) ->
+           key to SporsmalSvar(
+               sporsmal = ss,
+               restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
+               svar = spm.svar
+           )
+       }
     }.toMap()
 
     return mapOf(uke7Prefix to uke7)
