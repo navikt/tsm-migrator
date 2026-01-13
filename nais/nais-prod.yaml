@@ -43,8 +43,6 @@ spec:
     requests:
       cpu: 50m
       memory: 512Mi
-  secureLogs:
-    enabled: true
   kafka:
     pool: nav-prod
   azure:
@@ -53,6 +51,8 @@ spec:
   accessPolicy:
     outbound:
       rules:
+        - application: logging
+          namespace: nais-system
         - application: tsm-pdl-cache
   envFrom:
     - secret: tsm-migrator-smregister-db
