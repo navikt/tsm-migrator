@@ -53,6 +53,7 @@ import no.nav.tsm.sykmelding.input.core.model.ARBEIDSGIVER_TYPE
 import no.nav.tsm.sykmelding.input.core.model.Aktivitet
 import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
 import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
+import no.nav.tsm.sykmelding.input.core.model.AnnenFravarsgrunn
 import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
 import no.nav.tsm.sykmelding.input.core.model.ArbeidsgiverInfo
 import no.nav.tsm.sykmelding.input.core.model.ArbeidsrelatertArsakType
@@ -60,12 +61,14 @@ import no.nav.tsm.sykmelding.input.core.model.Avventende
 import no.nav.tsm.sykmelding.input.core.model.Behandlingsdager
 import no.nav.tsm.sykmelding.input.core.model.DiagnoseInfo
 import no.nav.tsm.sykmelding.input.core.model.DiagnoseSystem
+import no.nav.tsm.sykmelding.input.core.model.DigitalMedisinskVurdering
 import no.nav.tsm.sykmelding.input.core.model.DigitalSykmelding
 import no.nav.tsm.sykmelding.input.core.model.EnArbeidsgiver
 import no.nav.tsm.sykmelding.input.core.model.FlereArbeidsgivere
 import no.nav.tsm.sykmelding.input.core.model.Gradert
 import no.nav.tsm.sykmelding.input.core.model.IngenArbeidsgiver
 import no.nav.tsm.sykmelding.input.core.model.InvalidRule
+import no.nav.tsm.sykmelding.input.core.model.LegacyMedisinskVurdering
 import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
 import no.nav.tsm.sykmelding.input.core.model.Papirsykmelding
 import no.nav.tsm.sykmelding.input.core.model.Reisetilskudd
@@ -168,7 +171,7 @@ fun fromDigital(
                 svangerskap = sykmelding.medisinskVurdering.svangerskap,
                 yrkesskade = sykmelding.medisinskVurdering.yrkesskade != null,
                 yrkesskadeDato = sykmelding.medisinskVurdering.yrkesskade?.yrkesskadeDato,
-                annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.toAnnenFraversArsak(),
+                annenFraversArsak = sykmelding.medisinskVurdering.annenFravarsgrunn?.toAnnenFraversArsak(),
             ),
             skjermesForPasient = sykmelding.medisinskVurdering.skjermetForPasient,
             arbeidsgiver = toArbeidsgiver(sykmelding.arbeidsgiver),
@@ -207,7 +210,7 @@ fun fromDigital(
                 sykmelding.behandler.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
             ),
             avsenderSystem = AvsenderSystem(sykmelding.metadata.avsenderSystem.navn, versjon = sykmelding.metadata.avsenderSystem.versjon),
-            syketilfelleStartDato = sykmelding.medisinskVurdering.syketilfelletStartDato,
+            syketilfelleStartDato = null,
             signaturDato = sykmelding.metadata.genDate.toLocalDateTime(),
             navnFastlege = sykmelding.pasient.navnFastlege,
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmelding.utdypendeSporsmal),
@@ -253,6 +256,27 @@ fun fromDigital(
     )
 
     return receivedSykmelding
+}
+
+
+private fun AnnenFravarsgrunn?.toAnnenFraversArsak(): AnnenFraversArsak? {
+    if(this == null) return null
+    val annenFraversArsakType = when(this) {
+        AnnenFravarsgrunn.GODKJENT_HELSEINSTITUSJON -> AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON
+        AnnenFravarsgrunn.ARBEIDSRETTET_TILTAK -> AnnenFraverGrunn.ARBEIDSRETTET_TILTAK
+        AnnenFravarsgrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND -> AnnenFraverGrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND
+        AnnenFravarsgrunn.NODVENDIG_KONTROLLUNDENRSOKELSE -> AnnenFraverGrunn.NODVENDIG_KONTROLLUNDENRSOKELSE
+        AnnenFravarsgrunn.SMITTEFARE -> AnnenFraverGrunn.SMITTEFARE
+        AnnenFravarsgrunn.ABORT -> AnnenFraverGrunn.ABORT
+        AnnenFravarsgrunn.UFOR_GRUNNET_BARNLOSHET -> AnnenFraverGrunn.UFOR_GRUNNET_BARNLOSHET
+        AnnenFravarsgrunn.DONOR -> AnnenFraverGrunn.DONOR
+        AnnenFravarsgrunn.BEHANDLING_STERILISERING -> AnnenFraverGrunn.BEHANDLING_STERILISERING
+    }
+
+    return AnnenFraversArsak(
+        null,
+        grunn = listOf(annenFraversArsakType)
+    )
 }
 
 fun tohelsepersonellKategoriLegacy(helsepersonellKategori: HelsepersonellKategori) : String {
@@ -841,12 +865,20 @@ fun tilHelseOpplysningerArbeidsuforhetPeriode(
         isReisetilskudd = periode.reisetilskudd
     }
 
+fun no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering.toAnnenFraverArsak() : AnnenFraversArsak? {
+    return when (this) {
+        is LegacyMedisinskVurdering -> this.annenFraversArsak.toAnnenFraversArsak()
+        is DigitalMedisinskVurdering -> this.annenFravarsgrunn.toAnnenFraversArsak()
+    }
+}
+
 fun tilMedisinskVurdering(
     medisinskVurdering: no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering,
 ): HelseOpplysningerArbeidsuforhet.MedisinskVurdering {
+    val annenFraverArsak = medisinskVurdering.toAnnenFraverArsak()
     if (
         medisinskVurdering.hovedDiagnose == null &&
-        medisinskVurdering.annenFraversArsak == null
+        annenFraverArsak == null
     ) {
         log.warn("Sykmelding mangler hoveddiagnose og annenFraversArsak, avbryter..")
         throw IllegalStateException("Sykmelding mangler hoveddiagnose")
@@ -871,15 +903,24 @@ fun tilMedisinskVurdering(
                 }
         }
         isSkjermesForPasient = medisinskVurdering.skjermetForPasient
-        annenFraversArsak = medisinskVurdering.annenFraversArsak?.let {
-                ArsakType().apply {
-                    arsakskode.add(CS())
-                    beskriv = medisinskVurdering.annenFraversArsak?.beskrivelse
-                }
-            }
+        annenFraversArsak = annenFraverArsak.toArsakType()
         isSvangerskap = medisinskVurdering.svangerskap
         isYrkesskade = medisinskVurdering.yrkesskade != null
         yrkesskadeDato = medisinskVurdering.yrkesskade?.yrkesskadeDato
+    }
+}
+
+private fun AnnenFraversArsak?.toArsakType(): ArsakType? {
+    if(this == null) return null
+    val arsaktyper = grunn.map {
+        CS().apply {
+            this.v = it.codeValue
+            this.dn = it.text
+        }
+    }
+    return ArsakType().apply {
+        arsakskode.addAll(arsaktyper)
+        beskriv = beskrivelse
     }
 }
 
@@ -1015,7 +1056,8 @@ private fun MedisinskArsakType.toMedisinskArsakType(): MedisinskArsakTypeLegacy 
     }
 }
 
-private fun AnnenFraverArsak.toAnnenFraversArsak(): AnnenFraversArsak? {
+private fun AnnenFraverArsak?.toAnnenFraversArsak(): AnnenFraversArsak? {
+    if(this == null) return null
     return arsak?.let { arsaker ->
         AnnenFraversArsak(
             beskrivelse,  arsaker.map {

@@ -4,40 +4,13 @@ package no.nav.tsm.digital
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.SporsmalSvar
 import no.nav.tsm.smregister.models.SvarRestriksjon
-import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
-import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
-import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
-import no.nav.tsm.sykmelding.input.core.model.Behandler
-import no.nav.tsm.sykmelding.input.core.model.BistandNav
-import no.nav.tsm.sykmelding.input.core.model.DiagnoseInfo
-import no.nav.tsm.sykmelding.input.core.model.DiagnoseSystem
-import no.nav.tsm.sykmelding.input.core.model.DigitalSykmelding
-import no.nav.tsm.sykmelding.input.core.model.DigitalSykmeldingMetadata
-import no.nav.tsm.sykmelding.input.core.model.EnArbeidsgiver
-import no.nav.tsm.sykmelding.input.core.model.Gradert
-import no.nav.tsm.sykmelding.input.core.model.MedisinskArsak
-import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
-import no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering
+import no.nav.tsm.sykmelding.input.core.model.*
 import no.nav.tsm.sykmelding.input.core.model.Pasient
-import no.nav.tsm.sykmelding.input.core.model.RuleType
-import no.nav.tsm.sykmelding.input.core.model.Sporsmalstype
-import no.nav.tsm.sykmelding.input.core.model.Sykmelder
-import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
-import no.nav.tsm.sykmelding.input.core.model.Tilbakedatering
-import no.nav.tsm.sykmelding.input.core.model.UtdypendeSporsmal
-import no.nav.tsm.sykmelding.input.core.model.ValidationResult
-import no.nav.tsm.sykmelding.input.core.model.Yrkesskade
-import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
-import no.nav.tsm.sykmelding.input.core.model.metadata.HelsepersonellKategori
-import no.nav.tsm.sykmelding.input.core.model.metadata.Kontaktinfo
-import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
-import no.nav.tsm.sykmelding.input.core.model.metadata.Navn
-import no.nav.tsm.sykmelding.input.core.model.metadata.PersonId
-import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
+import no.nav.tsm.sykmelding.input.core.model.metadata.*
 import org.junit.Assert
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 
 class DigitalSykmeldingMapperTest {
@@ -54,7 +27,7 @@ class DigitalSykmeldingMapperTest {
 
     @Test
     fun testMapDigitalSykmeldingUtdypendeOpplysninger() {
-        val spm = listOf<UtdypendeSporsmal>(
+        val spm = listOf(
             UtdypendeSporsmal("svar 1", Sporsmalstype.MEDISINSK_OPPSUMMERING),
             UtdypendeSporsmal("svar 2", Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID),
             UtdypendeSporsmal("svar 3", Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN),
@@ -107,7 +80,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
                 Kontaktinfo(KontaktinfoType.TLF, "12345678"),
             )
         ),
-        medisinskVurdering = MedisinskVurdering(
+        medisinskVurdering = DigitalMedisinskVurdering(
             hovedDiagnose = DiagnoseInfo(DiagnoseSystem.ICPC2, "R03", "diagnosetekst"),
             biDiagnoser = listOf(
                 DiagnoseInfo(DiagnoseSystem.ICPC2, "R04", "diagnosetekst2"),
@@ -118,14 +91,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
                 LocalDate.parse("2025-01-01"),
             ),
             skjermetForPasient = true,
-            syketilfelletStartDato = LocalDate.parse("2025-01-01"),
-            annenFraversArsak = AnnenFraverArsak(
-                "beskrivelse",
-                arsak = listOf(
-                    AnnenFravarArsakType.NODVENDIG_KONTROLLUNDENRSOKELSE,
-                    AnnenFravarArsakType.BEHANDLING_FORHINDRER_ARBEID
-                )
-            ),
+            annenFravarsgrunn = AnnenFravarsgrunn.NODVENDIG_KONTROLLUNDENRSOKELSE
         ),
         aktivitet = listOf(
             AktivitetIkkeMulig(
