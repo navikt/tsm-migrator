@@ -143,7 +143,7 @@ fun toUtdypendeOpplysninger(sporsmal: List<UtdypendeSporsmal>?) : Map<String, Ma
     val uke7 = sporsmal.asSequence().mapNotNull { spm ->
        spmUke7Mapping[spm.type]?.let { (key, ss) ->
            key to SporsmalSvar(
-               sporsmal = ss,
+               sporsmal = spm.sporsmal ?: ss,
                restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
                svar = spm.svar
            )
@@ -271,6 +271,7 @@ private fun AnnenFravarsgrunn?.toAnnenFraversArsak(): AnnenFraversArsak? {
         AnnenFravarsgrunn.UFOR_GRUNNET_BARNLOSHET -> AnnenFraverGrunn.UFOR_GRUNNET_BARNLOSHET
         AnnenFravarsgrunn.DONOR -> AnnenFraverGrunn.DONOR
         AnnenFravarsgrunn.BEHANDLING_STERILISERING -> AnnenFraverGrunn.BEHANDLING_STERILISERING
+        AnnenFravarArsakType.BEHANDLING_FORHINDRER_ARBEID -> AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID
     }
 
     return AnnenFraversArsak(

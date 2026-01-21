@@ -126,6 +126,7 @@ class SykmeldingMapper {
                 UtdypendeSporsmal(
                     svar = utdypendeSpm.svar,
                     type = spm.key,
+                    sporsmal = utdypendeSpm.sporsmal,
                 )
             }
         }

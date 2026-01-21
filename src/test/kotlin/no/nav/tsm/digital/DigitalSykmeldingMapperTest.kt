@@ -28,9 +28,9 @@ class DigitalSykmeldingMapperTest {
     @Test
     fun testMapDigitalSykmeldingUtdypendeOpplysninger() {
         val spm = listOf(
-            UtdypendeSporsmal("svar 1", Sporsmalstype.MEDISINSK_OPPSUMMERING),
-            UtdypendeSporsmal("svar 2", Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID),
-            UtdypendeSporsmal("svar 3", Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN),
+            UtdypendeSporsmal("svar 1", Sporsmalstype.MEDISINSK_OPPSUMMERING, sporsmal = "Gi en kort medisinsk oppsummering av tilstanden (sykehistorie, hovedsymptomer, pågående/planlagt behandling)"),
+            UtdypendeSporsmal("svar 2", Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID, sporsmal = "Hvilke utfordringer har pasienten med å utføre gradert arbeid?"),
+            UtdypendeSporsmal("svar 3", Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN, sporsmal = "Hvilke hensyn må være på plass for at pasienten kan prøves i det nåværende arbeidet? (ikke obligatorisk)"),
         )
 
         val legacyUtdypendeOpplysninger = toUtdypendeOpplysninger(spm)
@@ -152,7 +152,9 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
             beskrivBistand = "beskrivelse",
             bistandUmiddelbart = true
         ),
-        utdypendeSporsmal = null
+        utdypendeSporsmal = listOf(
+            UtdypendeSporsmal(svar = "svar 1", Sporsmalstype.MEDISINSK_OPPSUMMERING, true, "sporsmal 1")
+        )
     )
     val validation = ValidationResult(
         RuleType.OK,
