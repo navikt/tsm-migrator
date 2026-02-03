@@ -1,18 +1,18 @@
 
 val kotlin_version="2.0.20"
-val logback_version= "1.5.13"
+val logback_version= "1.5.20"
 val koin_version="4.0.0"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
 val kafka_version= "3.9.1"
-val jackson_version= "2.18.0"
+val jackson_version= "2.20.2"
 val opentelemetryVersion = "2.8.0"
 val mockkVersion = "1.13.12"
 val syfoXmlCodegenVersion = "2.0.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val javaTimeAdapterVersion = "1.1.3"
-val sykmeldingInputVersion = "23"
+val sykmeldingInputVersion = "24"
 
 plugins {
     kotlin("jvm") version "2.0.20"

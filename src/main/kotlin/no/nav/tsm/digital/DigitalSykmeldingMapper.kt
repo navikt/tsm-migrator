@@ -127,30 +127,62 @@ fun fromXml(
     TODO("XML should only come from old namespace")
 }
 
-val uke7Prefix = "6.3"
+const val uke7Prefix = "6.3"
+const val uke17Prefix = "6.4"
+const val uke39Prefix = "6.5"
 
-val spmUke7Mapping = mapOf<Sporsmalstype, Pair<String, String>>(
-    Sporsmalstype.MEDISINSK_OPPSUMMERING to ("$uke7Prefix.1" to "Gi en kort medisinsk oppsummering av tilstanden (sykehistorie, hovedsymptomer, pågående/planlagt behandling)"),
-    Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID to ("$uke7Prefix.2" to "Hvilke utfordringer har pasienten med å utføre gradert arbeid?"),
-    Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN to ("$uke7Prefix.3" to "Hvilke hensyn må være på plass for at pasienten kan prøves i det nåværende arbeidet? (ikke obligatorisk)"),
-)
+
+fun spmMapping(prefix: String) : Map<Sporsmalstype, Pair<String, String>> =
+    mapOf<Sporsmalstype, Pair<String, String>>(
+        Sporsmalstype.MEDISINSK_OPPSUMMERING to ("$prefix.1" to "Gi en kort medisinsk oppsummering av tilstanden (sykehistorie, hovedsymptomer, behandling)"),
+        Sporsmalstype.UTFORDRINGER_MED_ARBEID to ("$prefix.2" to "Beskriv kort hvilke utfordringer helsetilstanden gir i arbeidssituasjonen nå. Oppgi også kort hva pasienten likevel kan mestre"),
+        Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID to ("$uke7Prefix.2" to "Beskriv kort hvilke helsemessige begrensninger som gjør det vanskelig å jobbe gradert"),
+        Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN to ("$uke7Prefix.3" to "Beskriv eventuelle medisinske forhold som bør ivaretas ved eventuell tilbakeføring til nåværende arbeid (ikke obligatorisk)"),
+        Sporsmalstype.BEHANDLING_OG_FREMTIDIG_ARBEID to ("$uke17Prefix.3" to "Beskriv pågående og planlagt utredning/behandling, og om dette forventes å påvirke muligheten for økt arbeidsdeltakelse fremover"),
+        Sporsmalstype.UAVKLARTE_FORHOLD to ("$uke17Prefix.4" to "Er det forhold som fortsatt er uavklarte eller hindrer videre arbeidsdeltakelse, som Nav bør være kjent med i sin oppfølging?"),
+        Sporsmalstype.FORVENTET_HELSETILSTAND_UTVIKLING to ("$uke39Prefix.3" to "Hvordan forventes helsetilstanden å utvikle seg de neste 3-6 månedene med tanke på mulighet for økt arbeidsdeltakelse?"),
+        Sporsmalstype.MEDISINSKE_HENSYN to ("$uke39Prefix.4" to "Er det medisinske hensyn eller avklaringsbehov Nav bør kjenne til i videre oppfølging?")
+    )
+
+
 
 fun toUtdypendeOpplysninger(sporsmal: List<UtdypendeSporsmal>?) : Map<String, Map<String, SporsmalSvar>> {
     if(sporsmal.isNullOrEmpty()) {
         return emptyMap()
     }
 
-    val uke7 = sporsmal.asSequence().mapNotNull { spm ->
-       spmUke7Mapping[spm.type]?.let { (key, ss) ->
-           key to SporsmalSvar(
-               sporsmal = spm.sporsmal ?: ss,
-               restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
-               svar = spm.svar
-           )
-       }
-    }.toMap()
 
-    return mapOf(uke7Prefix to uke7)
+    val prefix = when {
+        sporsmal.any { it.type == Sporsmalstype.MEDISINSKE_HENSYN } -> uke39Prefix
+        sporsmal.any { it.type == Sporsmalstype.BEHANDLING_OG_FREMTIDIG_ARBEID } -> uke17Prefix
+        sporsmal.any { it.type == Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID } -> uke7Prefix
+        else -> throw IllegalArgumentException("Utdypende sporsmal does not have correct prefix ${sporsmal.first().type}")
+    }
+
+    val mappings = spmMapping(prefix)
+    val sporsmals = sporsmal.mapNotNull { spm ->
+        mappings[spm.type]?.let { (key, ss) ->
+            key to SporsmalSvar(
+                sporsmal = spm.sporsmal ?: ss,
+                restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
+                svar = spm.svar
+            )
+        }
+    }
+
+
+    val grouped = sporsmals.groupBy {
+        when {
+            it.first.startsWith(uke39Prefix) -> uke39Prefix
+            it.first.startsWith(uke17Prefix) -> uke17Prefix
+            it.first.startsWith(uke7Prefix) -> uke7Prefix
+            else -> {
+                throw IllegalArgumentException("Sporsmal does not have correct prefix ${it.first}")
+            }
+        }
+    }.mapValues { it.value.toMap() }
+
+    return grouped
 }
 
 fun fromDigital(

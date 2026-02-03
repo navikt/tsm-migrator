@@ -4,7 +4,8 @@ import no.nav.helse.eiFellesformat.XMLMottakenhetBlokk
 import no.nav.helse.msgHead.*
 import no.nav.helse.sm2013.Address
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.tsm.digital.spmUke7Mapping
+import no.nav.tsm.digital.uke17Prefix
+import no.nav.tsm.digital.uke39Prefix
 import no.nav.tsm.digital.uke7Prefix
 import no.nav.tsm.reformat.sykmelding.model.metadata.*
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
@@ -115,21 +116,29 @@ class SykmeldingMapper {
     }
 
     fun toDigitalUtdypendeSporsmal(sykmeldingId: String, utdypendeOpplysninger: Map<String, Map<String, no.nav.tsm.smregister.models.SporsmalSvar>>): List<UtdypendeSporsmal>? {
-        val uke7spm = utdypendeOpplysninger[uke7Prefix] ?: return null
-
-        return uke7spm.mapNotNull { (key, utdypendeSpm) ->
-            val spm = spmUke7Mapping.entries.singleOrNull { it.value.first == key }
-            if(spm == null) {
-                log.warn("Could not find uke7 spm for sykmelding: $sykmeldingId, for key: $key. Skipping.")
-                null
-            } else {
-                UtdypendeSporsmal(
-                    svar = utdypendeSpm.svar,
-                    type = spm.key,
-                    sporsmal = utdypendeSpm.sporsmal,
-                )
+        val sporsmal = utdypendeOpplysninger.values.flatMap { it.entries }.map {
+            val sporsmalstype = when(it.key) {
+                "$uke7Prefix.1" -> Sporsmalstype.MEDISINSK_OPPSUMMERING
+                "$uke7Prefix.2" -> Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID
+                "$uke7Prefix.3" -> Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN
+                "$uke17Prefix.1" -> Sporsmalstype.MEDISINSK_OPPSUMMERING
+                "$uke17Prefix.2" -> Sporsmalstype.UTFORDRINGER_MED_ARBEID
+                "$uke17Prefix.3" -> Sporsmalstype.BEHANDLING_OG_FREMTIDIG_ARBEID
+                "$uke17Prefix.4" -> Sporsmalstype.UAVKLARTE_FORHOLD
+                "$uke39Prefix.1" -> Sporsmalstype.MEDISINSK_OPPSUMMERING
+                "$uke39Prefix.2" -> Sporsmalstype.UTFORDRINGER_MED_ARBEID
+                "$uke39Prefix.3" -> Sporsmalstype.FORVENTET_HELSETILSTAND_UTVIKLING
+                "$uke39Prefix.4" -> Sporsmalstype.MEDISINSKE_HENSYN
+                else -> throw IllegalArgumentException("Ukjent utdypende sporsmalstype: ${it.key} for sykmelding $sykmeldingId")
             }
+            UtdypendeSporsmal(
+                svar = it.value.svar,
+                type = sporsmalstype,
+                sporsmal = it.value.sporsmal,
+            )
         }
+
+        return sporsmal
     }
 
     private fun toEgenmeldtSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
