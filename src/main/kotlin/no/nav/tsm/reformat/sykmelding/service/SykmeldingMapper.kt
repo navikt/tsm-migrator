@@ -1,5 +1,6 @@
 package no.nav.tsm.reformat.sykmelding.service
 
+import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.eiFellesformat.XMLMottakenhetBlokk
 import no.nav.helse.msgHead.*
 import no.nav.helse.sm2013.Address
@@ -334,17 +335,47 @@ class SykmeldingMapper {
         return toOrganisasjon(receiver.organisation)
     }
 
+    fun extractHelseOpplysningerArbeidsuforhet(
+        fellesformat: XMLEIFellesformat
+    ): HelseOpplysningerArbeidsuforhet {
+
+        val helseOpplysningerArbeidsuforhet =
+            tryGetHelseOpplysningerArbeidsuforhet(fellesformat.get<XMLMsgHead>())
+        requireNotNull(helseOpplysningerArbeidsuforhet) {
+            RuntimeException("Chould not find HelseOpplysningerArbeidsuforhet in message")
+        }
+        return helseOpplysningerArbeidsuforhet
+    }
+
+    fun tryGetHelseOpplysningerArbeidsuforhet(
+        XMLMsgHead: XMLMsgHead
+    ): HelseOpplysningerArbeidsuforhet? {
+        XMLMsgHead.document.forEach {
+            val helseOpplysningerArbeidsuforhet = tryGetHelseOpplysningerArbeidsuforhet(it)
+            if (helseOpplysningerArbeidsuforhet != null) {
+                return helseOpplysningerArbeidsuforhet
+            }
+        }
+        return null
+    }
+
+    fun tryGetHelseOpplysningerArbeidsuforhet(document: XMLDocument): HelseOpplysningerArbeidsuforhet? {
+        document.refDoc.content.any.forEach {
+            if (it is HelseOpplysningerArbeidsuforhet) {
+                return it as HelseOpplysningerArbeidsuforhet
+            } else if (it is XMLMsgHead) {
+                return tryGetHelseOpplysningerArbeidsuforhet(it)
+            }
+        }
+        return null
+    }
     private fun fromReceivedSykmeldignAndFellesformat(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
         requireNotNull(receivedSykmelding.fellesformat)
         val unmashalledSykmelding = xmlStuff.unmarshal(receivedSykmelding.fellesformat)
         val msgHead = unmashalledSykmelding.get<XMLMsgHead>()
         val mottakenhetBlokk = unmashalledSykmelding.get<XMLMottakenhetBlokk>()
 
-        val helseOpplysningerArbeidsuforhet = msgHead.document.flatMap { it.refDoc.content.any }.filter { it is HelseOpplysningerArbeidsuforhet }.filterIsInstance<HelseOpplysningerArbeidsuforhet>()
-        if(helseOpplysningerArbeidsuforhet.size > 1) {
-            throw IllegalStateException("Forventet kun en HelseOpplysningerArbeidsuforhet for ${receivedSykmelding.sykmelding.id}")
-        }
-        val xmlSykmelding = helseOpplysningerArbeidsuforhet.single()
+        val xmlSykmelding = extractHelseOpplysningerArbeidsuforhet(unmashalledSykmelding)
         val sykmeldingPasient = toSykmeldingPasient(xmlSykmelding.pasient)
         val sykmelder = toSignerendeBehandler(receivedSykmelding)
         val behandler = Behandler(
