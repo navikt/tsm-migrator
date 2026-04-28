@@ -52,9 +52,9 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             } catch (e: CancellationException) {
                 log.info("Consumer cancelled")
             } catch (ex: Exception) {
-                log.error("Error processing messages from kafka delaying 60 seconds to tray again", ex)
+                log.error("Error processing messages from kafka delaying 60 seconds to tray again")
                 kafkaConsumer.unsubscribe()
-                delay(60_000)
+                delay(60.seconds)
             }
         }
     }
@@ -81,9 +81,15 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id}, for p: ${record.partition()}, o: ${record.offset()}", mappingException)
                 secureLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
                 throw mappingException
+            } catch (digitalMappingException: DigitalSykmeldingMapperException) {
+                log.error("Error mapping sykmelding ${digitalMappingException.sykmelding.id}, ${digitalMappingException.message}")
+                secureLog.error("Error in mapping, sykmelding:  ${objectMapper.writeValueAsString(digitalMappingException.sykmelding)}")
 
-            } catch (ex: Exception) {
-                throw ex
+                if(cluster == "dev-gcp") {
+                    log.warn("skipping record in dev")
+                } else {
+                    throw digitalMappingException
+                }
             }
         }
     }

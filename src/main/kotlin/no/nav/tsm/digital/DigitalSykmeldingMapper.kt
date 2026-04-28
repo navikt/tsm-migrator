@@ -21,6 +21,7 @@ import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.NavnType
 import no.nav.helse.sm2013.TeleCom
 import no.nav.helse.sm2013.URL
+import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.OldTilbakedatertMerknad
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
 import no.nav.tsm.smregister.models.Adresse
@@ -93,6 +94,9 @@ import java.util.stream.Collectors
 
 private val log = LoggerFactory.getLogger("no.nav.tsm.digital.DigitalSykmeldingMapper")
 private val xmlStuff = XmlStuff()
+
+class DigitalSykmeldingMapperException(val sykmelding: DigitalSykmelding, message: String) : Exception(message)
+
 fun SykmeldingRecord.toReceivedSykmelding(aktorId: String): ReceivedSykmelding {
     val fromSykmelding = sykmelding
     val sykmelding: ReceivedSykmelding = when (fromSykmelding) {
@@ -195,6 +199,7 @@ fun fromDigital(
     val behandlerFnr = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.FNR }?.id
     if (behandlerFnr == null) {
         log.warn("behandler fnr is null for sykmelding id ${sykmelding.id}, with type ${metadata.type}, from ${sykmelding.metadata.avsenderSystem.navn}")
+        throw DigitalSykmeldingMapperException(sykmelding = sykmelding,"Behandler fnr is null for sykmelding id ${sykmelding.id}")
     }
     val perioder = sykmelding.aktivitet.map { it.toPeriode() }
     val receivedSykmelding = ReceivedSykmelding(
