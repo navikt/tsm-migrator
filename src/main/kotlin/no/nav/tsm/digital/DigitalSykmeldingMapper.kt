@@ -191,6 +191,10 @@ fun fromDigital(
     validation: ValidationResult,
     aktorId: String,
 ): ReceivedSykmelding {
+    val behandlerFnr = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.FNR }?.id
+    if(behandlerFnr == null) {
+        log.warn("behandler fnr is null for sykmelding id ${sykmelding.id}, with type ${metadata.type}, from ${sykmelding.metadata.avsenderSystem.navn}")
+    }
     val perioder = sykmelding.aktivitet.map { it.toPeriode() }
     val receivedSykmelding = ReceivedSykmelding(
         sykmelding = SykmeldingLegacy(
@@ -229,7 +233,7 @@ fun fromDigital(
                 mellomnavn = sykmelding.behandler.navn.mellomnavn,
                 etternavn = sykmelding.behandler.navn.etternavn,
                 aktoerId = "",
-                fnr = sykmelding.behandler.ids.first { it.type == PersonIdType.FNR }.id,
+                fnr = behandlerFnr ?: "",
                 hpr = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HPR }?.id,
                 her = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HER }?.id,
                 Adresse(
