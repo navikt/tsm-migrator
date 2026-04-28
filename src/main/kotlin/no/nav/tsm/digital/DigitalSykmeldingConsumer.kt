@@ -1,5 +1,10 @@
 package no.nav.tsm.digital
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -39,11 +44,17 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                                 private val cluster: String,
     ) {
 
+    private val objectMapper: ObjectMapper =
+        jacksonObjectMapper().apply {
+            registerModule(JavaTimeModule())
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
+            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+        }
+
     companion object {
         private val log = LoggerFactory.getLogger(DigitalSykmeldingConsumer::class.java)
     }
-
-    private val objectMapper = jacksonObjectMapper()
 
     suspend fun start() = coroutineScope {
         while (isActive) {
@@ -52,9 +63,9 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             } catch (e: CancellationException) {
                 log.info("Consumer cancelled")
             } catch (ex: Exception) {
-                log.error("Error processing messages from kafka delaying 60 seconds to tray again")
+                log.error("Error processing messages from kafka delaying 60 seconds to tray again", ex)
                 kafkaConsumer.unsubscribe()
-                delay(60.seconds)
+                delay(60_000)
             }
         }
     }
@@ -84,7 +95,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             } catch (digitalMappingException: DigitalSykmeldingMapperException) {
                 log.error("Error mapping sykmelding ${digitalMappingException.sykmelding.id}, ${digitalMappingException.message}")
                 secureLog.error("Error in mapping, sykmelding:  ${objectMapper.writeValueAsString(digitalMappingException.sykmelding)}")
-
+                log.info("cluster is $cluster")
                 if(cluster == "dev-gcp") {
                     log.warn("skipping record in dev")
                 } else {
