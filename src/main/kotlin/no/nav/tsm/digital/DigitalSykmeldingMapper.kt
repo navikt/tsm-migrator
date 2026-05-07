@@ -293,7 +293,7 @@ fun fromDigital(
         legekontorHerId = null,
         rulesetVersion = null,
         legeHelsepersonellkategori = tohelsepersonellKategoriLegacy(sykmelding.sykmelder.helsepersonellKategori),
-        personNrLege = sykmelding.sykmelder.ids.first { it.type == PersonIdType.FNR }.id,
+        personNrLege = (sykmelding.sykmelder.ids union sykmelding.behandler.ids).first { it.type == PersonIdType.FNR || it.type == PersonIdType.DNR }.id,
         tlfPasient = sykmelding.pasient.kontaktinfo.firstOrNull { it.type == KontaktinfoType.TLF }?.value,
         personNrPasient = sykmelding.pasient.fnr,
         legeHprNr = sykmelding.sykmelder.ids.first { it.type == PersonIdType.HPR }.id,
