@@ -2,6 +2,7 @@ package no.nav.tsm.digital
 
 
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
+import no.nav.tsm.smregister.models.MedisinskVurdering
 import no.nav.tsm.smregister.models.SporsmalSvar
 import no.nav.tsm.smregister.models.SvarRestriksjon
 import no.nav.tsm.sykmelding.input.core.model.*
@@ -207,9 +208,9 @@ class DigitalSykmeldingMapperTest {
 
 
 private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
-    val digitalSykmelding = DigitalSykmelding(
+    val digitalSykmelding = Sykmelding.Digital(
         id = UUID.randomUUID().toString(),
-        metadata = DigitalSykmeldingMetadata(
+        metadata = SykmeldingMeta.Digital(
             mottattDato = OffsetDateTime.parse("2025-01-01T12:04:04.004Z"),
             genDate = OffsetDateTime.parse("2025-01-01T12:01:03.002Z"),
             avsenderSystem = no.nav.tsm.sykmelding.input.core.model.AvsenderSystem("syk-inn", "1")
@@ -223,7 +224,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
                 Kontaktinfo(KontaktinfoType.TLF, "12345678"),
             )
         ),
-        medisinskVurdering = DigitalMedisinskVurdering(
+        medisinskVurdering = no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering.Digital(
             hovedDiagnose = DiagnoseInfo(DiagnoseSystem.ICPC2, "R03", "diagnosetekst"),
             biDiagnoser = listOf(
                 DiagnoseInfo(DiagnoseSystem.ICPC2, "R04", "diagnosetekst2"),
@@ -237,7 +238,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
             annenFravarsgrunn = AnnenFravarsgrunn.NODVENDIG_KONTROLLUNDENRSOKELSE
         ),
         aktivitet = listOf(
-            AktivitetIkkeMulig(
+            Aktivitet.IkkeMulig(
                 medisinskArsak = MedisinskArsak(
                     "medisinsk beskrivelse",
                     arsak = listOf(MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET, MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND)
@@ -246,7 +247,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
                 fom = LocalDate.parse("2025-01-01"),
                 tom = LocalDate.parse("2025-01-31")
             ),
-            Gradert(
+            Aktivitet.Gradert(
                 grad = 50,
                 reisetilskudd = false,
                 fom = LocalDate.parse("2025-01-02"),
@@ -283,7 +284,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
             ),
             HelsepersonellKategori.LEGE
         ),
-        arbeidsgiver = EnArbeidsgiver(
+        arbeidsgiver = ArbeidsgiverInfo.En(
             navn = "Arbeidsgiver AS",
             yrkesbetegnelse = "Yrke",
             stillingsprosent = 100,
@@ -305,8 +306,8 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
         timestamp = OffsetDateTime.parse("2025-01-01T12:02:04.123Z"),
         rules = emptyList()
     )
-    val metadata = Digital("123456789")
-    return SykmeldingRecord(
+    val metadata = MessageMetadata.Digital("123456789")
+    return SykmeldingRecord.Digital(
         metadata = metadata,
         sykmelding = digitalSykmelding,
         validation = validation

@@ -1,132 +1,58 @@
 package no.nav.tsm.digital
 
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
-import no.nav.helse.msgHead.XMLCS
-import no.nav.helse.msgHead.XMLCV
-import no.nav.helse.msgHead.XMLDocument
-import no.nav.helse.msgHead.XMLHealthcareProfessional
-import no.nav.helse.msgHead.XMLIdent
-import no.nav.helse.msgHead.XMLMsgHead
-import no.nav.helse.msgHead.XMLMsgInfo
-import no.nav.helse.msgHead.XMLOrganisation
-import no.nav.helse.msgHead.XMLReceiver
-import no.nav.helse.msgHead.XMLRefDoc
-import no.nav.helse.msgHead.XMLSender
-import no.nav.helse.sm2013.Address
-import no.nav.helse.sm2013.ArsakType
-import no.nav.helse.sm2013.CS
-import no.nav.helse.sm2013.CV
-import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.helse.sm2013.Ident
-import no.nav.helse.sm2013.NavnType
-import no.nav.helse.sm2013.TeleCom
-import no.nav.helse.sm2013.URL
-import no.nav.tsm.reformat.sykmelding.service.MappingException
+import no.nav.helse.msgHead.*
+import no.nav.helse.sm2013.*
 import no.nav.tsm.reformat.sykmelding.service.OldTilbakedatertMerknad
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
+import no.nav.tsm.smregister.models.*
 import no.nav.tsm.smregister.models.Adresse
-import no.nav.tsm.smregister.models.AktivitetIkkeMuligLegacy
-import no.nav.tsm.smregister.models.AnnenFraverGrunn
-import no.nav.tsm.smregister.models.AnnenFraversArsak
-import no.nav.tsm.smregister.models.Arbeidsgiver
 import no.nav.tsm.smregister.models.ArbeidsrelatertArsak
-import no.nav.tsm.smregister.models.ArbeidsrelatertArsakTypeLegacy
 import no.nav.tsm.smregister.models.AvsenderSystem
 import no.nav.tsm.smregister.models.Behandler
-import no.nav.tsm.smregister.models.Diagnose
-import no.nav.tsm.smregister.models.GradertLegacy
-import no.nav.tsm.smregister.models.HarArbeidsgiver
-import no.nav.tsm.smregister.models.KontaktMedPasient
 import no.nav.tsm.smregister.models.MedisinskArsak
-import no.nav.tsm.smregister.models.MedisinskArsakTypeLegacy
 import no.nav.tsm.smregister.models.MedisinskVurdering
-import no.nav.tsm.smregister.models.MeldingTilNAV
-import no.nav.tsm.smregister.models.Merknad
-import no.nav.tsm.smregister.models.Periode
-import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.smregister.models.RuleInfo
 import no.nav.tsm.smregister.models.SporsmalSvar
-import no.nav.tsm.smregister.models.Status
 import no.nav.tsm.smregister.models.SvarRestriksjon
-import no.nav.tsm.smregister.models.SykmeldingLegacy
-import no.nav.tsm.smregister.models.ValidationResultLegacy
-import no.nav.tsm.sykmelding.input.core.model.ARBEIDSGIVER_TYPE
-import no.nav.tsm.sykmelding.input.core.model.Aktivitet
-import no.nav.tsm.sykmelding.input.core.model.AktivitetIkkeMulig
-import no.nav.tsm.sykmelding.input.core.model.AnnenFravarArsakType
-import no.nav.tsm.sykmelding.input.core.model.AnnenFravarsgrunn
-import no.nav.tsm.sykmelding.input.core.model.AnnenFraverArsak
-import no.nav.tsm.sykmelding.input.core.model.ArbeidsgiverInfo
-import no.nav.tsm.sykmelding.input.core.model.ArbeidsrelatertArsakType
-import no.nav.tsm.sykmelding.input.core.model.Avventende
-import no.nav.tsm.sykmelding.input.core.model.Behandlingsdager
-import no.nav.tsm.sykmelding.input.core.model.DiagnoseInfo
-import no.nav.tsm.sykmelding.input.core.model.DiagnoseSystem
-import no.nav.tsm.sykmelding.input.core.model.DigitalMedisinskVurdering
-import no.nav.tsm.sykmelding.input.core.model.DigitalSykmelding
-import no.nav.tsm.sykmelding.input.core.model.EnArbeidsgiver
-import no.nav.tsm.sykmelding.input.core.model.FlereArbeidsgivere
-import no.nav.tsm.sykmelding.input.core.model.Gradert
-import no.nav.tsm.sykmelding.input.core.model.IngenArbeidsgiver
-import no.nav.tsm.sykmelding.input.core.model.InvalidRule
-import no.nav.tsm.sykmelding.input.core.model.LegacyMedisinskVurdering
-import no.nav.tsm.sykmelding.input.core.model.MedisinskArsakType
-import no.nav.tsm.sykmelding.input.core.model.Papirsykmelding
-import no.nav.tsm.sykmelding.input.core.model.Reisetilskudd
-import no.nav.tsm.sykmelding.input.core.model.RuleType
-import no.nav.tsm.sykmelding.input.core.model.Sporsmalstype
-import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
-import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
-import no.nav.tsm.sykmelding.input.core.model.UtdypendeSporsmal
-import no.nav.tsm.sykmelding.input.core.model.UtenlandskSykmelding
-import no.nav.tsm.sykmelding.input.core.model.ValidationResult
-import no.nav.tsm.sykmelding.input.core.model.XmlSykmelding
-import no.nav.tsm.sykmelding.input.core.model.metadata.Digital
-import no.nav.tsm.sykmelding.input.core.model.metadata.HelsepersonellKategori
-import no.nav.tsm.sykmelding.input.core.model.metadata.KontaktinfoType
-import no.nav.tsm.sykmelding.input.core.model.metadata.MessageMetadata
-import no.nav.tsm.sykmelding.input.core.model.metadata.Papir
-import no.nav.tsm.sykmelding.input.core.model.metadata.PersonId
-import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
-import no.nav.tsm.sykmelding.input.core.model.metadata.Utenlandsk
+import no.nav.tsm.sykmelding.input.core.model.*
+import no.nav.tsm.sykmelding.input.core.model.metadata.*
 import org.slf4j.LoggerFactory
 import java.util.stream.Collectors
 
 private val log = LoggerFactory.getLogger("no.nav.tsm.digital.DigitalSykmeldingMapper")
 private val xmlStuff = XmlStuff()
 
-class DigitalSykmeldingMapperException(val sykmelding: DigitalSykmelding, message: String) : Exception(message)
+class DigitalSykmeldingMapperException(val sykmelding: Sykmelding.Digital, message: String) : Exception(message)
 
 fun SykmeldingRecord.toReceivedSykmelding(aktorId: String): ReceivedSykmelding {
-    val fromSykmelding = sykmelding
-    val sykmelding: ReceivedSykmelding = when (fromSykmelding) {
-        is DigitalSykmelding -> fromDigital(fromSykmelding, this.metadata as Digital, this.validation, aktorId)
-        is XmlSykmelding -> fromXml(fromSykmelding, this.metadata, this.validation, aktorId)
-        is Papirsykmelding -> fromPapir(fromSykmelding, this.metadata as Papir, this.validation)
-        is UtenlandskSykmelding -> fromUtenlandsk(fromSykmelding, this.metadata as Utenlandsk, this.validation)
+    val sykmelding: ReceivedSykmelding = when (this) {
+        is SykmeldingRecord.Digital -> fromDigital(this.sykmelding, this.metadata, this.validation, aktorId)
+        is SykmeldingRecord.Xml -> fromXml(this.sykmelding, this.metadata, this.validation, aktorId)
+        is SykmeldingRecord.Papir -> fromPapir(this.sykmelding, this.metadata, this.validation)
+        is SykmeldingRecord.Utenlandsk -> fromUtenlandsk(this.sykmelding, this.metadata, this.validation)
     }
     return sykmelding
 }
 
 fun fromUtenlandsk(
-    sykmelding: UtenlandskSykmelding,
-    metadata: Utenlandsk,
+    sykmelding: Sykmelding.Utenlandsk,
+    metadata: MessageMetadata.Utenlandsk,
     validation: ValidationResult,
 ): ReceivedSykmelding {
     TODO()
 }
 
 fun fromPapir(
-    sykmelding: Papirsykmelding,
-    metadata: Papir,
+    sykmelding: Sykmelding.Papir,
+    metadata: MessageMetadata.Papir,
     validation: ValidationResult,
 ): ReceivedSykmelding {
     TODO("Not yet implemented")
 }
 
 fun fromXml(
-    sykmelding: XmlSykmelding,
-    metadata: MessageMetadata,
+    sykmelding: Sykmelding.Xml,
+    metadata: MessageMetadata.Xml,
     validation: ValidationResult,
     aktorId: String,
 ): ReceivedSykmelding {
@@ -191,8 +117,8 @@ fun toUtdypendeOpplysninger(sporsmal: List<UtdypendeSporsmal>?) : Map<String, Ma
 }
 
 fun fromDigital(
-    sykmelding: DigitalSykmelding,
-    metadata: Digital,
+    sykmelding: Sykmelding.Digital,
+    metadata: MessageMetadata.Digital,
     validation: ValidationResult,
     aktorId: String,
 ): ReceivedSykmelding {
@@ -221,17 +147,17 @@ fun fromDigital(
             perioder = perioder,
             prognose = null,
             tiltakArbeidsplassen = when (val arbeidsgiver = sykmelding.arbeidsgiver) {
-                is IngenArbeidsgiver -> null
-                is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
-                is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
+                is ArbeidsgiverInfo.Ingen -> null
+                is ArbeidsgiverInfo.En -> arbeidsgiver.tiltakArbeidsplassen
+                is ArbeidsgiverInfo.Flere -> arbeidsgiver.tiltakArbeidsplassen
             },
             tiltakNAV = null,
             andreTiltak = null,
             meldingTilNAV = sykmelding.bistandNav?.let { MeldingTilNAV(it.bistandUmiddelbart, it.beskrivBistand) },
             meldingTilArbeidsgiver = when (val arbeidsgiver = sykmelding.arbeidsgiver) {
-                is IngenArbeidsgiver -> null
-                is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
-                is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
+                is ArbeidsgiverInfo.Ingen -> null
+                is ArbeidsgiverInfo.En -> arbeidsgiver.meldingTilArbeidsgiver
+                is ArbeidsgiverInfo.Flere -> arbeidsgiver.meldingTilArbeidsgiver
             },
             kontaktMedPasient = KontaktMedPasient(
                 sykmelding.tilbakedatering?.kontaktDato, sykmelding.tilbakedatering?.begrunnelse
@@ -272,7 +198,7 @@ fun fromDigital(
             RuleType.PENDING -> Status.OK
             RuleType.INVALID -> Status.INVALID
         },
-            ruleHits = validation.rules.filterIsInstance<InvalidRule>()
+            ruleHits = validation.rules.filterIsInstance<Rule.Invalid>()
                 .filter { it.name != TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name }.map {
                     RuleInfo(
                         ruleName = it.name,
@@ -337,21 +263,21 @@ fun tohelsepersonellKategoriLegacy(helsepersonellKategori: HelsepersonellKategor
 
 fun toArbeidsgiver(it: ArbeidsgiverInfo): Arbeidsgiver {
     return when (it) {
-        is EnArbeidsgiver -> Arbeidsgiver(
+        is ArbeidsgiverInfo.En -> Arbeidsgiver(
             harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
             navn = it.navn,
             yrkesbetegnelse = it.yrkesbetegnelse,
             stillingsprosent = it.stillingsprosent,
         )
 
-        is FlereArbeidsgivere -> Arbeidsgiver(
+        is ArbeidsgiverInfo.Flere -> Arbeidsgiver(
             harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
             navn = it.navn,
             yrkesbetegnelse = it.yrkesbetegnelse,
             stillingsprosent = it.stillingsprosent,
         )
 
-        is IngenArbeidsgiver -> Arbeidsgiver(
+        is ArbeidsgiverInfo.Ingen -> Arbeidsgiver(
             harArbeidsgiver = HarArbeidsgiver.INGEN_ARBEIDSGIVER,
             navn = null,
             yrkesbetegnelse = null,
@@ -409,7 +335,7 @@ private fun PersonId.getIdTypeAndName(): Pair<String?, String?> = when (this.typ
     PersonIdType.IKKE_OPPGITT -> null to null
 }
 
-fun mapToFellesformat(sykmelding: DigitalSykmelding, perioder: List<Periode>): XMLEIFellesformat {
+fun mapToFellesformat(sykmelding: Sykmelding.Digital, perioder: List<Periode>): XMLEIFellesformat {
     return XMLEIFellesformat().apply {
         any.add(
             XMLMsgHead().apply {
@@ -514,9 +440,9 @@ fun mapToFellesformat(sykmelding: DigitalSykmelding, perioder: List<Periode>): X
                                         utdypendeOpplysninger = null
                                         tiltak = HelseOpplysningerArbeidsuforhet.Tiltak().apply {
                                             tiltakArbeidsplassen = when (val arbeidsgiver = sykmelding.arbeidsgiver) {
-                                                is IngenArbeidsgiver -> null
-                                                is EnArbeidsgiver -> arbeidsgiver.tiltakArbeidsplassen
-                                                is FlereArbeidsgivere -> arbeidsgiver.tiltakArbeidsplassen
+                                                is ArbeidsgiverInfo.Ingen -> null
+                                                is ArbeidsgiverInfo.En -> arbeidsgiver.tiltakArbeidsplassen
+                                                is ArbeidsgiverInfo.Flere -> arbeidsgiver.tiltakArbeidsplassen
                                             }
                                             tiltakNAV = null
                                             andreTiltak = null
@@ -528,9 +454,9 @@ fun mapToFellesformat(sykmelding: DigitalSykmelding, perioder: List<Periode>): X
                                                     }
                                             }
                                         meldingTilArbeidsgiver = when (val arbeidsgiver = sykmelding.arbeidsgiver) {
-                                            is IngenArbeidsgiver -> null
-                                            is EnArbeidsgiver -> arbeidsgiver.meldingTilArbeidsgiver
-                                            is FlereArbeidsgivere -> arbeidsgiver.meldingTilArbeidsgiver
+                                            is ArbeidsgiverInfo.Ingen -> null
+                                            is ArbeidsgiverInfo.En -> arbeidsgiver.meldingTilArbeidsgiver
+                                            is ArbeidsgiverInfo.Flere -> arbeidsgiver.meldingTilArbeidsgiver
                                         }
                                         kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
                                                 kontaktDato = sykmelding.tilbakedatering?.kontaktDato
@@ -653,17 +579,10 @@ fun tilHelseOpplysningerArbeidsuforhetPeriode(
     isReisetilskudd = periode.reisetilskudd
 }
 
-fun no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering.toAnnenFraverArsak(): AnnenFraversArsak? {
-    return when (this) {
-        is LegacyMedisinskVurdering -> this.annenFraversArsak.toAnnenFraversArsak()
-        is DigitalMedisinskVurdering -> this.annenFravarsgrunn.toAnnenFraversArsak()
-    }
-}
-
 fun tilMedisinskVurdering(
-    medisinskVurdering: no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering,
+    medisinskVurdering: no.nav.tsm.sykmelding.input.core.model.MedisinskVurdering.Digital,
 ): HelseOpplysningerArbeidsuforhet.MedisinskVurdering {
-    val annenFraverArsak = medisinskVurdering.toAnnenFraverArsak()
+    val annenFraverArsak = medisinskVurdering.annenFravarsgrunn?.toAnnenFraversArsak()
     if (medisinskVurdering.hovedDiagnose == null && annenFraverArsak == null) {
         log.warn("Sykmelding mangler hoveddiagnose og annenFraversArsak, avbryter..")
         throw IllegalStateException("Sykmelding mangler hoveddiagnose")
@@ -738,11 +657,11 @@ fun tilArbeidsgiver(
             v = "1"
         }
     }
-    if (arbeidsgiver is EnArbeidsgiver) {
+    if (arbeidsgiver is ArbeidsgiverInfo.En) {
         navnArbeidsgiver = arbeidsgiver.navn
         yrkesbetegnelse = arbeidsgiver.yrkesbetegnelse
         stillingsprosent = arbeidsgiver.stillingsprosent
-    } else if (arbeidsgiver is FlereArbeidsgivere) {
+    } else if (arbeidsgiver is ArbeidsgiverInfo.Flere) {
         navnArbeidsgiver = arbeidsgiver.navn
         yrkesbetegnelse = arbeidsgiver.yrkesbetegnelse
         stillingsprosent = arbeidsgiver.stillingsprosent
@@ -783,7 +702,7 @@ private fun TilbakedatertMerknad.toOldTilbakedateringMerknad(): OldTilbakedatert
 private fun Aktivitet.toPeriode(): Periode {
     return Periode(
         fom = fom, tom = tom, aktivitetIkkeMulig = when (this) {
-        is AktivitetIkkeMulig -> AktivitetIkkeMuligLegacy(medisinskArsak = this.medisinskArsak?.let { medisinskArsak ->
+        is Aktivitet.IkkeMulig -> AktivitetIkkeMuligLegacy(medisinskArsak = this.medisinskArsak?.let { medisinskArsak ->
             MedisinskArsak(
                 medisinskArsak.beskrivelse, medisinskArsak.arsak.map { it.toMedisinskArsakType() })
         }, arbeidsrelatertArsak = this.arbeidsrelatertArsak?.let { arbeidsrelatertArsak ->
@@ -793,16 +712,16 @@ private fun Aktivitet.toPeriode(): Periode {
 
         else -> null
     }, avventendeInnspillTilArbeidsgiver = when (this) {
-        is Avventende -> innspillTilArbeidsgiver
+        is Aktivitet.Avventende -> innspillTilArbeidsgiver
         else -> null
     }, behandlingsdager = when (this) {
-        is Behandlingsdager -> this.antallBehandlingsdager
+        is Aktivitet.Behandlingsdager -> this.antallBehandlingsdager
         else -> null
     }, gradert = when (this) {
-        is Gradert -> GradertLegacy(this.reisetilskudd, this.grad)
+        is Aktivitet.Gradert -> GradertLegacy(this.reisetilskudd, this.grad)
         else -> null
     }, reisetilskudd = when (this) {
-        is Reisetilskudd -> true
+        is Aktivitet.Reisetilskudd -> true
         else -> false
     })
 }
