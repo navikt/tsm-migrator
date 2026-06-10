@@ -61,6 +61,7 @@ fun parseHelsepersonellKategori(v: String?): HelsepersonellKategori {
                 "AA" -> HelsepersonellKategori.AMBULANSEARBEIDER
                 "XX" ->  HelsepersonellKategori.USPESIFISERT
                 "HS" -> HelsepersonellKategori.UGYLDIG
+                "AT" -> HelsepersonellKategori.UGYLDIG
                 "token" -> HelsepersonellKategori.UGYLDIG
                 null -> HelsepersonellKategori.IKKE_OPPGITT
                 else -> throw IllegalArgumentException("Ukjent helsepersonellkategori: $v")
