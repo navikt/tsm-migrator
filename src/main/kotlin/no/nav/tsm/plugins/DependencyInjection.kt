@@ -144,8 +144,8 @@ val digitalSykmeldingConsumer = module {
             kafkaProducerManuellTIlbakedatering = producerManuellTilbakedatring,
             tsmSykmeldingerTopic = env.tsmSykmeldingTopic,
             okSykmeldingTopic = env.okSykmeldingTopic,
-            manuellBehanldingTopic = env.manuellTilbakedateringTopic,
-
+            manuellTilbakedateringTopic = env.manuellTilbakedateringTopic,
+            manuellSykmeldingTopic = env.manuellSykmeldingTopic,
             cluster = env.cluster,
             tsmPdlClient = get()
         )

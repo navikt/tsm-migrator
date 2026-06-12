@@ -1,6 +1,5 @@
 package no.nav.tsm.digital
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -14,6 +13,7 @@ import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.ValidationResultLegacy
+import no.nav.tsm.sykmelding.input.core.model.Aktivitetstype
 import no.nav.tsm.sykmelding.input.core.model.RuleType
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
@@ -34,14 +34,16 @@ data class ManuellOppgave(
     val validationResult: ValidationResultLegacy,
 )
 
-class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, SykmeldingRecord>,
-                                private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
-                                private val kafkaProducerManuellTIlbakedatering: KafkaProducer<String, ManuellOppgave>,
-                                private val tsmPdlClient: TsmPdlClient,
-                                private val tsmSykmeldingerTopic: String,
-                                private val okSykmeldingTopic: String,
-                                private val manuellBehanldingTopic: String,
-                                private val cluster: String,
+class DigitalSykmeldingConsumer(
+    private val kafkaConsumer: KafkaConsumer<String, SykmeldingRecord>,
+    private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
+    private val kafkaProducerManuellTIlbakedatering: KafkaProducer<String, ManuellOppgave>,
+    private val tsmPdlClient: TsmPdlClient,
+    private val tsmSykmeldingerTopic: String,
+    private val okSykmeldingTopic: String,
+    private val manuellTilbakedateringTopic: String,
+    private val cluster: String,
+    private val manuellSykmeldingTopic: String,
     ) {
 
     private val objectMapper: ObjectMapper =
@@ -121,7 +123,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             if (isManualVurdering(sykmeldingRecord)) {
                 log.info("Digital sykmelding is sendt to manuell behandling $sykmeldingId")
                 val producerRecord = ProducerRecord(
-                    manuellBehanldingTopic,
+                    manuellTilbakedateringTopic,
                     null,
                     sykmeldingRecord.sykmelding.id,
                     ManuellOppgave(
@@ -133,8 +135,16 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                 kafkaProducerManuellTIlbakedatering.send(producerRecord).get()
             } else {
                 log.info("Digital sykmelding is sendt to old arc, sykmeldingId: $sykmeldingId")
+                val isBehandlingsdager = sykmeldingRecord.sykmelding.aktivitet.any { it.type == Aktivitetstype.BEHANDLINGSDAGER }
+                val topic = if(isBehandlingsdager) {
+                    manuellSykmeldingTopic
+                } else {
+                    okSykmeldingTopic
+                }
+                log.info("Digital sykmelding is sendt to old arc, sykmeldingId: $sykmeldingId, topic: $topic")
+
                 val producerRecord = ProducerRecord(
-                    okSykmeldingTopic,
+                    topic,
                     null,
                     sykmeldingRecord.sykmelding.id,
                     receivedSykmelding,
