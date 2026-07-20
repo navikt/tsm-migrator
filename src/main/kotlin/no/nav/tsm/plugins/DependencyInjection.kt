@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.engine.apache5.Apache5
+import io.ktor.client.engine.apache5.Apache5EngineConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -54,7 +54,7 @@ fun Application.environmentModule() = module {
 val tsmPdlModule = module {
     single {
         val env = get<Environment>()
-        val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+        val config: HttpClientConfig<Apache5EngineConfig>.() -> Unit = {
             install(ContentNegotiation) {
                 jackson {
                     registerKotlinModule()
@@ -62,7 +62,7 @@ val tsmPdlModule = module {
                 }
             }
         }
-        val httpClient = HttpClient(Apache, config)
+        val httpClient = HttpClient(Apache5, config)
         val tsmPdlScope = "api://${env.cluster}.tsm.tsm-pdl-cache/.default"
         val texasClient = TexasClient(
             tokenEndpoint = env.texasTokenEndpoint,

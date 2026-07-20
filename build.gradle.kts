@@ -1,23 +1,23 @@
 
-val kotlin_version="2.0.20"
-val logback_version= "1.5.20"
-val koin_version="4.0.0"
+val kotlin_version="2.4.10"
+val logback_version= "1.5.34"
+val koin_version="4.1.1"
 val prometheus_version="0.16.0"
 val logback_encoder_version="8.0"
 val kafka_version= "3.9.1"
-val jackson_version= "2.20.2"
+val jackson_version= "2.22.1"
 val opentelemetryVersion = "2.8.0"
 val mockkVersion = "1.13.12"
 val syfoXmlCodegenVersion = "2.0.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val javaTimeAdapterVersion = "1.1.3"
-val sykmeldingInputVersion = "26"
+val sykmeldingInputVersion = "27"
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-    id("io.ktor.plugin") version "2.3.12"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.4.10"
+    id("io.ktor.plugin") version "3.5.1"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10"
 }
 
 group = "no.nav.tsm"
@@ -46,7 +46,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-jackson-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-client-content-negotiation")
-    implementation("io.ktor:ktor-client-apache")
+    implementation("io.ktor:ktor-client-apache5")
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
@@ -67,7 +67,7 @@ dependencies {
     implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
     implementation("com.migesok", "jaxb-java-time-adapters", javaTimeAdapterVersion)
     implementation("no.nav.tsm.sykmelding", "input", sykmeldingInputVersion)
-    testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
