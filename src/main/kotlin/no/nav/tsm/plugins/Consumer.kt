@@ -14,7 +14,7 @@ fun Application.configureConsumer(sykmeldingConsumer: SykmeldingConsumer,
     val sykmeldingConsumerJob = launch(Dispatchers.IO) { sykmeldingConsumer.start() }
     val sykmeldingReformatJob = launch(Dispatchers.IO) { sykmeldingReformatService.start() }
     val digitalSykmeldingConsumerJob = launch(Dispatchers.IO) { digitalSykmeldingConsumer.start() }
-    monitor.subscribe(ApplicationStopping) {
+    environment.monitor.subscribe(ApplicationStopping) {
         sykmeldingReformatJob.cancel()
         sykmeldingConsumerJob.cancel()
         digitalSykmeldingConsumerJob.cancel()
