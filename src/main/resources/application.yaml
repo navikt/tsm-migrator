@@ -5,6 +5,13 @@ ktor:
       - no.nav.tsm.ApplicationKt.module
   deployment:
     port: 8080
+    # Kafka consumers block in poll(10s), which coroutine cancellation cannot interrupt
+    # until the poll returns. Ktor 3's default shutdownTimeout of 5000ms is therefore too
+    # low and causes "Failed to destroy application instance" TimeoutCancellationExceptions
+    # on every shutdown. Give teardown enough time to finish (well within Nais' default
+    # 30s terminationGracePeriodSeconds).
+    shutdownGracePeriod: 2000
+    shutdownTimeout: 20000
   kafka:
     config:
       bootstrap.servers: $KAFKA_BROKERS
