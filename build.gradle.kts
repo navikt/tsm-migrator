@@ -1,6 +1,5 @@
 val kotlin_version = "2.4.10"
 val logback_version = "1.5.34"
-val koin_version = "4.1.1"
 val prometheus_version = "0.16.0"
 val logback_encoder_version = "8.0"
 val kafka_version = "3.9.1"
@@ -33,18 +32,18 @@ dependencies {
     implementation(ktorLibs.server.core)
     implementation(ktorLibs.server.config.yaml)
     implementation(ktorLibs.server.contentNegotiation)
+    implementation(ktorLibs.server.di)
     implementation(ktorLibs.serialization.jackson)
     implementation(ktorLibs.serialization.kotlinx.json)
     implementation(ktorLibs.client.contentNegotiation)
     implementation(ktorLibs.client.apache5)
     implementation(ktorLibs.server.netty)
+    implementation(tsmKtorLibs.core)
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
     implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
-    implementation("io.insert-koin:koin-ktor:$koin_version")
-    implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
     implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
     implementation("io.prometheus:simpleclient_common:$prometheus_version")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")

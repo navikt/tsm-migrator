@@ -8,6 +8,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.tsm.digital.uke17Prefix
 import no.nav.tsm.digital.uke39Prefix
 import no.nav.tsm.digital.uke7Prefix
+import no.nav.tsm.ktor.logger
 import no.nav.tsm.reformat.sykmelding.model.metadata.*
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
 import no.nav.tsm.reformat.sykmelding.util.get
@@ -25,7 +26,6 @@ import no.nav.tsm.sykmelding.input.core.model.SporsmalSvar
 import no.nav.tsm.sykmelding.input.core.model.UtenlandskInfo
 import no.nav.tsm.sykmelding.input.core.model.metadata.*
 import no.nav.tsm.sykmelding.input.core.model.metadata.Adresse
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -50,9 +50,7 @@ class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception
         get() = exception.message
 }
 class SykmeldingMapper {
-    companion object {
-        private val log = LoggerFactory.getLogger(SykmeldingMapper::class.java)
-    }
+    private val log = logger()
     private val xmlStuff = XmlStuff()
 
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {

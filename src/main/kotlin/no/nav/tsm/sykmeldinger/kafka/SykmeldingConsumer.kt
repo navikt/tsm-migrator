@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import no.nav.tsm.ktor.logger
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -20,11 +21,7 @@ class SykmeldingConsumer(
     manuellBehandlingSykmeldingTopic: String,
     avvistSykmeldingTopic: String
 ) {
-
-    companion object {
-        private val logger = org.slf4j.LoggerFactory.getLogger(SykmeldingConsumer::class.java)
-    }
-
+    private val logger = logger()
     private val sykmeldingTopics = listOf(okSykmeldingTopic, manuellBehandlingSykmeldingTopic, avvistSykmeldingTopic)
 
     @WithSpan

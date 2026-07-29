@@ -1,6 +1,5 @@
 package no.nav.tsm.digital
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -9,9 +8,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import no.nav.syfo.pdl.TsmPdlClient
+import no.nav.tsm.ktor.logger
+import no.nav.tsm.ktor.teamLogger
+import no.nav.tsm.pdl.TsmPdlClient
 import no.nav.tsm.reformat.sykmelding.service.MappingException
-import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.ValidationResultLegacy
 import no.nav.tsm.sykmelding.input.core.model.RuleType
@@ -24,7 +24,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.Headers
-import org.slf4j.LoggerFactory
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -43,7 +42,8 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                                 private val manuellBehanldingTopic: String,
                                 private val cluster: String,
     ) {
-
+    private val log = logger()
+    private val teamLog = teamLogger()
     private val objectMapper: ObjectMapper =
         jacksonObjectMapper().apply {
             registerModule(JavaTimeModule())
@@ -51,10 +51,6 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
         }
-
-    companion object {
-        private val log = LoggerFactory.getLogger(DigitalSykmeldingConsumer::class.java)
-    }
 
     suspend fun start() = coroutineScope {
         while (isActive) {
@@ -90,11 +86,11 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                 }
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id}, for p: ${record.partition()}, o: ${record.offset()}", mappingException)
-                secureLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
+                teamLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
                 throw mappingException
             } catch (digitalMappingException: DigitalSykmeldingMapperException) {
                 log.error("Error mapping sykmelding ${digitalMappingException.sykmelding.id}, ${digitalMappingException.message}")
-                secureLog.error("Error in mapping, sykmelding:  ${objectMapper.writeValueAsString(digitalMappingException.sykmelding)}")
+                teamLog.error("Error in mapping, sykmelding:  ${objectMapper.writeValueAsString(digitalMappingException.sykmelding)}")
                 log.info("cluster is $cluster")
                 if(cluster == "dev-gcp") {
                     log.warn("skipping record in dev")

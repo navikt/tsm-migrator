@@ -3,6 +3,7 @@ package no.nav.tsm.digital
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.msgHead.*
 import no.nav.helse.sm2013.*
+import no.nav.tsm.ktor.logger
 import no.nav.tsm.reformat.sykmelding.service.OldTilbakedatertMerknad
 import no.nav.tsm.reformat.sykmelding.util.XmlStuff
 import no.nav.tsm.smregister.models.*
@@ -16,10 +17,9 @@ import no.nav.tsm.smregister.models.SporsmalSvar
 import no.nav.tsm.smregister.models.SvarRestriksjon
 import no.nav.tsm.sykmelding.input.core.model.*
 import no.nav.tsm.sykmelding.input.core.model.metadata.*
-import org.slf4j.LoggerFactory
 import java.util.stream.Collectors
 
-private val log = LoggerFactory.getLogger("no.nav.tsm.digital.DigitalSykmeldingMapper")
+private val log = logger()
 private val xmlStuff = XmlStuff()
 
 class DigitalSykmeldingMapperException(val sykmelding: Sykmelding.Digital, message: String) : Exception(message)

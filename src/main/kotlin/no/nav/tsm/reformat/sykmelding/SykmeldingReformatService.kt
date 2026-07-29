@@ -7,9 +7,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
+import no.nav.tsm.ktor.logger
+import no.nav.tsm.ktor.teamLogger
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
-import no.nav.tsm.reformat.sykmelding.util.secureLog
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingType
@@ -18,7 +19,6 @@ import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_APP
 import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_NAMESPACE
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -38,9 +38,8 @@ class SykmeldingReformatService(
     private val inputTopic: String,
     private val cluster: String,
 ) {
-    companion object {
-        private val log = LoggerFactory.getLogger(SykmeldingReformatService::class.java)
-    }
+    private val log = logger()
+    private val teamLog = teamLogger()
 
     suspend fun start() = coroutineScope {
         kafkaConsumer.subscribe(listOf(inputTopic))
@@ -85,7 +84,7 @@ class SykmeldingReformatService(
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id} for p: ${record.partition()} at offset: ${record.offset()}", mappingException)
 
                 if (cluster != "dev-gcp") {
-                    secureLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
+                    teamLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
                     throw mappingException
                 }
             } catch (ex: Exception) {

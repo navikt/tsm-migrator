@@ -1,6 +1,9 @@
 package no.nav.tsm.reformat.sykmelding.util
 
+import no.nav.tsm.ktor.teamLogger
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
+
+private val teamLog = teamLogger()
 
 val lookup1: IntArray = intArrayOf(3, 7, 6, 1, 8, 9, 4, 5, 2, 0)
 val lookup2: IntArray = intArrayOf(5, 4, 3, 2, 7, 6, 5, 4, 3, 2)
@@ -40,6 +43,6 @@ fun getIdentType(ident: String): PersonIdType {
             return PersonIdType.FNR
         }
     }
-    secureLog.error("incorrect person ident: $ident")
+    teamLog.error("incorrect person ident: $ident")
     return PersonIdType.UGYLDIG
 }
