@@ -4,7 +4,7 @@ on:
     branches:
       - '**'
     paths:
-      - 'nais/network-policy-dev.yaml'
+      - '.nais/network-policy-dev.yaml'
       - '.github/workflows/networkpolicy-dev.yaml'
 
 jobs:
@@ -21,4 +21,4 @@ jobs:
         uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
-          RESOURCE: nais/network-policy-dev.yaml
+          RESOURCE: .nais/network-policy-dev.yaml
