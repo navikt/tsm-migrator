@@ -1,11 +1,10 @@
-
-val kotlin_version="2.4.10"
-val logback_version= "1.5.34"
-val koin_version="4.1.1"
-val prometheus_version="0.16.0"
-val logback_encoder_version="8.0"
-val kafka_version= "3.9.1"
-val jackson_version= "2.22.1"
+val kotlin_version = "2.4.10"
+val logback_version = "1.5.34"
+val koin_version = "4.1.1"
+val prometheus_version = "0.16.0"
+val logback_encoder_version = "8.0"
+val kafka_version = "3.9.1"
+val jackson_version = "2.22.1"
 val opentelemetryVersion = "2.8.0"
 val mockkVersion = "1.13.12"
 val syfoXmlCodegenVersion = "2.0.1"
@@ -16,7 +15,7 @@ val sykmeldingInputVersion = "27"
 
 plugins {
     kotlin("jvm") version "2.4.10"
-    id("io.ktor.plugin") version "3.5.1"
+    alias(ktorLibs.plugins.ktor)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10"
 }
 
@@ -30,25 +29,16 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-
-repositories {
-    mavenCentral()
-    maven(url = "https://packages.confluent.io/maven/")
-    maven {
-        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
-    }
-}
-
 dependencies {
-    implementation("io.ktor:ktor-server-core-jvm")
-    implementation("io.ktor:ktor-server-config-yaml")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm")
-    implementation("io.ktor:ktor-serialization-jackson-jvm")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
-    implementation("io.ktor:ktor-client-content-negotiation")
-    implementation("io.ktor:ktor-client-apache5")
+    implementation(ktorLibs.server.core)
+    implementation(ktorLibs.server.config.yaml)
+    implementation(ktorLibs.server.contentNegotiation)
+    implementation(ktorLibs.serialization.jackson)
+    implementation(ktorLibs.serialization.kotlinx.json)
+    implementation(ktorLibs.client.contentNegotiation)
+    implementation(ktorLibs.client.apache5)
+    implementation(ktorLibs.server.netty)
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
-    implementation("io.ktor:ktor-server-netty-jvm")
     implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
@@ -65,17 +55,19 @@ dependencies {
     implementation("no.nav.helse.xml:kith-apprec:$syfoXmlCodegenVersion")
     implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
     implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
-    implementation("com.migesok", "jaxb-java-time-adapters", javaTimeAdapterVersion)
-    implementation("no.nav.tsm.sykmelding", "input", sykmeldingInputVersion)
-    testImplementation("io.ktor:ktor-server-test-host")
+    implementation("com.migesok:jaxb-java-time-adapters:$javaTimeAdapterVersion")
+    implementation("no.nav.tsm.sykmelding:input:$sykmeldingInputVersion")
+    testImplementation(ktorLibs.server.testHost)
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
 tasks {
     shadowJar {
-        mergeServiceFiles {
-
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        mergeServiceFiles {}
+        from("src/main/resources/logback.xml") {
+            into("/")
         }
     }
 }
