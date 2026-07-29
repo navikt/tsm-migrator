@@ -11,7 +11,6 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
-  image: {{ image }}
   replicas:
     min: 1
     max: 10
