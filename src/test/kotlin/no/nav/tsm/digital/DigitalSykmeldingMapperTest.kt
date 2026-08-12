@@ -2,7 +2,6 @@ package no.nav.tsm.digital
 
 
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
-import no.nav.tsm.smregister.models.MedisinskVurdering
 import no.nav.tsm.smregister.models.SporsmalSvar
 import no.nav.tsm.smregister.models.SvarRestriksjon
 import no.nav.tsm.sykmelding.input.core.model.*

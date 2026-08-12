@@ -1,26 +1,17 @@
 package no.nav.tsm.sykmeldinger.kafka.util
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.apache.kafka.common.serialization.Serializer
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
 class JacksonKafkaSerializer<T: Any> : Serializer<T> {
-    private val objectMapper: ObjectMapper = ObjectMapper()
-
-    override fun configure(configs: MutableMap<String, *>, isKey: Boolean) {
-        objectMapper.apply {
-            registerKotlinModule()
-            registerModule(JavaTimeModule())
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        }
-    }
+    private val objectMapper =
+        jacksonMapperBuilder()
+            .enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+            .changeDefaultPropertyInclusion { it.withValueInclusion(JsonInclude.Include.NON_NULL) }
+            .changeDefaultPropertyInclusion { it.withContentInclusion(JsonInclude.Include.NON_NULL) }
+            .build()
 
     override fun serialize(topic: String?, data: T?): ByteArray? {
         return when (data) {

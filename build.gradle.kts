@@ -1,16 +1,13 @@
-val kotlin_version = "2.4.10"
-val logback_version = "1.5.34"
-val prometheus_version = "0.16.0"
-val logback_encoder_version = "8.0"
-val kafka_version = "3.9.1"
-val jackson_version = "2.22.1"
-val opentelemetryVersion = "2.8.0"
-val mockkVersion = "1.13.12"
-val syfoXmlCodegenVersion = "2.0.1"
-val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val jaxbApiVersion = "2.4.0-b180830.0359"
-val javaTimeAdapterVersion = "1.1.3"
-val sykmeldingInputVersion = "27"
+val kotlin = "2.4.10"
+val logback = "1.5.34"
+val logback_encoder = "9.0"
+val kafka = "3.9.1"
+val mockk = "1.13.12"
+val syfoXmlCodegen = "2.0.1"
+val jaxbRuntime = "2.4.0-b180830.0438"
+val jaxbApi = "2.4.0-b180830.0359"
+val javaTimeAdapter = "1.1.3"
+val sykmeldingInput = "29"
 
 plugins {
     kotlin("jvm") version "2.4.10"
@@ -33,32 +30,28 @@ dependencies {
     implementation(ktorLibs.server.config.yaml)
     implementation(ktorLibs.server.contentNegotiation)
     implementation(ktorLibs.server.di)
-    implementation(ktorLibs.serialization.jackson)
+    implementation(ktorLibs.serialization.jackson3)
     implementation(ktorLibs.serialization.kotlinx.json)
     implementation(ktorLibs.client.contentNegotiation)
     implementation(ktorLibs.client.apache5)
     implementation(ktorLibs.server.netty)
     implementation(tsmKtorLibs.core)
-    implementation("org.apache.kafka:kafka-clients:$kafka_version")
-    implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder_version}")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
-    implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
-    implementation("io.prometheus:simpleclient_common:$prometheus_version")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
+    implementation(tsmKtorLibs.kafka.sykmeldinger)
+    implementation("org.apache.kafka:kafka-clients:$kafka")
+    implementation("net.logstash.logback:logstash-logback-encoder:${logback_encoder}")
+    implementation("ch.qos.logback:logback-classic:$logback")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegenVersion")
-    implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegenVersion")
-    implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegenVersion")
-    implementation("no.nav.helse.xml:kith-apprec:$syfoXmlCodegenVersion")
-    implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
-    implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
-    implementation("com.migesok:jaxb-java-time-adapters:$javaTimeAdapterVersion")
-    implementation("no.nav.tsm.sykmelding:input:$sykmeldingInputVersion")
+    implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:kith-apprec:$syfoXmlCodegen")
+    implementation("javax.xml.bind:jaxb-api:$jaxbApi")
+    implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntime")
+    implementation("com.migesok:jaxb-java-time-adapters:$javaTimeAdapter")
+    implementation("no.nav.tsm.sykmelding:input:$sykmeldingInput")
     testImplementation(ktorLibs.server.testHost)
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin")
+    testImplementation("io.mockk:mockk:$mockk")
 }
 
 tasks {
