@@ -35,14 +35,14 @@ class SykmeldingReformatService(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding>,
     private val sykmeldingMapper: SykmeldingMapper,
     private val kafkaProducer: SykmeldingInputProducer,
-    private val inputTopic: String,
+    private val teamsykmeldingSykmeldingTopic: String,
     private val cluster: String,
 ) {
     private val log = logger()
     private val teamLog = teamLogger()
 
     suspend fun start() = coroutineScope {
-        kafkaConsumer.subscribe(listOf(inputTopic))
+        kafkaConsumer.subscribe(listOf(teamsykmeldingSykmeldingTopic))
         try {
             while (isActive) {
                 val records = kafkaConsumer.poll(10.seconds.toJavaDuration())

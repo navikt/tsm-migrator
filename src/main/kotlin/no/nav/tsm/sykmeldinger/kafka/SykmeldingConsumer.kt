@@ -29,21 +29,7 @@ class SykmeldingConsumer(
 
     private fun runKafkaConsumer(): suspend CoroutineScope.() -> Unit =
         {
-            logger.info("starting consumer for $sykmeldingTopics")
-
-            while (isActive) {
-                try {
-                    consumeMessages()
-                } catch (ex: CancellationException) {
-                    logger.info("Consumer cancelled")
-                } catch (ex: Exception) {
-                    logger.error("Error processing messages from kafka delaying 60 seconds to tray again")
-                    kafkaConsumer.unsubscribe()
-                    delay(60_000)
-                }
-            }
-            kafkaConsumer.unsubscribe()
-            logger.info("Consumerer is stopping")
+            logger.info("Not starting consumer for $sykmeldingTopics, its being deprecated.")
         }
 
     private suspend fun consumeMessages() = coroutineScope {
