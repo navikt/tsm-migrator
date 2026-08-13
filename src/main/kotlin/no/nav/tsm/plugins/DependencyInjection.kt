@@ -69,7 +69,7 @@ fun initSykmeldingReformatService(env: Environment): SykmeldingReformatService {
         kafkaConsumer = consumer,
         sykmeldingMapper = SykmeldingMapper(),
         kafkaProducer = producer,
-        inputTopic = env.teamsykmeldingSykmeldingTopic,
+        teamsykmeldingSykmeldingTopic = env.teamsykmeldingSykmeldingTopic,
         cluster = env.cluster
     )
 }
