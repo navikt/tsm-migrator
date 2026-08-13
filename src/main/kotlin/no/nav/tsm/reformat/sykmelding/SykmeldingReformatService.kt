@@ -9,6 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import no.nav.tsm.ktor.logger
 import no.nav.tsm.ktor.teamLogger
+import no.nav.tsm.plugins.KafkaTopics
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
@@ -30,19 +31,22 @@ val objectMapper: ObjectMapper =
         configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
     }
 
-
 class SykmeldingReformatService(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding>,
     private val sykmeldingMapper: SykmeldingMapper,
     private val kafkaProducer: SykmeldingInputProducer,
-    private val teamsykmeldingSykmeldingTopic: String,
     private val cluster: String,
 ) {
     private val log = logger()
     private val teamLog = teamLogger()
 
     suspend fun start() = coroutineScope {
-        kafkaConsumer.subscribe(listOf(teamsykmeldingSykmeldingTopic))
+        kafkaConsumer.subscribe(listOf(
+            KafkaTopics.okSykmeldingTopic,
+            KafkaTopics.avvistSykmeldingTopic,
+            KafkaTopics.manuellSykmeldingTopic
+        ))
+
         try {
             while (isActive) {
                 val records = kafkaConsumer.poll(10.seconds.toJavaDuration())

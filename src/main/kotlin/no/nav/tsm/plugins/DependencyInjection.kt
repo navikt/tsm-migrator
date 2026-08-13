@@ -18,7 +18,6 @@ import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmelding.input.producer.SykmeldingInputKafkaInputFactory
-import no.nav.tsm.sykmeldinger.kafka.SykmeldingConsumer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaDeserializer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -36,7 +35,6 @@ fun Application.configureDependencyInjection() {
         provide<Environment> { env }
         provide(TexasClient::class)
         provide(TsmPdlClient::class)
-        provide<SykmeldingConsumer> { initSykmeldingConsumer(env) }
         provide<SykmeldingReformatService> { initSykmeldingReformatService(env) }
         provide<DigitalSykmeldingConsumer> { initDigitalSykmeldingConsumer(env, resolve()) }
     }
@@ -56,7 +54,7 @@ fun initSykmeldingReformatService(env: Environment): SykmeldingReformatService {
         putAll(env.kafkaConfig)
         this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java.name
         this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-        this[ConsumerConfig.GROUP_ID_CONFIG] = "sykmelding-reformat-consumer"
+        this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding"
         this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-sykmelding-reformat-consumer"
         this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
         this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
@@ -69,7 +67,6 @@ fun initSykmeldingReformatService(env: Environment): SykmeldingReformatService {
         kafkaConsumer = consumer,
         sykmeldingMapper = SykmeldingMapper(),
         kafkaProducer = producer,
-        teamsykmeldingSykmeldingTopic = env.teamsykmeldingSykmeldingTopic,
         cluster = env.cluster
     )
 }
@@ -110,44 +107,8 @@ fun initDigitalSykmeldingConsumer(env: Environment, pdl: TsmPdlClient): DigitalS
         kafkaConsumer = consumer,
         kafkaProducer = producer,
         kafkaProducerManuellTIlbakedatering = producerManuellTilbakedatring,
-        tsmSykmeldingerTopic = env.tsmSykmeldingTopic,
-        okSykmeldingTopic = env.okSykmeldingTopic,
-        manuellBehanldingTopic = env.manuellTilbakedateringTopic,
-
         cluster = env.cluster,
         tsmPdlClient = pdl,
-    )
-}
-
-fun initSykmeldingConsumer(env: Environment): SykmeldingConsumer {
-    val consumer = KafkaConsumer(Properties().apply {
-        putAll(env.kafkaConfig)
-        this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java.name
-        this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.name
-        this[ConsumerConfig.GROUP_ID_CONFIG] = "migrator-sykmelding"
-        this[ConsumerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-ny-sykmelding-consumer"
-        this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-        this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
-        this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
-    }, StringDeserializer(), JacksonKafkaDeserializer(ReceivedSykmelding::class))
-
-    val producer = KafkaProducer<String, ReceivedSykmelding?>(Properties().apply {
-        putAll(env.kafkaConfig)
-        this[ProducerConfig.ACKS_CONFIG] = "all"
-        this[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
-        this[ProducerConfig.CLIENT_ID_CONFIG] = "${env.hostname}-migrert-sykmelding-producer"
-        this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
-        this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
-        this[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "gzip"
-    })
-
-    return SykmeldingConsumer(
-        kafkaConsumer = consumer,
-        kafkaProducer = producer,
-        okSykmeldingTopic = env.okSykmeldingTopic,
-        manuellBehandlingSykmeldingTopic = env.manuellSykmeldingTopic,
-        avvistSykmeldingTopic = env.avvistSykmeldingTopic,
-        teamsykmeldingSykmeldigerTopic = env.teamsykmeldingSykmeldingTopic,
     )
 }
 
