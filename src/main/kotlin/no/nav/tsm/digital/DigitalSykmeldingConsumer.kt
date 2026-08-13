@@ -11,6 +11,7 @@ import kotlinx.coroutines.isActive
 import no.nav.tsm.ktor.logger
 import no.nav.tsm.ktor.teamLogger
 import no.nav.tsm.pdl.TsmPdlClient
+import no.nav.tsm.plugins.KafkaTopics
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.smregister.models.ValidationResultLegacy
@@ -37,9 +38,6 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                                 private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
                                 private val kafkaProducerManuellTIlbakedatering: KafkaProducer<String, ManuellOppgave>,
                                 private val tsmPdlClient: TsmPdlClient,
-                                private val tsmSykmeldingerTopic: String,
-                                private val okSykmeldingTopic: String,
-                                private val manuellBehanldingTopic: String,
                                 private val cluster: String,
     ) {
     private val log = logger()
@@ -67,7 +65,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
     }
 
     suspend fun consumeMessages() = coroutineScope {
-        kafkaConsumer.subscribe(listOf(tsmSykmeldingerTopic))
+        kafkaConsumer.subscribe(listOf(KafkaTopics.tsmSykmeldingTopic))
         while (isActive) {
             val records = kafkaConsumer.poll(10.seconds.toJavaDuration())
             processRecords(records)
@@ -110,14 +108,14 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
         log.info("received sykmelding from source-namespace:$sourceNamespace, should sendt to namespace: teamsykmelding, sykmeldingId: $sykmeldingId")
         if (sykmeldingRecord == null) {
             log.info("tombstoning sykmelding with id: $sykmeldingId")
-            kafkaProducer.send(ProducerRecord(okSykmeldingTopic, null, sykmeldingId, null, headers)).get()
+            kafkaProducer.send(ProducerRecord(KafkaTopics.okSykmeldingTopic, null, sykmeldingId, null, headers)).get()
         } else {
             val aktorId = tsmPdlClient.getAktorId(sykmeldingRecord.sykmelding.pasient.fnr)
             val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding(aktorId)
             if (isManualVurdering(sykmeldingRecord)) {
                 log.info("Digital sykmelding is sendt to manuell behandling $sykmeldingId")
                 val producerRecord = ProducerRecord(
-                    manuellBehanldingTopic,
+                    KafkaTopics.manuellTilbakedateringTopic,
                     null,
                     sykmeldingRecord.sykmelding.id,
                     ManuellOppgave(
@@ -130,7 +128,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             } else {
                 log.info("Digital sykmelding is sendt to old arc, sykmeldingId: $sykmeldingId")
                 val producerRecord = ProducerRecord(
-                    okSykmeldingTopic,
+                    KafkaTopics.okSykmeldingTopic,
                     null,
                     sykmeldingRecord.sykmelding.id,
                     receivedSykmelding,
