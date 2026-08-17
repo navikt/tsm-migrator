@@ -213,7 +213,7 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
         metadata = SykmeldingMeta.Digital(
             mottattDato = OffsetDateTime.parse("2025-01-01T12:04:04.004Z"),
             genDate = OffsetDateTime.parse("2025-01-01T12:01:03.002Z"),
-            avsenderSystem = no.nav.tsm.sykmelding.input.core.model.AvsenderSystem("syk-inn", "1")
+            avsenderSystem = AvsenderSystem("syk-inn (HelseID)", "1")
         ),
         pasient = Pasient(
             navn = Navn("Fornavn", "Mellomnavn", "Etternavn"),

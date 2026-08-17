@@ -50,13 +50,12 @@ class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception
         get() = exception.message
 }
 class SykmeldingMapper {
-    private val log = logger()
     private val xmlStuff = XmlStuff()
 
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
         try {
             return when {
-                receivedSykmelding.sykmelding.avsenderSystem.navn == "syk-inn" -> toDigitalSykmelding(receivedSykmelding)
+                receivedSykmelding.sykmelding.avsenderSystem.navn == "syk-inn (HelseID)" -> toDigitalSykmelding(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn.contains("FHIR") -> toDigitalSykmelding(receivedSykmelding)
                 receivedSykmelding.utenlandskSykmelding != null -> toUtenlandssykmeldingMedBehandlingsutfall(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(
@@ -68,7 +67,6 @@ class SykmeldingMapper {
                 else -> emottakEnkel(receivedSykmelding)
             }
         } catch (e: Exception) {
-
             throw MappingException(receivedSykmelding, e)
         }
     }
@@ -358,7 +356,7 @@ class SykmeldingMapper {
     fun tryGetHelseOpplysningerArbeidsuforhet(document: XMLDocument): HelseOpplysningerArbeidsuforhet? {
         document.refDoc.content.any.forEach {
             if (it is HelseOpplysningerArbeidsuforhet) {
-                return it as HelseOpplysningerArbeidsuforhet
+                return it
             } else if (it is XMLMsgHead) {
                 return tryGetHelseOpplysningerArbeidsuforhet(it)
             }
