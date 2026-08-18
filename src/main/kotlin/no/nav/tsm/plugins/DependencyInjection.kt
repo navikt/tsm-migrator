@@ -13,7 +13,7 @@ import no.nav.tsm.pdl.TsmPdlClient
 import no.nav.tsm.digital.DigitalSykmeldingConsumer
 import no.nav.tsm.digital.ManuellOppgave
 import no.nav.tsm.digital.SykmeldingRecordDeserializer
-import no.nav.tsm.ktor.auth.texas.TexasClient
+import no.nav.tsm.ktor.auth.texas.Texas
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
@@ -33,7 +33,7 @@ fun Application.configureDependencyInjection() {
     dependencies {
         provide<HttpClient> { configureBaseHttpClient() }
         provide<Environment> { env }
-        provide(TexasClient::class)
+        provide(Texas::class)
         provide(TsmPdlClient::class)
         provide<SykmeldingReformatService> { initSykmeldingReformatService(env) }
         provide<DigitalSykmeldingConsumer> { initDigitalSykmeldingConsumer(env, resolve()) }

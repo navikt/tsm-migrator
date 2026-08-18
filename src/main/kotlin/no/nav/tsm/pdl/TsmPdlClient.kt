@@ -5,7 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import no.nav.tsm.ktor.auth.texas.TexasClient
+import no.nav.tsm.ktor.auth.texas.Texas
 import no.nav.tsm.ktor.auth.texas.TexasToken
 
 data class PdlPerson(
@@ -25,7 +25,7 @@ enum class IDENT_GRUPPE {
 }
 
 class TsmPdlClient(
-    val texasClient: TexasClient,
+    val texasClient: Texas,
     val httpClient: HttpClient,
 ) {
     private val tsmPdlUrl = "http://tsm-pdl-cache"
