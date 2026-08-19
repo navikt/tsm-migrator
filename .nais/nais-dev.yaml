@@ -7,29 +7,25 @@ metadata:
     team: tsm
     system: mottak
 spec:
-  observability:
-    autoInstrumentation:
-      enabled: true
-      runtime: java
   replicas:
     min: 1
     max: 1
     cpuThresholdPercentage: 90
   port: 8080
   liveness:
-    path: /internal/is_alive
-    initialDelay: 10
-    timeout: 5
-    periodSeconds: 5
-    failureThreshold: 30
+    path: /internal/health/alive
   readiness:
-    path: /internal/is_ready
-    initialDelay: 30
-    periodSeconds: 5
-    timeout: 1
+    path: /internal/health/ready
+  preStopHook:
+    http:
+      path: /internal/shutdown
   prometheus:
     enabled: true
-    path: /internal/prometheus
+    path: /internal/metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
   resources:
     limits:
       memory: 1Gi
@@ -49,4 +45,3 @@ spec:
         - application: tsm-pdl-cache
   envFrom:
     - secret: tsm-migrator-smregister-db
-

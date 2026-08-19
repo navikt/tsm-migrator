@@ -1,20 +1,37 @@
-package no.nav.tsm.digital
+package no.nav.tsm.migrator.digital
 
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.msgHead.*
 import no.nav.helse.sm2013.*
 import no.nav.tsm.ktor.logger
-import no.nav.tsm.reformat.sykmelding.service.OldTilbakedatertMerknad
-import no.nav.tsm.reformat.sykmelding.util.XmlStuff
-import no.nav.tsm.smregister.models.*
-import no.nav.tsm.smregister.models.Adresse
-import no.nav.tsm.smregister.models.ArbeidsrelatertArsak
-import no.nav.tsm.smregister.models.AvsenderSystem
-import no.nav.tsm.smregister.models.Behandler
-import no.nav.tsm.smregister.models.MedisinskArsak
-import no.nav.tsm.smregister.models.MedisinskVurdering
-import no.nav.tsm.smregister.models.SporsmalSvar
-import no.nav.tsm.smregister.models.SvarRestriksjon
+import no.nav.tsm.migrator.reformat.OldTilbakedatertMerknad
+import no.nav.tsm.migrator.reformat.util.XmlStuff
+import no.nav.tsm.migrator.legacy.Adresse
+import no.nav.tsm.migrator.legacy.AktivitetIkkeMuligLegacy
+import no.nav.tsm.migrator.legacy.AnnenFraverGrunn
+import no.nav.tsm.migrator.legacy.AnnenFraversArsak
+import no.nav.tsm.migrator.legacy.Arbeidsgiver
+import no.nav.tsm.migrator.legacy.ArbeidsrelatertArsak
+import no.nav.tsm.migrator.legacy.ArbeidsrelatertArsakTypeLegacy
+import no.nav.tsm.migrator.legacy.AvsenderSystem
+import no.nav.tsm.migrator.legacy.Behandler
+import no.nav.tsm.migrator.legacy.Diagnose
+import no.nav.tsm.migrator.legacy.GradertLegacy
+import no.nav.tsm.migrator.legacy.HarArbeidsgiver
+import no.nav.tsm.migrator.legacy.KontaktMedPasient
+import no.nav.tsm.migrator.legacy.MedisinskArsak
+import no.nav.tsm.migrator.legacy.MedisinskArsakTypeLegacy
+import no.nav.tsm.migrator.legacy.MedisinskVurdering
+import no.nav.tsm.migrator.legacy.MeldingTilNAV
+import no.nav.tsm.migrator.legacy.Merknad
+import no.nav.tsm.migrator.legacy.Periode
+import no.nav.tsm.migrator.legacy.ReceivedSykmelding
+import no.nav.tsm.migrator.legacy.RuleInfo
+import no.nav.tsm.migrator.legacy.SporsmalSvar
+import no.nav.tsm.migrator.legacy.Status
+import no.nav.tsm.migrator.legacy.SvarRestriksjon
+import no.nav.tsm.migrator.legacy.SykmeldingLegacy
+import no.nav.tsm.migrator.legacy.ValidationResultLegacy
 import no.nav.tsm.sykmelding.input.core.model.*
 import no.nav.tsm.sykmelding.input.core.model.metadata.*
 import java.util.stream.Collectors
@@ -194,10 +211,10 @@ fun fromDigital(
         tssid = null,
         validationResult = ValidationResultLegacy(
             status = when (validation.status) {
-            RuleType.OK -> Status.OK
-            RuleType.PENDING -> Status.OK
-            RuleType.INVALID -> Status.INVALID
-        },
+                RuleType.OK -> Status.OK
+                RuleType.PENDING -> Status.OK
+                RuleType.INVALID -> Status.INVALID
+            },
             ruleHits = validation.rules.filterIsInstance<Rule.Invalid>()
                 .filter { it.name != TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name }.map {
                     RuleInfo(
@@ -702,28 +719,29 @@ private fun TilbakedatertMerknad.toOldTilbakedateringMerknad(): OldTilbakedatert
 private fun Aktivitet.toPeriode(): Periode {
     return Periode(
         fom = fom, tom = tom, aktivitetIkkeMulig = when (this) {
-        is Aktivitet.IkkeMulig -> AktivitetIkkeMuligLegacy(medisinskArsak = this.medisinskArsak?.let { medisinskArsak ->
-            MedisinskArsak(
-                medisinskArsak.beskrivelse, medisinskArsak.arsak.map { it.toMedisinskArsakType() })
-        }, arbeidsrelatertArsak = this.arbeidsrelatertArsak?.let { arbeidsrelatertArsak ->
-            ArbeidsrelatertArsak(
-                arbeidsrelatertArsak.beskrivelse, arbeidsrelatertArsak.arsak.map { it.toArbeidsrelatertArsak() })
-        })
+            is Aktivitet.IkkeMulig -> AktivitetIkkeMuligLegacy(medisinskArsak = this.medisinskArsak?.let { medisinskArsak ->
+                MedisinskArsak(
+                    medisinskArsak.beskrivelse, medisinskArsak.arsak.map { it.toMedisinskArsakType() })
+            }, arbeidsrelatertArsak = this.arbeidsrelatertArsak?.let { arbeidsrelatertArsak ->
+                ArbeidsrelatertArsak(
+                    arbeidsrelatertArsak.beskrivelse, arbeidsrelatertArsak.arsak.map { it.toArbeidsrelatertArsak() })
+            })
 
-        else -> null
-    }, avventendeInnspillTilArbeidsgiver = when (this) {
-        is Aktivitet.Avventende -> innspillTilArbeidsgiver
-        else -> null
-    }, behandlingsdager = when (this) {
-        is Aktivitet.Behandlingsdager -> this.antallBehandlingsdager
-        else -> null
-    }, gradert = when (this) {
-        is Aktivitet.Gradert -> GradertLegacy(this.reisetilskudd, this.grad)
-        else -> null
-    }, reisetilskudd = when (this) {
-        is Aktivitet.Reisetilskudd -> true
-        else -> false
-    })
+            else -> null
+        }, avventendeInnspillTilArbeidsgiver = when (this) {
+            is Aktivitet.Avventende -> innspillTilArbeidsgiver
+            else -> null
+        }, behandlingsdager = when (this) {
+            is Aktivitet.Behandlingsdager -> this.antallBehandlingsdager
+            else -> null
+        }, gradert = when (this) {
+            is Aktivitet.Gradert -> GradertLegacy(this.reisetilskudd, this.grad)
+            else -> null
+        }, reisetilskudd = when (this) {
+            is Aktivitet.Reisetilskudd -> true
+            else -> false
+        }
+    )
 }
 
 private fun ArbeidsrelatertArsakType.toArbeidsrelatertArsak(): ArbeidsrelatertArsakTypeLegacy {
@@ -741,28 +759,6 @@ private fun MedisinskArsakType.toMedisinskArsakType(): MedisinskArsakTypeLegacy 
         MedisinskArsakType.ANNET -> MedisinskArsakTypeLegacy.ANNET
     }
 }
-
-private fun AnnenFraverArsak?.toAnnenFraversArsak(): AnnenFraversArsak? {
-    if (this == null) return null
-    return arsak?.let { arsaker ->
-        AnnenFraversArsak(
-            beskrivelse, arsaker.map {
-                when (it) {
-                    AnnenFravarArsakType.GODKJENT_HELSEINSTITUSJON -> AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON
-                    AnnenFravarArsakType.BEHANDLING_FORHINDRER_ARBEID -> AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID
-                    AnnenFravarArsakType.ARBEIDSRETTET_TILTAK -> AnnenFraverGrunn.ARBEIDSRETTET_TILTAK
-                    AnnenFravarArsakType.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND -> AnnenFraverGrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND
-                    AnnenFravarArsakType.NODVENDIG_KONTROLLUNDENRSOKELSE -> AnnenFraverGrunn.NODVENDIG_KONTROLLUNDENRSOKELSE
-                    AnnenFravarArsakType.SMITTEFARE -> AnnenFraverGrunn.SMITTEFARE
-                    AnnenFravarArsakType.ABORT -> AnnenFraverGrunn.ABORT
-                    AnnenFravarArsakType.UFOR_GRUNNET_BARNLOSHET -> AnnenFraverGrunn.UFOR_GRUNNET_BARNLOSHET
-                    AnnenFravarArsakType.DONOR -> AnnenFraverGrunn.DONOR
-                    AnnenFravarArsakType.BEHANDLING_STERILISERING -> AnnenFraverGrunn.BEHANDLING_STERILISERING
-                }
-            })
-    }
-}
-
 
 private fun DiagnoseInfo.toDiagnose(): Diagnose {
     return Diagnose(

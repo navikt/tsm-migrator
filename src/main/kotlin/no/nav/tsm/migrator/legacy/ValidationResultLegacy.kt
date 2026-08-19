@@ -1,4 +1,4 @@
-package no.nav.tsm.smregister.models
+package no.nav.tsm.migrator.legacy
 
 import java.time.OffsetDateTime
 

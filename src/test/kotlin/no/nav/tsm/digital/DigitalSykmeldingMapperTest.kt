@@ -1,10 +1,11 @@
 package no.nav.tsm.digital
 
 
-import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
-import no.nav.tsm.smregister.models.MedisinskVurdering
-import no.nav.tsm.smregister.models.SporsmalSvar
-import no.nav.tsm.smregister.models.SvarRestriksjon
+import no.nav.tsm.migrator.digital.toReceivedSykmelding
+import no.nav.tsm.migrator.digital.toUtdypendeOpplysninger
+import no.nav.tsm.migrator.reformat.SykmeldingMapper
+import no.nav.tsm.migrator.legacy.SporsmalSvar
+import no.nav.tsm.migrator.legacy.SvarRestriksjon
 import no.nav.tsm.sykmelding.input.core.model.*
 import no.nav.tsm.sykmelding.input.core.model.Pasient
 import no.nav.tsm.sykmelding.input.core.model.metadata.*
@@ -16,13 +17,11 @@ import kotlin.test.Test
 
 class DigitalSykmeldingMapperTest {
 
-    private val sykmeldingMapper = SykmeldingMapper()
-
     @Test
     fun testMapDigitalSykmelding() {
         val digitalSykmeldingRecord = getDigitalSykmeldingRecord()
         val receivedSykmelding = digitalSykmeldingRecord.toReceivedSykmelding("aktorId")
-        val mappedDigitalSykmeldingRecord = sykmeldingMapper.toNewSykmelding(receivedSykmelding)
+        val mappedDigitalSykmeldingRecord = SykmeldingMapper.toNewSykmelding(receivedSykmelding)
         Assert.assertEquals(digitalSykmeldingRecord, mappedDigitalSykmeldingRecord)
     }
 
@@ -57,7 +56,7 @@ class DigitalSykmeldingMapperTest {
         )
 
         Assert.assertEquals(expected, legacyUtdypendeOpplysninger)
-        val digitalUtdypendeSporsmal = SykmeldingMapper().toDigitalUtdypendeSporsmal("1", legacyUtdypendeOpplysninger)
+        val digitalUtdypendeSporsmal = SykmeldingMapper.toDigitalUtdypendeSporsmal("1", legacyUtdypendeOpplysninger)
         Assert.assertEquals(spm, digitalUtdypendeSporsmal)
 
     }
@@ -113,7 +112,7 @@ class DigitalSykmeldingMapperTest {
             ),
             uke7Map["6.3.3"]
         )
-        val digitalUtdypendeSporsmal = SykmeldingMapper().toDigitalUtdypendeSporsmal("1", result)
+        val digitalUtdypendeSporsmal = SykmeldingMapper.toDigitalUtdypendeSporsmal("1", result)
         Assert.assertEquals(spm, digitalUtdypendeSporsmal)
     }
 
@@ -138,7 +137,7 @@ class DigitalSykmeldingMapperTest {
         Assert.assertTrue(uke17Map.containsKey("6.4.3"))
         Assert.assertTrue(uke17Map.containsKey("6.4.4"))
 
-        val digitalUtdypendeSporsmal = SykmeldingMapper().toDigitalUtdypendeSporsmal("1", result)
+        val digitalUtdypendeSporsmal = SykmeldingMapper.toDigitalUtdypendeSporsmal("1", result)
         Assert.assertEquals(spm, digitalUtdypendeSporsmal)
     }
 
@@ -163,7 +162,7 @@ class DigitalSykmeldingMapperTest {
         Assert.assertTrue(uke39Map.containsKey("6.5.3"))
         Assert.assertTrue(uke39Map.containsKey("6.5.4"))
 
-        val digitalUtdypendeSporsmal = SykmeldingMapper().toDigitalUtdypendeSporsmal("1", result)
+        val digitalUtdypendeSporsmal = SykmeldingMapper.toDigitalUtdypendeSporsmal("1", result)
         Assert.assertEquals(spm, digitalUtdypendeSporsmal)
     }
 

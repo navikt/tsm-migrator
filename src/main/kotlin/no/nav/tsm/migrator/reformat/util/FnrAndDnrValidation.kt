@@ -1,4 +1,4 @@
-package no.nav.tsm.reformat.sykmelding.util
+package no.nav.tsm.migrator.reformat.util
 
 import no.nav.tsm.ktor.teamLogger
 import no.nav.tsm.sykmelding.input.core.model.metadata.PersonIdType
