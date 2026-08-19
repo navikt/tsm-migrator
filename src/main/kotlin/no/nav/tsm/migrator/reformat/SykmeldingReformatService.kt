@@ -20,7 +20,7 @@ val objectMapper: ObjectMapper = jacksonMapperBuilder()
     .build()
 
 class SykmeldingReformatService(
-    private val kafkaProducer: SykmeldingInputProducer,
+    private val inputProducer: SykmeldingInputProducer,
     private val env: Environment,
 ) {
     private val log = logger()
@@ -53,8 +53,14 @@ class SykmeldingReformatService(
                 log.info("skipping sykmelding from $sourceNamespace : $sourceApp: ${meta.key}")
             } else {
                 when (sykmeldingRecord) {
-                    null -> kafkaProducer.tombstone(meta.key, sourceApp, sourceNamespace, additionalHeaders)
-                    else -> kafkaProducer.send(sykmeldingRecord, sourceApp, sourceNamespace, additionalHeaders)
+                    null -> {
+                        log.info("Tombstoning ${meta.key} from $sourceNamespace : $sourceApp on tsm.sykmeldinger-input")
+                        inputProducer.tombstone(meta.key, sourceApp, sourceNamespace, additionalHeaders)
+                    }
+                    else -> {
+                        log.info("Sending sykmelding ${sykmeldingRecord.sykmelding.id} from $sourceNamespace : $sourceApp on tsm.sykmeldinger-input")
+                        inputProducer.send(sykmeldingRecord, sourceApp, sourceNamespace, additionalHeaders)
+                    }
                 }
             }
         } catch (mappingException: MappingException) {
