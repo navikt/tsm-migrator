@@ -1,14 +1,10 @@
 package no.nav.tsm.digital
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import no.nav.tsm.ktor.logger
+import no.nav.tsm.ktor.nais.RuntimeCluster
 import no.nav.tsm.ktor.teamLogger
 import no.nav.tsm.pdl.TsmPdlClient
 import no.nav.tsm.plugins.KafkaTopics
@@ -25,6 +21,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.Headers
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -38,17 +36,13 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                                 private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
                                 private val kafkaProducerManuellTIlbakedatering: KafkaProducer<String, ManuellOppgave>,
                                 private val tsmPdlClient: TsmPdlClient,
-                                private val cluster: String,
+                                private val cluster: RuntimeCluster,
     ) {
     private val log = logger()
     private val teamLog = teamLogger()
-    private val objectMapper: ObjectMapper =
-        jacksonObjectMapper().apply {
-            registerModule(JavaTimeModule())
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-        }
+    private val objectMapper = jacksonMapperBuilder()
+        .enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+        .build()
 
     suspend fun start() = coroutineScope {
         while (isActive) {
@@ -90,7 +84,7 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
                 log.error("Error mapping sykmelding ${digitalMappingException.sykmelding.id}, ${digitalMappingException.message}")
                 teamLog.error("Error in mapping, sykmelding:  ${objectMapper.writeValueAsString(digitalMappingException.sykmelding)}")
                 log.info("cluster is $cluster")
-                if(cluster == "dev-gcp") {
+                if(cluster == RuntimeCluster.DEV) {
                     log.warn("skipping record in dev")
                 } else {
                     throw digitalMappingException

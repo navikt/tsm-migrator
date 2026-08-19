@@ -1,13 +1,10 @@
 package no.nav.tsm.reformat.sykmelding
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
+import no.nav.tsm.ktor.kafka.sykmeldinger.SykmeldingInputProducer
 import no.nav.tsm.ktor.logger
+import no.nav.tsm.ktor.nais.RuntimeCluster
 import no.nav.tsm.ktor.teamLogger
 import no.nav.tsm.plugins.KafkaTopics
 import no.nav.tsm.reformat.sykmelding.service.MappingException
@@ -15,27 +12,25 @@ import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingType
-import no.nav.tsm.sykmelding.input.producer.SykmeldingInputProducer
 import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_APP
 import no.nav.tsm.sykmeldinger.kafka.util.SOURCE_NAMESPACE
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-val objectMapper: ObjectMapper =
-    jacksonObjectMapper().apply {
-        registerModule(JavaTimeModule())
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-    }
+val objectMapper: ObjectMapper = jacksonMapperBuilder()
+    .enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+    .build()
 
 class SykmeldingReformatService(
     private val kafkaConsumer: KafkaConsumer<String, ReceivedSykmelding>,
     private val sykmeldingMapper: SykmeldingMapper,
     private val kafkaProducer: SykmeldingInputProducer,
-    private val cluster: String,
+    private val cluster: RuntimeCluster,
 ) {
     private val log = logger()
     private val teamLog = teamLogger()
@@ -80,20 +75,20 @@ class SykmeldingReformatService(
                     log.info("skipping sykmelding from $sourceNamespace : $sourceApp: ${record.key()}")
                 } else {
                     when (sykmeldingRecord) {
-                        null -> kafkaProducer.tombstoneSykmelding(record.key(), sourceApp, sourceNamespace, additionalHeaders)
-                        else -> kafkaProducer.sendSykmelding(sykmeldingRecord, sourceApp, sourceNamespace, additionalHeaders)
+                        null -> kafkaProducer.tombstone(record.key(), sourceApp, sourceNamespace, additionalHeaders)
+                        else -> kafkaProducer.send(sykmeldingRecord, sourceApp, sourceNamespace, additionalHeaders)
                     }
                 }
             } catch (mappingException: MappingException) {
                 log.error("error processing sykmelding ${mappingException.receivedSykmelding.sykmelding.id} for p: ${record.partition()} at offset: ${record.offset()}", mappingException)
 
-                if (cluster != "dev-gcp") {
+                if (cluster != RuntimeCluster.DEV) {
                     teamLog.error(objectMapper.writeValueAsString(mappingException.receivedSykmelding))
                     throw mappingException
                 }
             } catch (ex: Exception) {
                 log.error(ex.message, ex)
-                if (cluster != "dev-gcp") {
+                if (cluster != RuntimeCluster.DEV) {
                     throw ex
                 }
             }
