@@ -1,4 +1,4 @@
-package no.nav.tsm.reformat.sykmelding.model.metadata
+package no.nav.tsm.migrator.reformat.metadata
 
 import no.nav.tsm.sykmelding.input.core.model.metadata.AckType
 

@@ -1,10 +1,8 @@
 [versions]
 kotlin = "2.4.10"
 logback = "1.5.34"
-prometheus = "0.16.0"
 logback-encoder = "8.0"
 kafka = "3.9.1"
-opentelemetry = "2.8.0"
 mockk = "1.13.12"
 syfo-xml-codegen = "2.0.1"
 jaxb-runtime = "2.4.0-b180830.0438"
@@ -17,9 +15,6 @@ kotlinx-coroutines = "1.9.0"
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logback-encoder" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-prometheus-simpleclient-hotspot = { module = "io.prometheus:simpleclient_hotspot", version.ref = "prometheus" }
-prometheus-simpleclient-common = { module = "io.prometheus:simpleclient_common", version.ref = "prometheus" }
-opentelemetry-instrumentation-annotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version.ref = "opentelemetry" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 syfo-xml-codegen-sm2013 = { module = "no.nav.helse.xml:sm2013", version.ref = "syfo-xml-codegen" }
 syfo-xml-codegen-xmlfellesformat = { module = "no.nav.helse.xml:xmlfellesformat", version.ref = "syfo-xml-codegen" }

@@ -1,20 +1,27 @@
-package no.nav.tsm.reformat.sykmelding.service
+package no.nav.tsm.migrator.reformat
 
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.eiFellesformat.XMLMottakenhetBlokk
 import no.nav.helse.msgHead.*
 import no.nav.helse.sm2013.Address
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.tsm.digital.uke17Prefix
-import no.nav.tsm.digital.uke39Prefix
-import no.nav.tsm.digital.uke7Prefix
-import no.nav.tsm.ktor.logger
-import no.nav.tsm.reformat.sykmelding.model.metadata.*
-import no.nav.tsm.reformat.sykmelding.util.XmlStuff
-import no.nav.tsm.reformat.sykmelding.util.get
-import no.nav.tsm.reformat.sykmelding.util.getIdentType
-import no.nav.tsm.smregister.models.*
-import no.nav.tsm.smregister.models.SvarRestriksjon
+import no.nav.tsm.migrator.digital.uke17Prefix
+import no.nav.tsm.migrator.digital.uke39Prefix
+import no.nav.tsm.migrator.digital.uke7Prefix
+import no.nav.tsm.migrator.legacy.*
+import no.nav.tsm.migrator.legacy.SvarRestriksjon
+import no.nav.tsm.migrator.reformat.metadata.parseAckType
+import no.nav.tsm.migrator.reformat.metadata.parseAdresseType
+import no.nav.tsm.migrator.reformat.metadata.parseHelsepersonellKategori
+import no.nav.tsm.migrator.reformat.metadata.parseKjonn
+import no.nav.tsm.migrator.reformat.metadata.parseKontaktinfoType
+import no.nav.tsm.migrator.reformat.metadata.parseOrgIdType
+import no.nav.tsm.migrator.reformat.metadata.parseOrganisasjonsType
+import no.nav.tsm.migrator.reformat.metadata.parsePersonIdType
+import no.nav.tsm.migrator.reformat.metadata.parseRolleTilPasient
+import no.nav.tsm.migrator.reformat.util.XmlStuff
+import no.nav.tsm.migrator.reformat.util.get
+import no.nav.tsm.migrator.reformat.util.getIdentType
 import no.nav.tsm.sykmelding.input.core.model.*
 import no.nav.tsm.sykmelding.input.core.model.ArbeidsrelatertArsak
 import no.nav.tsm.sykmelding.input.core.model.AvsenderSystem
@@ -49,7 +56,8 @@ class MappingException(val receivedSykmelding: ReceivedSykmelding, val exception
     override val message: String?
         get() = exception.message
 }
-class SykmeldingMapper {
+
+object SykmeldingMapper {
     private val xmlStuff = XmlStuff()
 
     fun toNewSykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
@@ -110,7 +118,7 @@ class SykmeldingMapper {
         )
     }
 
-    fun toDigitalUtdypendeSporsmal(sykmeldingId: String, utdypendeOpplysninger: Map<String, Map<String, no.nav.tsm.smregister.models.SporsmalSvar>>): List<UtdypendeSporsmal> {
+    fun toDigitalUtdypendeSporsmal(sykmeldingId: String, utdypendeOpplysninger: Map<String, Map<String, no.nav.tsm.migrator.legacy.SporsmalSvar>>): List<UtdypendeSporsmal> {
         val sporsmal = utdypendeOpplysninger.values.flatMap { it.entries }.map {
             val sporsmalstype = when(it.key) {
                 "$uke7Prefix.1" -> Sporsmalstype.MEDISINSK_OPPSUMMERING
