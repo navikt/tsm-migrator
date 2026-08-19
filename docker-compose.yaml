@@ -1,0 +1,6 @@
+services:
+  kafka:
+    image: confluentinc/confluent-local:8.1.0
+    container_name: migrator-dev-kafka
+    ports:
+      - "9092:9092"
