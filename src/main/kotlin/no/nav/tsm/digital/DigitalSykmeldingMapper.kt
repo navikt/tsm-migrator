@@ -168,7 +168,7 @@ fun fromDigital(
                 mellomnavn = sykmelding.behandler.navn.mellomnavn,
                 etternavn = sykmelding.behandler.navn.etternavn,
                 aktoerId = "",
-                fnr = behandlerFnr ?: "",
+                fnr = behandlerFnr,
                 hpr = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HPR }?.id,
                 her = sykmelding.behandler.ids.firstOrNull { it.type == PersonIdType.HER }?.id,
                 Adresse(

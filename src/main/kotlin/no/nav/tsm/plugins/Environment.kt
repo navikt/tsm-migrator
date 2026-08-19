@@ -1,9 +1,11 @@
 package no.nav.tsm.plugins
 
-import io.ktor.server.application.Application
-import io.ktor.server.application.host
-import no.nav.tsm.sykmeldinger.kafka.aiven.KafkaEnvironment.Companion.getEnvVar
-import java.util.Properties
+import io.ktor.server.application.*
+import no.nav.tsm.ktor.nais.RuntimeCluster
+import no.nav.tsm.ktor.nais.getRuntimeCluster
+import java.util.*
+
+class Runtime(val env: RuntimeCluster, val name: String)
 
 object KafkaTopics {
     val tsmSykmeldingTopic: String = "tsm.sykmeldinger"
@@ -14,13 +16,17 @@ object KafkaTopics {
 }
 
 class Environment(
+    val runtime: Runtime,
     val kafkaConfig: Properties,
     val hostname: String,
-    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
 )
 
 fun Application.createEnvironment(): Environment {
     return Environment(
+        Runtime(
+            env = getRuntimeCluster(),
+            name = environment.config.property("app.name").getString(),
+        ),
         kafkaConfig = Properties().apply {
             environment.config.config("ktor.kafka.config").toMap().forEach {
                 this[it.key] = it.value

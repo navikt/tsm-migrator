@@ -1,12 +1,11 @@
 package no.nav.tsm.plugins
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
 import no.nav.tsm.pdl.TsmPdlClient
@@ -14,10 +13,11 @@ import no.nav.tsm.digital.DigitalSykmeldingConsumer
 import no.nav.tsm.digital.ManuellOppgave
 import no.nav.tsm.digital.SykmeldingRecordDeserializer
 import no.nav.tsm.ktor.auth.texas.Texas
+import no.nav.tsm.ktor.kafka.config.KafkaConfig
+import no.nav.tsm.ktor.kafka.sykmeldinger.sykmeldingInputProducer
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
 import no.nav.tsm.reformat.sykmelding.service.SykmeldingMapper
 import no.nav.tsm.smregister.models.ReceivedSykmelding
-import no.nav.tsm.sykmelding.input.producer.SykmeldingInputKafkaInputFactory
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaDeserializer
 import no.nav.tsm.sykmeldinger.kafka.util.JacksonKafkaSerializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -30,26 +30,28 @@ import java.util.Properties
 
 fun Application.configureDependencyInjection() {
     val env = createEnvironment()
+
+    install(KafkaConfig) {
+        clientId = env.runtime.name
+    }
+
     dependencies {
         provide<HttpClient> { configureBaseHttpClient() }
         provide<Environment> { env }
         provide(Texas::class)
         provide(TsmPdlClient::class)
-        provide<SykmeldingReformatService> { initSykmeldingReformatService(env) }
+        provide<SykmeldingReformatService> { this@configureDependencyInjection.initSykmeldingReformatService(env) }
         provide<DigitalSykmeldingConsumer> { initDigitalSykmeldingConsumer(env, resolve()) }
     }
 }
 
 private fun configureBaseHttpClient(): HttpClient = HttpClient(Apache5) {
     install(ContentNegotiation) {
-        jackson {
-            registerKotlinModule()
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        }
+        jackson {}
     }
 }
 
-fun initSykmeldingReformatService(env: Environment): SykmeldingReformatService {
+fun Application.initSykmeldingReformatService(env: Environment): SykmeldingReformatService {
     val consumer = KafkaConsumer(Properties().apply {
         putAll(env.kafkaConfig)
         this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java.name
@@ -61,13 +63,13 @@ fun initSykmeldingReformatService(env: Environment): SykmeldingReformatService {
         this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
     }, StringDeserializer(), JacksonKafkaDeserializer(ReceivedSykmelding::class))
 
-    val producer = SykmeldingInputKafkaInputFactory.naisProducer()
+    val producer = sykmeldingInputProducer()
 
     return SykmeldingReformatService(
         kafkaConsumer = consumer,
         sykmeldingMapper = SykmeldingMapper(),
         kafkaProducer = producer,
-        cluster = env.cluster
+        cluster = env.runtime.env
     )
 }
 
@@ -107,7 +109,7 @@ fun initDigitalSykmeldingConsumer(env: Environment, pdl: TsmPdlClient): DigitalS
         kafkaConsumer = consumer,
         kafkaProducer = producer,
         kafkaProducerManuellTIlbakedatering = producerManuellTilbakedatring,
-        cluster = env.cluster,
+        cluster = env.runtime.env,
         tsmPdlClient = pdl,
     )
 }
