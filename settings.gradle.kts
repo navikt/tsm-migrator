@@ -1,7 +1,7 @@
 rootProject.name = "migrator"
 
 val ktorVersion = "3.5.1"
-val tsmKtorVersion = "1.2.2"
+val tsmKtorVersion = "1.2.3"
 
 dependencyResolutionManagement {
     repositories {

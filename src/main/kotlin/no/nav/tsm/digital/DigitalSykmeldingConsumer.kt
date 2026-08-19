@@ -3,10 +3,10 @@ package no.nav.tsm.digital
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import no.nav.tsm.ktor.clients.pdl.PdlClient
 import no.nav.tsm.ktor.logger
 import no.nav.tsm.ktor.nais.RuntimeCluster
 import no.nav.tsm.ktor.teamLogger
-import no.nav.tsm.pdl.TsmPdlClient
 import no.nav.tsm.plugins.KafkaTopics
 import no.nav.tsm.reformat.sykmelding.service.MappingException
 import no.nav.tsm.smregister.models.ReceivedSykmelding
@@ -35,7 +35,7 @@ data class ManuellOppgave(
 class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String, SykmeldingRecord>,
                                 private val kafkaProducer: KafkaProducer<String, ReceivedSykmelding?>,
                                 private val kafkaProducerManuellTIlbakedatering: KafkaProducer<String, ManuellOppgave>,
-                                private val tsmPdlClient: TsmPdlClient,
+                                private val tsmPdlClient: PdlClient,
                                 private val cluster: RuntimeCluster,
     ) {
     private val log = logger()
@@ -104,7 +104,9 @@ class DigitalSykmeldingConsumer(private val kafkaConsumer: KafkaConsumer<String,
             log.info("tombstoning sykmelding with id: $sykmeldingId")
             kafkaProducer.send(ProducerRecord(KafkaTopics.okSykmeldingTopic, null, sykmeldingId, null, headers)).get()
         } else {
-            val aktorId = tsmPdlClient.getAktorId(sykmeldingRecord.sykmelding.pasient.fnr)
+            val aktorId = requireNotNull(tsmPdlClient.getAktorId(sykmeldingRecord.sykmelding.pasient.fnr)) {
+                "Could not find aktorId for ident in sykmelding with id: $sykmeldingId"
+            }
             val receivedSykmelding = sykmeldingRecord.toReceivedSykmelding(aktorId)
             if (isManualVurdering(sykmeldingRecord)) {
                 log.info("Digital sykmelding is sendt to manuell behandling $sykmeldingId")
