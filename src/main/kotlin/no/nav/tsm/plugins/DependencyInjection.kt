@@ -8,11 +8,12 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
-import no.nav.tsm.pdl.TsmPdlClient
 import no.nav.tsm.digital.DigitalSykmeldingConsumer
 import no.nav.tsm.digital.ManuellOppgave
 import no.nav.tsm.digital.SykmeldingRecordDeserializer
 import no.nav.tsm.ktor.auth.texas.Texas
+import no.nav.tsm.ktor.clients.pdl.PdlClient
+import no.nav.tsm.ktor.clients.pdl.PdlPlugin
 import no.nav.tsm.ktor.kafka.config.KafkaConfig
 import no.nav.tsm.ktor.kafka.sykmeldinger.sykmeldingInputProducer
 import no.nav.tsm.reformat.sykmelding.SykmeldingReformatService
@@ -31,6 +32,7 @@ import java.util.Properties
 fun Application.configureDependencyInjection() {
     val env = createEnvironment()
 
+    install(PdlPlugin)
     install(KafkaConfig) {
         clientId = env.runtime.name
     }
@@ -39,7 +41,6 @@ fun Application.configureDependencyInjection() {
         provide<HttpClient> { configureBaseHttpClient() }
         provide<Environment> { env }
         provide(Texas::class)
-        provide(TsmPdlClient::class)
         provide<SykmeldingReformatService> { this@configureDependencyInjection.initSykmeldingReformatService(env) }
         provide<DigitalSykmeldingConsumer> { initDigitalSykmeldingConsumer(env, resolve()) }
     }
@@ -73,7 +74,7 @@ fun Application.initSykmeldingReformatService(env: Environment): SykmeldingRefor
     )
 }
 
-fun initDigitalSykmeldingConsumer(env: Environment, pdl: TsmPdlClient): DigitalSykmeldingConsumer {
+fun initDigitalSykmeldingConsumer(env: Environment, pdl: PdlClient): DigitalSykmeldingConsumer {
     val consumer = KafkaConsumer(Properties().apply {
         putAll(env.kafkaConfig)
         this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = SykmeldingRecordDeserializer::class.java.name
