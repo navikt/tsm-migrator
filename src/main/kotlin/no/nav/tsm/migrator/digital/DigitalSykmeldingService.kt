@@ -68,9 +68,15 @@ class DigitalSykmeldingService(
     suspend fun handleTombstone(meta: RecordMeta) {
         log.info("tombstoning sykmelding with id: ${meta.key}")
         withContext(Dispatchers.IO) {
-            okSykmeldingProducer.tombstone(
-                meta.key,
-                meta.headers.toList().associate { it.key() to it.value().toString(Charsets.UTF_8) })
+            val sourceNamespace = meta.headers.lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
+            if (sourceNamespace == TSM_SOURCE) {
+                log.info("tombstoning sykmelding with id: ${meta.key} from $sourceNamespace")
+                okSykmeldingProducer.tombstone(
+                    meta.key,
+                    meta.headers.toList().associate { it.key() to it.value().toString(Charsets.UTF_8) })
+            } else {
+                log.info("do not tombstone sykmelding with id: ${meta.key} source is ${sourceNamespace}")
+            }
         }
     }
 
