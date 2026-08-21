@@ -27,7 +27,6 @@ dependencies {
     implementation(tsmKtorLibs.core)
     implementation(tsmKtorLibs.kafka)
     implementation(tsmKtorLibs.kafka.sykmeldinger)
-    implementation(libs.kafka.clients)
     implementation(libs.logstash.logback.encoder)
     implementation(libs.logback.classic)
     implementation(libs.kotlinx.coroutines.core)
