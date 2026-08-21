@@ -71,9 +71,7 @@ class DigitalSykmeldingService(
             val sourceNamespace = meta.headers.lastHeader(SOURCE_NAMESPACE)?.value()?.toString(Charsets.UTF_8)
             if (sourceNamespace == TSM_SOURCE) {
                 log.info("tombstoning sykmelding with id: ${meta.key} from $sourceNamespace")
-                okSykmeldingProducer.tombstone(
-                    meta.key,
-                    meta.headers.toList().associate { it.key() to it.value().toString(Charsets.UTF_8) })
+                okSykmeldingProducer.tombstone(meta.key, meta.headers)
             } else {
                 log.info("do not tombstone sykmelding with id: ${meta.key} source is ${sourceNamespace}")
             }
@@ -99,7 +97,7 @@ class DigitalSykmeldingService(
                         receivedSykmelding = receivedSykmelding,
                         validationResult = receivedSykmelding.validationResult
                     ),
-                    headers = headers.associate { it.key() to it.value().toString(Charsets.UTF_8) }
+                    headers = headers,
                 )
             }
         } else {
@@ -108,7 +106,7 @@ class DigitalSykmeldingService(
                 okSykmeldingProducer.send(
                     key = sykmeldingRecord.sykmelding.id,
                     value = receivedSykmelding,
-                    headers = headers.associate { it.key() to it.value().toString(Charsets.UTF_8) }
+                    headers = headers,
                 )
             }
         }
