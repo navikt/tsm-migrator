@@ -24,11 +24,13 @@ dependencies {
     implementation(ktorLibs.client.contentNegotiation)
     implementation(ktorLibs.client.apache5)
     implementation(ktorLibs.server.netty)
+
     implementation(tsmKtorLibs.core)
     implementation(tsmKtorLibs.kafka)
     implementation(tsmKtorLibs.kafka.sykmeldinger)
-    implementation(libs.logstash.logback.encoder)
-    implementation(libs.logback.classic)
+    implementation(libs.tsm.sykmeldinger.input)
+    implementation(libs.tsm.pdl.client)
+
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.syfo.xml.codegen.sm2013)
     implementation(libs.syfo.xml.codegen.xmlfellesformat)
@@ -37,7 +39,6 @@ dependencies {
     implementation(libs.jaxb.api)
     implementation(libs.jaxb.runtime)
     implementation(libs.jaxb.java.time.adapters)
-    implementation(libs.tsm.sykmeldinger.input)
     testImplementation(ktorLibs.server.testHost)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.mockk)

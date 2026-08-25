@@ -2,21 +2,21 @@ package no.nav.tsm.migrator.digital
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.tsm.ktor.clients.pdl.PdlClient
+import no.nav.tsm.kafka.SOURCE_NAMESPACE
+import no.nav.tsm.kafka.TSM_SOURCE
 import no.nav.tsm.ktor.kafka.consumer.RecordMeta
 import no.nav.tsm.ktor.kafka.producer.KafkaRecordProducer
 import no.nav.tsm.ktor.logger
 import no.nav.tsm.ktor.nais.RuntimeCluster
 import no.nav.tsm.ktor.teamLogger
-import no.nav.tsm.migrator.reformat.MappingException
 import no.nav.tsm.migrator.legacy.ReceivedSykmelding
 import no.nav.tsm.migrator.legacy.ValidationResultLegacy
+import no.nav.tsm.migrator.reformat.MappingException
+import no.nav.tsm.pdl.PdlClient
+import no.nav.tsm.plugins.Environment
 import no.nav.tsm.sykmelding.input.core.model.RuleType
 import no.nav.tsm.sykmelding.input.core.model.SykmeldingRecord
 import no.nav.tsm.sykmelding.input.core.model.TilbakedatertMerknad
-import no.nav.tsm.kafka.SOURCE_NAMESPACE
-import no.nav.tsm.kafka.TSM_SOURCE
-import no.nav.tsm.plugins.Environment
 import org.apache.kafka.common.header.Headers
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.module.kotlin.jacksonMapperBuilder
