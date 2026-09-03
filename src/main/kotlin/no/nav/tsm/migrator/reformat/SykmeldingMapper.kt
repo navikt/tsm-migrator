@@ -902,7 +902,7 @@ private fun AnnenFraverGrunn?.toAnnenFravarsgrunn() : AnnenFravarsgrunn? {
     return when (this) {
         AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON -> AnnenFravarsgrunn.GODKJENT_HELSEINSTITUSJON
         AnnenFraverGrunn.ARBEIDSRETTET_TILTAK -> AnnenFravarsgrunn.ARBEIDSRETTET_TILTAK
-        AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID -> throw IllegalArgumentException("AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID is not suuported in digital sykmelding yet")
+        AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID -> AnnenFravarsgrunn.BEHANDLING_FORHINDRER_ARBEID
         AnnenFraverGrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND -> AnnenFravarsgrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND
         AnnenFraverGrunn.NODVENDIG_KONTROLLUNDENRSOKELSE -> AnnenFravarsgrunn.NODVENDIG_KONTROLLUNDENRSOKELSE
         AnnenFraverGrunn.SMITTEFARE -> AnnenFravarsgrunn.SMITTEFARE
