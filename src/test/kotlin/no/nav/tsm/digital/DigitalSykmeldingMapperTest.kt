@@ -290,6 +290,9 @@ private fun getDigitalSykmeldingRecord() : SykmeldingRecord {
             meldingTilArbeidsgiver = "melding",
             tiltakArbeidsplassen = "tiltak"
         ),
+        prognose = DigitalPrognose(
+            friskmeldingTilArbeidsformidling = true
+        ),
         tilbakedatering = Tilbakedatering(kontaktDato = LocalDate.parse("2025-01-01"), begrunnelse = "begrunnelse"),
         bistandNav = BistandNav(
             beskrivBistand = "beskrivelse",

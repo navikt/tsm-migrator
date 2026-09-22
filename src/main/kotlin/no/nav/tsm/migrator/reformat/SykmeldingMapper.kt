@@ -66,9 +66,7 @@ object SykmeldingMapper {
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "syk-inn (HelseID)" -> toDigitalSykmelding(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn.contains("FHIR") -> toDigitalSykmelding(receivedSykmelding)
                 receivedSykmelding.utenlandskSykmelding != null -> toUtenlandssykmeldingMedBehandlingsutfall(receivedSykmelding)
-                receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(
-                    receivedSykmelding
-                )
+                receivedSykmelding.sykmelding.avsenderSystem.navn == "Papirsykmelding" -> toPapirsykmelding(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt" -> toEgenmeldtSykmelding(receivedSykmelding)
                 receivedSykmelding.sykmelding.avsenderSystem.navn.lowercase().contains("dolly") -> emottakEnkel(receivedSykmelding)
                 !receivedSykmelding.fellesformat.isNullOrBlank() -> fromReceivedSykmeldignAndFellesformat(receivedSykmelding)
@@ -88,15 +86,19 @@ object SykmeldingMapper {
         val pasientNavn = Navn(
             fornavn = xmlSykmelding.pasient.navn.fornavn,
             mellomnavn = xmlSykmelding.pasient.navn.mellomnavn,
-            etternavn = xmlSykmelding.pasient.navn.etternavn)
+            etternavn = xmlSykmelding.pasient.navn.etternavn
+        )
 
         val digitalSykmelding = Sykmelding.Digital(
             id = receivedSykmelding.sykmelding.id,
             metadata = SykmeldingMeta.Digital(
                 mottattDato = receivedSykmelding.mottattDato.atOffset(UTC),
                 genDate = receivedSykmelding.sykmelding.signaturDato.atOffset(UTC),
-                avsenderSystem = AvsenderSystem(receivedSykmelding.sykmelding.avsenderSystem.navn, receivedSykmelding.sykmelding.avsenderSystem.versjon),
+                avsenderSystem = AvsenderSystem(
+                    receivedSykmelding.sykmelding.avsenderSystem.navn,
+                    receivedSykmelding.sykmelding.avsenderSystem.versjon
                 ),
+            ),
             pasient = toPasient(receivedSykmelding, pasientNavn),
             medisinskVurdering = mapDigitalMedisinskVurdering(receivedSykmelding.sykmelding),
             aktivitet = receivedSykmelding.sykmelding.perioder.map { mapAktivitet(it) },
@@ -105,7 +107,11 @@ object SykmeldingMapper {
             arbeidsgiver = mapArbeidsgiver(receivedSykmelding.sykmelding),
             tilbakedatering = toTilbakedatering(receivedSykmelding),
             bistandNav = toBistandNav(receivedSykmelding),
-            utdypendeSporsmal = toDigitalUtdypendeSporsmal(receivedSykmelding.sykmelding.id, receivedSykmelding.sykmelding.utdypendeOpplysninger)
+            utdypendeSporsmal = toDigitalUtdypendeSporsmal(
+                receivedSykmelding.sykmelding.id,
+                receivedSykmelding.sykmelding.utdypendeOpplysninger
+            ),
+            prognose = toPrognose(receivedSykmelding.sykmelding.prognose),
         )
         val digital = MessageMetadata.Digital(
             receivedSykmelding.legekontorOrgNr ?: throw IllegalArgumentException("missing legekontorOrgNr"),
@@ -118,9 +124,12 @@ object SykmeldingMapper {
         )
     }
 
-    fun toDigitalUtdypendeSporsmal(sykmeldingId: String, utdypendeOpplysninger: Map<String, Map<String, no.nav.tsm.migrator.legacy.SporsmalSvar>>): List<UtdypendeSporsmal> {
+    fun toDigitalUtdypendeSporsmal(
+        sykmeldingId: String,
+        utdypendeOpplysninger: Map<String, Map<String, no.nav.tsm.migrator.legacy.SporsmalSvar>>
+    ): List<UtdypendeSporsmal> {
         val sporsmal = utdypendeOpplysninger.values.flatMap { it.entries }.map {
-            val sporsmalstype = when(it.key) {
+            val sporsmalstype = when (it.key) {
                 "$uke7Prefix.1" -> Sporsmalstype.MEDISINSK_OPPSUMMERING
                 "$uke7Prefix.2" -> Sporsmalstype.UTFORDRINGER_MED_GRADERT_ARBEID
                 "$uke7Prefix.3" -> Sporsmalstype.HENSYN_PA_ARBEIDSPLASSEN
@@ -155,6 +164,12 @@ object SykmeldingMapper {
             ),
             sykmelding = toSykmelding(receivedSykmelding)
         )
+    }
+
+    private fun toPrognose(prognose: no.nav.tsm.migrator.legacy.Prognose?): DigitalPrognose? {
+        if (prognose == null) return null
+
+        return DigitalPrognose(friskmeldingTilArbeidsformidling = prognose.erIArbeid?.annetArbeidPaSikt ?: false)
     }
 
     private fun toPapirsykmelding(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
@@ -256,7 +271,7 @@ object SykmeldingMapper {
     private fun tilHelsepersonell(healthcareProfessional: XMLHealthcareProfessional?): Helsepersonell? {
         if (healthcareProfessional == null) return null
         val invalidName = healthcareProfessional.givenName == null || healthcareProfessional.familyName == null
-        val name = if(!invalidName) {
+        val name = if (!invalidName) {
             Navn(
                 fornavn = healthcareProfessional.givenName,
                 mellomnavn = healthcareProfessional.middleName,
@@ -285,10 +300,10 @@ object SykmeldingMapper {
             fodselsdato = healthcareProfessional.dateOfBirth,
             helsepersonellKategori = parseHelsepersonellKategori(healthcareProfessional.typeHealthcareProfessional?.v),
             rolleTilPasient = parseRolleTilPasient(healthcareProfessional.roleToPatient?.v),
-            )
+        )
     }
 
-    private fun toAdresse(address: XMLAddress?) : Adresse? {
+    private fun toAdresse(address: XMLAddress?): Adresse? {
         if (address == null) return null
         return Adresse(
             gateadresse = address.streetAdr,
@@ -371,6 +386,7 @@ object SykmeldingMapper {
         }
         return null
     }
+
     private fun fromReceivedSykmeldignAndFellesformat(receivedSykmelding: ReceivedSykmelding): SykmeldingRecord {
         requireNotNull(receivedSykmelding.fellesformat)
         val unmashalledSykmelding = xmlStuff.unmarshal(receivedSykmelding.fellesformat)
@@ -442,13 +458,13 @@ object SykmeldingMapper {
     private fun toOffsetDateTime(genDate: String): OffsetDateTime {
         return try {
             OffsetDateTime.parse(genDate).withOffsetSameInstant(UTC)
-        } catch (_ : DateTimeParseException) {
+        } catch (_: DateTimeParseException) {
             LocalDateTime.parse(genDate).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime().withOffsetSameInstant(UTC)
         }
     }
 
     private fun toOffsetDateTime(date: GregorianCalendar): OffsetDateTime {
-       return date.toZonedDateTime().toOffsetDateTime().withOffsetSameInstant(UTC)
+        return date.toZonedDateTime().toOffsetDateTime().withOffsetSameInstant(UTC)
     }
 
 
@@ -601,6 +617,7 @@ object SykmeldingMapper {
             validation = validation,
         )
     }
+
     private fun toPapirSykmelding(
         receivedSykmelding: ReceivedSykmelding,
     ): Sykmelding.Papir {
@@ -692,7 +709,7 @@ object SykmeldingMapper {
     private fun toTiltak(receivedSykmelding: ReceivedSykmelding): Tiltak? {
         val tiltakNav = receivedSykmelding.sykmelding.tiltakNAV
         val andreTiltak = receivedSykmelding.sykmelding.andreTiltak
-        if(!tiltakNav.isNullOrBlank() || !andreTiltak.isNullOrBlank()) {
+        if (!tiltakNav.isNullOrBlank() || !andreTiltak.isNullOrBlank()) {
             return Tiltak(
                 tiltakNav = tiltakNav,
                 andreTiltak = andreTiltak,
@@ -715,7 +732,7 @@ object SykmeldingMapper {
                     )
                 },
 
-            ),
+                ),
             helsepersonellKategori = parseHelsepersonellKategori(receivedSykmelding.legeHelsepersonellkategori),
         )
     }
@@ -807,7 +824,8 @@ object SykmeldingMapper {
             Status.INVALID -> mapInvalidValidation(receivedSykmelding)
             Status.MANUAL_PROCESSING -> ValidationResult(
                 status = RuleType.OK,
-                timestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC),
+                timestamp = receivedSykmelding.validationResult.timestamp
+                    ?: receivedSykmelding.mottattDato.atOffset(UTC),
                 rules = emptyList()
             )
         }
@@ -837,7 +855,8 @@ object SykmeldingMapper {
     }
 
     private fun mapOkOrPendingValidation(receivedSykmelding: ReceivedSykmelding): ValidationResult {
-        val validationResultTimestamp = receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC)
+        val validationResultTimestamp =
+            receivedSykmelding.validationResult.timestamp ?: receivedSykmelding.mottattDato.atOffset(UTC)
         if (receivedSykmelding.merknader.isNullOrEmpty()) {
             return ValidationResult(
                 status = RuleType.OK,
@@ -867,26 +886,33 @@ object SykmeldingMapper {
                     sykmeldt = "Sykmeldingen blir manuelt behandlet fordi den er tilbakedatert"
                 )
             )
+
             OldTilbakedatertMerknad.UGYLDIG_TILBAKEDATERING -> Rule.Invalid(
                 name = TilbakedatertMerknad.TILBAKEDATERING_UGYLDIG_TILBAKEDATERING.name,
                 timestamp = timestamp,
                 validationType = ValidationType.MANUAL,
                 reason = Reason(
                     sykmeldt = "Sykmeldingen er tilbakedatert uten tilstrekkelig begrunnelse fra den som sykmeldte deg.",
-                    "Ugyldig tilbakedatering")
+                    "Ugyldig tilbakedatering"
+                )
             )
+
             OldTilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER -> Rule.Pending(
                 name = TilbakedatertMerknad.TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER.name,
                 timestamp = timestamp,
                 validationType = ValidationType.MANUAL,
-                reason = Reason(sykmeldt = "Sykmeldingen blir manuelt behandlet fordi den er tilbakedatert",
-                    "Tilbakedatering krever flere opplysninger")
+                reason = Reason(
+                    sykmeldt = "Sykmeldingen blir manuelt behandlet fordi den er tilbakedatert",
+                    "Tilbakedatering krever flere opplysninger"
+                )
             )
+
             OldTilbakedatertMerknad.DELVIS_GODKJENT -> Rule.OK(
                 name = TilbakedatertMerknad.TILBAKEDATERING_DELVIS_GODKJENT.name,
                 timestamp = timestamp,
                 validationType = ValidationType.MANUAL,
             )
+
             OldTilbakedatertMerknad.TILBAKEDATERT_PAPIRSYKMELDING -> Rule.OK(
                 name = TilbakedatertMerknad.TILBAKEDATERING_TILBAKEDATERT_PAPIRSYKMELDING.name,
                 timestamp = timestamp,
@@ -897,7 +923,7 @@ object SykmeldingMapper {
 }
 
 
-private fun AnnenFraverGrunn?.toAnnenFravarsgrunn() : AnnenFravarsgrunn? {
+private fun AnnenFraverGrunn?.toAnnenFravarsgrunn(): AnnenFravarsgrunn? {
     if (this == null) return null
     return when (this) {
         AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON -> AnnenFravarsgrunn.GODKJENT_HELSEINSTITUSJON
@@ -919,12 +945,12 @@ private fun mapDigitalMedisinskVurdering(sykmelding: SykmeldingLegacy): Medisins
         biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser.map(toDiagnoseInfo()),
         annenFravarsgrunn = sykmelding.medisinskVurdering.annenFraversArsak?.grunn?.firstOrNull().toAnnenFravarsgrunn(),
         svangerskap = sykmelding.medisinskVurdering.svangerskap,
-        yrkesskade = when(sykmelding.medisinskVurdering.yrkesskade) {
+        yrkesskade = when (sykmelding.medisinskVurdering.yrkesskade) {
             true -> Yrkesskade(sykmelding.medisinskVurdering.yrkesskadeDato)
             false -> null
         },
         skjermetForPasient = sykmelding.skjermesForPasient,
-        )
+    )
 }
 
 private fun mapLegacyMedisinskVurdering(sykmelding: SykmeldingLegacy): MedisinskVurdering.Legacy {
@@ -932,10 +958,9 @@ private fun mapLegacyMedisinskVurdering(sykmelding: SykmeldingLegacy): Medisinsk
         hovedDiagnose = sykmelding.medisinskVurdering.hovedDiagnose?.let(toDiagnoseInfo()),
         biDiagnoser = sykmelding.medisinskVurdering.biDiagnoser.map(toDiagnoseInfo()),
         annenFraversArsak = sykmelding.medisinskVurdering.annenFraversArsak?.let {
-            if(it.beskrivelse == null && it.grunn.isEmpty()) {
+            if (it.beskrivelse == null && it.grunn.isEmpty()) {
                 null
-            }
-            else {
+            } else {
                 AnnenFraverArsak(
                     it.beskrivelse, it.grunn.map { grunn ->
                         when (grunn) {
@@ -955,7 +980,7 @@ private fun mapLegacyMedisinskVurdering(sykmelding: SykmeldingLegacy): Medisinsk
             }
         },
         svangerskap = sykmelding.medisinskVurdering.svangerskap,
-        yrkesskade = when(sykmelding.medisinskVurdering.yrkesskade) {
+        yrkesskade = when (sykmelding.medisinskVurdering.yrkesskade) {
             true -> Yrkesskade(sykmelding.medisinskVurdering.yrkesskadeDato)
             false -> null
         },
@@ -1068,14 +1093,14 @@ private fun mapAktivitet(periode: Periode): Aktivitet {
     throw IllegalArgumentException("Ukjent aktivitetstype")
 }
 
-fun toArbeidsrelatertArsakType(arsak: ArbeidsrelatertArsakTypeLegacy) : ArbeidsrelatertArsakType {
+fun toArbeidsrelatertArsakType(arsak: ArbeidsrelatertArsakTypeLegacy): ArbeidsrelatertArsakType {
     return when (arsak) {
         ArbeidsrelatertArsakTypeLegacy.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING
         ArbeidsrelatertArsakTypeLegacy.ANNET -> ArbeidsrelatertArsakType.ANNET
     }
 }
 
-fun toMedisinskArsakType(arsak: MedisinskArsakTypeLegacy) : MedisinskArsakType {
+fun toMedisinskArsakType(arsak: MedisinskArsakTypeLegacy): MedisinskArsakType {
     return when (arsak) {
         MedisinskArsakTypeLegacy.TILSTAND_HINDRER_AKTIVITET -> MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET
         MedisinskArsakTypeLegacy.AKTIVITET_FORVERRER_TILSTAND -> MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND

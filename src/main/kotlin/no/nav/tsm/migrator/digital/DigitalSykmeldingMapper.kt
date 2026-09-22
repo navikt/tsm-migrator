@@ -16,6 +16,7 @@ import no.nav.tsm.migrator.legacy.ArbeidsrelatertArsakTypeLegacy
 import no.nav.tsm.migrator.legacy.AvsenderSystem
 import no.nav.tsm.migrator.legacy.Behandler
 import no.nav.tsm.migrator.legacy.Diagnose
+import no.nav.tsm.migrator.legacy.ErIArbeid
 import no.nav.tsm.migrator.legacy.GradertLegacy
 import no.nav.tsm.migrator.legacy.HarArbeidsgiver
 import no.nav.tsm.migrator.legacy.KontaktMedPasient
@@ -25,6 +26,7 @@ import no.nav.tsm.migrator.legacy.MedisinskVurdering
 import no.nav.tsm.migrator.legacy.MeldingTilNAV
 import no.nav.tsm.migrator.legacy.Merknad
 import no.nav.tsm.migrator.legacy.Periode
+import no.nav.tsm.migrator.legacy.Prognose
 import no.nav.tsm.migrator.legacy.ReceivedSykmelding
 import no.nav.tsm.migrator.legacy.RuleInfo
 import no.nav.tsm.migrator.legacy.SporsmalSvar
@@ -162,7 +164,19 @@ fun fromDigital(
             skjermesForPasient = sykmelding.medisinskVurdering.skjermetForPasient,
             arbeidsgiver = toArbeidsgiver(sykmelding.arbeidsgiver),
             perioder = perioder,
-            prognose = null,
+            prognose = sykmelding.prognose?.let {
+                Prognose(
+                    arbeidsforEtterPeriode = false,
+                    hensynArbeidsplassen = null,
+                    erIkkeIArbeid = null,
+                    erIArbeid = ErIArbeid(
+                        egetArbeidPaSikt = false,
+                        annetArbeidPaSikt = it.friskmeldingTilArbeidsformidling,
+                        arbeidFOM = null,
+                        vurderingsdato = null
+                    )
+                )
+            },
             tiltakArbeidsplassen = when (val arbeidsgiver = sykmelding.arbeidsgiver) {
                 is ArbeidsgiverInfo.Ingen -> null
                 is ArbeidsgiverInfo.En -> arbeidsgiver.tiltakArbeidsplassen
@@ -453,7 +467,14 @@ fun mapToFellesformat(sykmelding: Sykmelding.Digital, perioder: List<Periode>): 
                                                     )
                                                 )
                                             }
-                                        prognose = null
+                                        prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                                            if (sykmelding.prognose?.friskmeldingTilArbeidsformidling != null) {
+                                                erIArbeid = HelseOpplysningerArbeidsuforhet.Prognose.ErIArbeid().apply {
+                                                    arbeidFraDato = null
+                                                    isAnnetArbeidPaSikt = sykmelding.prognose?.friskmeldingTilArbeidsformidling ?: false
+                                                }
+                                            }
+                                        }
                                         utdypendeOpplysninger = null
                                         tiltak = HelseOpplysningerArbeidsuforhet.Tiltak().apply {
                                             tiltakArbeidsplassen = when (val arbeidsgiver = sykmelding.arbeidsgiver) {
