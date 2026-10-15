@@ -394,7 +394,7 @@ object SykmeldingMapper {
         val mottakenhetBlokk = unmashalledSykmelding.get<XMLMottakenhetBlokk>()
 
         val xmlSykmelding = extractHelseOpplysningerArbeidsuforhet(unmashalledSykmelding)
-        val sykmeldingPasient = toSykmeldingPasient(xmlSykmelding.pasient)
+        val sykmeldingPasient = toSykmeldingPasient(xmlSykmelding.pasient, receivedSykmelding.personNrPasient)
         val sykmelder = toSignerendeBehandler(receivedSykmelding)
         val behandler = Behandler(
             navn = Navn(
@@ -468,15 +468,14 @@ object SykmeldingMapper {
     }
 
 
-    private fun toSykmeldingPasient(pasient: HelseOpplysningerArbeidsuforhet.Pasient): SykmeldingPasient {
-
+    private fun toSykmeldingPasient(pasient: HelseOpplysningerArbeidsuforhet.Pasient, kafkaPasientIdent: String): SykmeldingPasient {
         return SykmeldingPasient(
             navn = Navn(
                 fornavn = pasient.navn.fornavn,
                 mellomnavn = pasient.navn.mellomnavn,
                 etternavn = pasient.navn.etternavn,
             ),
-            fnr = pasient.fodselsnummer.id,
+            fnr = kafkaPasientIdent,
             navnFastlege = pasient.navnFastlege,
             navKontor = pasient.navKontor,
             kontaktinfo = pasient.kontaktInfo.map {
