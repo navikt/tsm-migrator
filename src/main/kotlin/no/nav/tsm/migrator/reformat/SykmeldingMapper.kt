@@ -998,6 +998,7 @@ private fun toDiagnoseInfo() = { diagnose: Diagnose ->
             "2.16.578.1.12.4.1.1.7171" -> DiagnoseSystem.ICPC2B
             "2.16.578.1.12.4.1.1.7112" -> DiagnoseSystem.PHBU
             "" -> DiagnoseSystem.UGYLDIG
+            "NCSP_NO" -> DiagnoseSystem.UGYLDIG
             else -> throw IllegalArgumentException("Ukjent diagnose system ${diagnose.system}")
         },
     )
