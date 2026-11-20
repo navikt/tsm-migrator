@@ -361,6 +361,7 @@ private fun PersonId.getIdTypeAndName(): Pair<String?, String?> = when (this.typ
     PersonIdType.SSN -> "SSN" to "Sosial security number"
     PersonIdType.FPN -> "FPN" to "Forsikringspolise nummer"
     PersonIdType.DUF -> "DUF" to "DUF-nummer"
+    PersonIdType.FHN -> "FHN" to "Felles nasjonalt hjelpenummer"
     PersonIdType.XXX -> "XXX" to "Annet"
     PersonIdType.UGYLDIG -> "" to "Ugyldig"
     PersonIdType.IKKE_OPPGITT -> null to null

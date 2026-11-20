@@ -18,6 +18,7 @@ fun parsePersonIdType(type: String?): PersonIdType {
                 "SSN" -> PersonIdType.SSN
                 "FPN" -> PersonIdType.FPN
                 "DUF" -> PersonIdType.DUF
+                "FHN" -> PersonIdType.FHN
                 "XXX" -> PersonIdType.XXX
                 "" -> PersonIdType.UGYLDIG
                 null -> return PersonIdType.IKKE_OPPGITT
